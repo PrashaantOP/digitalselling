@@ -27,7 +27,7 @@ class LessonContentController extends Controller
 
     public function update(Request $request, CourseLesson $lesson)
     {
-        DB::transaction(fn () => match ($lesson->type) {
+        DB::transaction(fn() => match ($lesson->type) {
             'video' => $this->video($request, $lesson),
             'text_image' => $this->text($request, $lesson),
             'audio' => $this->audio($request, $lesson),
@@ -81,7 +81,7 @@ class LessonContentController extends Controller
         foreach ($request->file('images', []) as $file) {
             LessonTextImage::create([
                 'lesson_text_content_id' => $text->id,
-                'image_path' => $this->putPublic($file, 'lessons/images'),
+                'image_path' => $this->putPublic($file, 'course'),
                 'sort_order' => (int) $text->images()->max('sort_order') + 1,
             ]);
         }
@@ -100,7 +100,7 @@ class LessonContentController extends Controller
 
         if ($request->hasFile('audio_file')) {
             $this->deletePublic($audio->audio_path);
-            $audio->audio_path = $this->putPublic($request->file('audio_file'), 'lessons/audio');
+            $audio->audio_path = $this->putPublic($request->file('audio_file'), 'course');
             $audio->audio_url = null; // ek time pe ek hi source
         } elseif (! empty($data['audio_url'])) {
             $this->deletePublic($audio->audio_path);

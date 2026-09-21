@@ -151,3 +151,12 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Course editor: inputs card + tab panels me scrollbar hide (scroll kaam karega, bar nahi dikhega) */
+.no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}

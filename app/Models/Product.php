@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -15,6 +16,7 @@ class Product extends Model
 
     protected $fillable = [
         'creator_id',
+        'uuid',
         'type',
         'title',
         'slug',
@@ -49,6 +51,13 @@ class Product extends Model
         'revenue_total' => 'decimal:2',
         'published_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $product): void {
+            $product->uuid ??= (string) Str::uuid();
+        });
+    }
 
 
     public function creator()
@@ -89,6 +98,23 @@ class Product extends Model
     public function eventDetail()
     {
         return $this->hasOne(EventDetail::class, 'product_id');
+    }
+
+    /**
+     * Event product ke saare registrations (event_details ke through).
+     * Index table ke "Attendees" column ke count ke liye use hota hai —
+     * `withCount('eventRegistrations as registrations_count')`.
+     */
+    public function eventRegistrations()
+    {
+        return $this->hasManyThrough(
+            EventRegistration::class,
+            EventDetail::class,
+            'product_id', // event_details.product_id -> products.id
+            'event_id',   // event_registrations.event_id -> event_details.id
+            'id',
+            'id',
+        );
     }
 
     public function bookDetail()

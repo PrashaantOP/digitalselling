@@ -36,7 +36,7 @@ class DashboardController extends Controller
             'kyc' => $owner->kycVerification?->status === 'verified',
         ];
 
-        return Inertia::render('dashboard', [
+        return Inertia::render('Dashboard/Index', [
             'stats' => $stats,
             'profileCompletion' => [
                 'percent' => (int) round(count(array_filter($checklist)) / count($checklist) * 100),

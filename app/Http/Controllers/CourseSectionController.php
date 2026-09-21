@@ -36,6 +36,9 @@ class CourseSectionController extends Controller
     {
         $cfg = self::SECTIONS[$type] ?? abort(404);
 
+        $detail = $course->courseDetail;
+        abort_unless($detail, 422, 'Course details are missing for this product.');
+
         $rules = [
             'is_enabled' => ['sometimes', 'boolean'],
             'items' => ['present', 'array', 'max:50'],
@@ -51,7 +54,7 @@ class CourseSectionController extends Controller
 
         $data = $request->validate($rules);
 
-        $relation = $course->courseDetail->{$cfg['relation']}();
+        $relation = $detail->{$cfg['relation']}();
         $existing = $relation->get()->keyBy('id');
         $keep = [];
 
@@ -67,7 +70,7 @@ class CourseSectionController extends Controller
                     [$requestKey, $column] = $cfg['file'];
                     if ($request->hasFile("items.$i.$requestKey")) {
                         $this->deletePublic($model->{$column});
-                        $model->{$column} = $this->putPublic($request->file("items.$i.$requestKey"), 'course-sections');
+                        $model->{$column} = $this->putPublic($request->file("items.$i.$requestKey"), 'course');
                     } elseif (! empty($cfg['file_required']) && ! $model->{$column}) {
                         throw ValidationException::withMessages(["items.$i.$requestKey" => 'An image is required.']);
                     }
@@ -90,7 +93,7 @@ class CourseSectionController extends Controller
         });
 
         return $this->done($request, ucfirst($type) . ' saved.', [
-            'items' => $course->courseDetail->{$cfg['relation']}()->orderBy('sort_order')->get(),
+            'items' => $detail->{$cfg['relation']}()->orderBy('sort_order')->get(),
         ]);
     }
 }

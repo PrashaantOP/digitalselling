@@ -18,6 +18,8 @@ class CourseModuleController extends Controller
         $data = $request->validate(['title' => ['required', 'string', 'max:150']]);
 
         $detail = $course->courseDetail;
+        abort_unless($detail, 422, 'Course details are missing for this product.');
+
         $module = $detail->modules()->create([
             'title' => $data['title'],
             'sort_order' => (int) $detail->modules()->max('sort_order') + 1,

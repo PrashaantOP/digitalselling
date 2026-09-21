@@ -11,14 +11,16 @@ class CourseEnrollmentController extends Controller
 {
     public function index(Request $request, Product $course)
     {
+        abort_unless($course->courseDetail, 404);
+
         $enrollments = Enrollment::with('customer:id,name,email,phone')
             ->where('course_id', $course->courseDetail->id)
-            ->when($request->query('search'), fn ($q, $v) => $q->whereHas('customer', fn ($c) => $c
+            ->when($request->query('search'), fn($q, $v) => $q->whereHas('customer', fn($c) => $c
                 ->where('name', 'like', "%{$v}%")->orWhere('email', 'like', "%{$v}%")->orWhere('phone', 'like', "%{$v}%")))
             ->latest('created_at')->paginate(20)->withQueryString();
 
         return Inertia::render('Courses/Students', [
-            'course' => $course->only(['id', 'title', 'slug']),
+            'course' => $course->only(['id', 'uuid', 'title', 'slug']),
             'enrollments' => $enrollments,
             'filters' => $request->only('search'),
         ]);
@@ -34,9 +36,9 @@ class CourseEnrollmentController extends Controller
             'lessonProgress:id,enrollment_id,lesson_id,is_completed,completed_at',
             'quizAttempts.quiz:id,lesson_id,title',
             'assignmentSubmissions.assignment:id,lesson_id',
-            'course.product:id,title',
-            'course.modules' => fn ($q) => $q->orderBy('sort_order'),
-            'course.modules.lessons' => fn ($q) => $q->orderBy('sort_order'),
+            'course.product:id,uuid,title',
+            'course.modules' => fn($q) => $q->orderBy('sort_order'),
+            'course.modules.lessons' => fn($q) => $q->orderBy('sort_order'),
         ]);
 
         return Inertia::render('Courses/EnrollmentShow', ['enrollment' => $enrollment]);

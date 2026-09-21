@@ -27,7 +27,7 @@ class QuizQuestionController extends Controller
             $question = $quiz->questions()->create([
                 'question_text' => $data['question_text'],
                 'type' => $data['type'],
-                'question_image_path' => $request->hasFile('question_image') ? $this->putPublic($request->file('question_image'), 'quiz') : null,
+                'question_image_path' => $request->hasFile('question_image') ? $this->putPublic($request->file('question_image'), 'course') : null,
                 'sort_order' => (int) $quiz->questions()->max('sort_order') + 1,
             ]);
 
@@ -48,7 +48,7 @@ class QuizQuestionController extends Controller
 
             if ($request->hasFile('question_image')) {
                 $this->deletePublic($quizQuestion->question_image_path);
-                $attrs['question_image_path'] = $this->putPublic($request->file('question_image'), 'quiz');
+                $attrs['question_image_path'] = $this->putPublic($request->file('question_image'), 'course');
             } elseif ($request->boolean('remove_question_image')) {
                 $this->deletePublic($quizQuestion->question_image_path);
                 $attrs['question_image_path'] = null;
@@ -85,7 +85,7 @@ class QuizQuestionController extends Controller
             'options.*.image' => ['nullable', 'image', 'max:5120'],
         ]);
 
-        $correct = collect($data['options'])->filter(fn ($o) => ! empty($o['is_correct']))->count();
+        $correct = collect($data['options'])->filter(fn($o) => ! empty($o['is_correct']))->count();
 
         if ($correct < 1 || ($data['type'] === 'single_choice' && $correct !== 1)) {
             throw ValidationException::withMessages([
@@ -111,7 +111,7 @@ class QuizQuestionController extends Controller
 
             if ($request->hasFile("options.$i.image")) {
                 $this->deletePublic($model->option_image_path);
-                $model->option_image_path = $this->putPublic($request->file("options.$i.image"), 'quiz');
+                $model->option_image_path = $this->putPublic($request->file("options.$i.image"), 'course');
             }
 
             $model->save();

@@ -75,14 +75,48 @@ abstract class BaseProductController extends Controller
         return [];
     }
 
+    /**
+     * Index listing me extra withCount (subclass opt-in).
+     * e.g. EventController => ['eventRegistrations as registrations_count']
+     */
+    protected function listCounts(): array
+    {
+        return [];
+    }
+
     protected function afterStoreRedirect(Product $product): ?string
     {
-        return route($this->routeName() . '.edit', $product->id);
+        return route($this->routeName() . '.edit', $this->routeIdentifier($product));
+    }
+
+    /** Dashboard route identifier. Product types can opt into UUID URLs. */
+    protected function routeIdentifier(Product $product): int|string
+    {
+        return $product->id;
+    }
+
+    protected function routeIdentifierColumn(): string
+    {
+        return 'id';
     }
 
     protected function item(Request $request): Product
     {
-        return $request->route($this->param());
+        $item = $request->route($this->param());
+
+        // Route bindings normally provide the scoped Product model. When the
+        // route cache is active, however, a binding can occasionally arrive
+        // as its raw route value. Resolve it here as a safe fallback so edit,
+        // publish and update actions continue to work in both cases.
+        if ($item instanceof Product) {
+            return $item;
+        }
+
+        return Product::query()
+            ->where('creator_id', $this->tid())
+            ->where('type', $this->type())
+            ->where($this->routeIdentifierColumn(), $item)
+            ->firstOrFail();
     }
 
     // ------------------------------------------------------------------ actions
@@ -91,11 +125,16 @@ abstract class BaseProductController extends Controller
     {
         $base = Product::where('creator_id', $this->tid())->where('type', $this->type());
 
-        $items = (clone $base)
+        $query = (clone $base)
             ->when($request->query('status'), fn ($q, $v) => $q->where('status', $v))
             ->when($request->query('search'), fn ($q, $v) => $q->where('title', 'like', "%{$v}%"))
-            ->with(array_filter([$this->detailRelation()]))
-            ->latest()->paginate(12)->withQueryString();
+            ->with(array_filter([$this->detailRelation()]));
+
+        if ($counts = $this->listCounts()) {
+            $query->withCount($counts);
+        }
+
+        $items = $query->latest()->paginate(12)->withQueryString();
 
         return Inertia::render($this->view() . '/Index', [
             'items' => $items,
@@ -277,9 +316,13 @@ abstract class BaseProductController extends Controller
     protected function duplicateProduct(Product $source): Product
     {
         return DB::transaction(function () use ($source) {
-            $copy = $source->replicate(['sales_count', 'revenue_total', 'views_count', 'published_at']);
+            // NOTE: uuid ko replicate NAHI karna — products.uuid unique hai.
+            // Neeche naya uuid generate hota hai, warna duplicate save par
+            // "Duplicate entry ... for key 'products_uuid_unique'" aata hai.
+            $copy = $source->replicate(['uuid', 'sales_count', 'revenue_total', 'views_count', 'published_at']);
             $copy->title = Str::limit($source->title, 135, '') . ' (Copy)';
             $copy->slug = $this->uniqueSlug($copy->title);
+            $copy->uuid = (string) Str::uuid();
             $copy->status = 'draft';
             $copy->sales_count = 0;
             $copy->revenue_total = 0;

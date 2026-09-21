@@ -15,9 +15,32 @@ class CreatorProfileController extends Controller
 
     /** Storefront ke top-level routes se clash na ho. Auth module me registration pe bhi yahi list use karo. */
     public const RESERVED_USERNAMES = [
-        'dashboard', 'me', 'login', 'register', 'logout', 'otp', 'invite', 'book', 'c', 'e', 'b', 'l', 'p',
-        'settings', 'verify-email', 'email', 'confirm-password',
-        'checkout', 'webhooks', 'api', 'storage', 'admin', 'track', 'up', 'forgot-password', 'reset-password',
+        'dashboard',
+        'me',
+        'login',
+        'register',
+        'logout',
+        'otp',
+        'invite',
+        'book',
+        'c',
+        'e',
+        'b',
+        'l',
+        'p',
+        'settings',
+        'verify-email',
+        'email',
+        'confirm-password',
+        'checkout',
+        'webhooks',
+        'api',
+        'storage',
+        'admin',
+        'track',
+        'up',
+        'forgot-password',
+        'reset-password',
     ];
 
     public function edit()
@@ -38,7 +61,9 @@ class CreatorProfileController extends Controller
         // username sirf owner creator ka hota hai (public URL). Phone yahan change nahi hota — OTP re-verify chahiye (Auth module).
         if ($user->isCreator()) {
             $rules['username'] = [
-                'required', 'regex:/^[a-z0-9_.\-]{3,30}$/', Rule::notIn(self::RESERVED_USERNAMES),
+                'required',
+                'regex:/^[a-z0-9_.\-]{3,30}$/',
+                Rule::notIn(self::RESERVED_USERNAMES),
                 Rule::unique('users', 'username')->ignore($user->id),
             ];
         }
@@ -47,7 +72,7 @@ class CreatorProfileController extends Controller
 
         if ($request->hasFile('avatar')) {
             $this->deletePublic($user->avatar);
-            $data['avatar'] = $request->file('avatar')->store("avatars/{$user->id}", 'public');
+            $data['avatar'] = $this->putPublic($request->file('avatar'), 'profile', $user->id);
         } else {
             unset($data['avatar']);
         }

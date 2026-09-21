@@ -29,8 +29,12 @@ class ProductCoverImageController extends Controller
 
         $order = (int) $product->coverImages()->max('sort_order');
 
-        $created = collect($request->file('images'))->map(fn ($img) => $product->coverImages()->create([
-            'image_path' => $this->putPublic($img, 'covers'),
+        $created = collect($request->file('images'))->map(fn($img) => $product->coverImages()->create([
+            'image_path' => $this->putPublic($img, match ($product->type) {
+                'course' => 'course',
+                'event' => 'events',
+                default => str_replace('_', '-', $product->type),
+            }, $product->creator_id),
             'sort_order' => ++$order,
         ]));
 

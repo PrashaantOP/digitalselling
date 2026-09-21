@@ -15,6 +15,16 @@ class EventController extends BaseProductController
     protected function detailModel(): ?string { return EventDetail::class; }
     protected function detailRelation(): ?string { return 'eventDetail'; }
 
+    protected function routeIdentifier(Product $product): int|string
+    {
+        return $product->uuid;
+    }
+
+    protected function routeIdentifierColumn(): string
+    {
+        return 'uuid';
+    }
+
     // event_details.starts_at NOT NULL hai
     protected function detailDefaults(): array
     {
@@ -30,6 +40,16 @@ class EventController extends BaseProductController
             'join_link' => ['nullable', 'url', 'max:500'],
             'venue_address' => ['nullable', 'string', 'max:255'],
         ];
+    }
+
+    /**
+     * `products` table me registrations ka koi column nahi hai, isliye
+     * event_details ke through registrations count karke Events/Index ke
+     * "Attendees" column (registrations_count) ko bharte hain.
+     */
+    protected function listCounts(): array
+    {
+        return ['eventRegistrations as registrations_count'];
     }
 
     protected function publishProblems(Product $product): array

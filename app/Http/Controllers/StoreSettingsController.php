@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\RespondsFlexibly;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -23,7 +24,10 @@ class StoreSettingsController extends Controller
 
     public function update(Request $request)
     {
+        $store = StoreController::storeFor($this->tid());
+
         $data = $request->validate([
+            'username' => ['sometimes', 'required', 'string', 'max:30', 'regex:/^[a-z0-9]+$/', Rule::unique('stores', 'username')->ignore($store->id), Rule::unique('users', 'username')->ignore($store->user_id)],
             'column_layout' => ['required', Rule::in(['single', 'double'])],
             'sensitive_content_warning' => ['sometimes', 'boolean'],
             'meta_title' => ['nullable', 'string', 'max:70'],
@@ -32,8 +36,13 @@ class StoreSettingsController extends Controller
             'ga_tracking_id' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $store = StoreController::storeFor($this->tid());
-        $store->update($data);
+        DB::transaction(function () use ($store, $data) {
+            $user = $store->user;
+            if ($user && array_key_exists('username', $data)) {
+                $user->update(['username' => $data['username']]);
+            }
+            $store->update($data);
+        });
 
         return $this->done($request, 'Settings saved.', ['store' => $store->fresh()]);
     }

@@ -33,15 +33,21 @@ use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
 
 // ---- Products (type-wise) ----
-$product = fn (?string $type) => function ($value) use ($type) {
-    return Product::where('creator_id', Tenant::id())
-        ->when($type, fn ($q) => $q->where('type', $type))
-        ->findOrFail($value);
+$product = fn (?string $type, ?string $column = null) => function ($value) use ($type, $column) {
+    $q = Product::where('creator_id', Tenant::id())
+        ->when($type, fn ($q) => $q->where('type', $type));
+
+    // uuid wale types (event/course) guess-proof URLs dete hain, baaki id par hain
+    if ($column === 'uuid') {
+        return $q->where('uuid', $value)->firstOrFail();
+    }
+
+    return $q->findOrFail($value);
 };
 
 Route::bind('product', $product(null));
-Route::bind('course', $product('course'));
-Route::bind('event', $product('event'));
+Route::bind('course', $product('course', 'uuid'));
+Route::bind('event', fn ($value) => Product::where('creator_id', Tenant::id())->where('type', 'event')->where('uuid', $value)->firstOrFail());
 Route::bind('book', $product('book'));
 Route::bind('lockedContent', $product('locked_content'));
 Route::bind('paymentPage', $product('payment_page'));

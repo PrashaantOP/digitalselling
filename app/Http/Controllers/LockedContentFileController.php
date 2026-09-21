@@ -24,7 +24,7 @@ class LockedContentFileController extends Controller
 
         $detail = LockedContentDetail::firstOrCreate(['product_id' => $lockedContent->id], ['category' => 'other']);
 
-        $created = collect($request->file('files'))->map(fn ($file) => $detail->files()->create([
+        $created = collect($request->file('files'))->map(fn($file) => $detail->files()->create([
             'file_path' => $this->putPrivate($file, 'locked'),
             'original_name' => $file->getClientOriginalName(),
         ]));
@@ -47,8 +47,8 @@ class LockedContentFileController extends Controller
         $detail = LockedContentDetail::firstOrCreate(['product_id' => $lockedContent->id], ['category' => 'other']);
         $order = (int) $detail->images()->max('sort_order');
 
-        $created = collect($request->file('images'))->map(fn ($img) => $detail->images()->create([
-            'image_path' => $this->putPublic($img, 'locked-teasers'),
+        $created = collect($request->file('images'))->map(fn($img) => $detail->images()->create([
+            'image_path' => $this->putPublic($img, 'locked-content'),
             'sort_order' => ++$order,
         ]));
 

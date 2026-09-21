@@ -19,6 +19,17 @@ class CourseController extends BaseProductController
     protected function detailModel(): ?string { return CourseDetail::class; }
     protected function detailRelation(): ?string { return 'courseDetail'; }
 
+    /** Events ki tarah dashboard URLs me id ki jagah uuid (secure, guess nahi hoga). */
+    protected function routeIdentifier(Product $product): int|string
+    {
+        return $product->uuid;
+    }
+
+    protected function routeIdentifierColumn(): string
+    {
+        return 'uuid';
+    }
+
     protected function detailRules(Product $product): array
     {
         return [

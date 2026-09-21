@@ -24,6 +24,8 @@ class LiveClassController extends Controller
 
     public function store(Request $request, Product $course)
     {
+        abort_unless($course->courseDetail, 422, 'Course details are missing for this product.');
+
         $liveClass = $course->courseDetail->liveClasses()->create($request->validate($this->rules()));
 
         return $this->done($request, 'Live class scheduled.', ['liveClass' => $liveClass], null, 201);

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -56,6 +57,23 @@ class User extends Authenticatable
     public function isSuperAdmin(): bool
     {
         return $this->role === 'super_admin';
+    }
+
+    public static function uniqueUsername(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::lower(Str::slug($name)) ?: 'creator';
+        $base = Str::limit($base, 24, '');
+        if (in_array($base, ['dashboard', 'login', 'register', 'logout', 'settings', 'checkout', 'admin', 'api', 'storage'], true)) {
+            $base .= '-creator';
+        }
+        $username = $base;
+        $suffix = 1;
+
+        while (self::where('username', $username)->when($ignoreId, fn($q) => $q->whereKeyNot($ignoreId))->exists()) {
+            $username = Str::limit($base, 24, '') . '-' . $suffix++;
+        }
+
+        return $username;
     }
 
     // ---- relationships ----

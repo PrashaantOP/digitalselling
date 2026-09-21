@@ -1,182 +1,55 @@
-import { ProductTypeBadge } from '@/components/status-badges';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/utils';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { CreditCard, Eye, Package, ShoppingBag, TrendingUp } from 'lucide-react';
+import { type BreadcrumbItem, type SharedData } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { ArrowRight, Banknote, BookOpen, CalendarDays, Check, CircleDollarSign, CreditCard, Eye, FileLock2, GraduationCap, Lightbulb, Rocket, ShoppingBag, Sparkles, Store, UserRound, Users } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Overview', href: '/dashboard' }];
+interface OrderProduct { id: number; title: string; type: string }
+interface RecentOrder { id: number; order_number: string; buyer_name: string | null; total_amount: string | number; paid_at: string | null; product: OrderProduct | null }
+interface ProfileCompletion { percent: number; items: { store_profile: boolean; first_product: boolean; payout_method: boolean; kyc: boolean } }
+interface DashboardProps { stats: { visits: number; sales: number; revenue: number }; profileCompletion: ProfileCompletion; recentOrders: RecentOrder[] }
 
-interface OrderProduct {
-    id: number;
-    title: string;
-    type: string;
-}
-
-interface RecentOrder {
-    id: number;
-    order_number: string;
-    product_id: number;
-    buyer_name: string | null;
-    total_amount: string | number; // Eloquent decimal cast serializes as a numeric string
-    paid_at: string | null;
-    product: OrderProduct | null;
-}
-
-interface ProfileCompletion {
-    percent: number;
-    items: {
-        store_profile: boolean;
-        first_product: boolean;
-        payout_method: boolean;
-        kyc: boolean;
-    };
-}
-
-interface DashboardProps {
-    stats: {
-        visits: number;
-        sales: number;
-        revenue: number;
-    };
-    profileCompletion: ProfileCompletion;
-    recentOrders: RecentOrder[];
-}
-
-const CHECKLIST_LABELS: Record<keyof ProfileCompletion['items'], string> = {
-    store_profile: 'Add your store bio and avatar',
-    first_product: 'Create your first product',
-    payout_method: 'Add a payout method',
-    kyc: 'Complete KYC verification',
-};
-
-function formatDate(value: string | null) {
-    if (!value) return '—';
-    return new Date(value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-}
+const checklist = [
+    { key: 'store_profile', label: 'Store profile', description: 'Add your bio & avatar', href: '/dashboard/store' },
+    { key: 'first_product', label: 'First product', description: 'Start selling today', href: '/dashboard/products' },
+    { key: 'payout_method', label: 'Payout method', description: 'Bank account or UPI', href: '/dashboard/payments/account' },
+    { key: 'kyc', label: 'Creator KYC', description: 'Verify PAN & Aadhaar', href: '/dashboard/payments/account/kyc' },
+] as const;
+const sellingOptions = [
+    { title: 'Sell digital products', description: 'PDFs, guides, templates, ZIP packages & Notion pages', action: 'Create e-book', href: '/dashboard/books', icon: BookOpen, tone: 'bg-amber-100 text-amber-700' },
+    { title: 'Offer 1:1 sessions', description: 'Paid calls and mentorship with calendar availability', action: 'Create booking', href: '/dashboard/bookings/sessions', icon: CalendarDays, tone: 'bg-sky-100 text-sky-700' },
+    { title: 'Launch a course', description: 'Video cohorts or self-paced lessons for your audience', action: 'Create course', href: '/dashboard/courses', icon: GraduationCap, tone: 'bg-indigo-100 text-indigo-700' },
+    { title: 'Host an event', description: 'Workshops, masterclasses and ticketed live sessions', action: 'Create event', href: '/dashboard/events', icon: Users, tone: 'bg-orange-100 text-orange-700' },
+    { title: 'Lock content', description: 'Monetize exclusive links, files, audio and resources', action: 'Create link', href: '/dashboard/locked-content', icon: FileLock2, tone: 'bg-violet-100 text-violet-700' },
+    { title: 'Take any payment', description: 'Custom payment links with fast UPI checkout', action: 'Create page', href: '/dashboard/payment-pages', icon: CreditCard, tone: 'bg-teal-100 text-teal-700' },
+];
+function formatDate(value: string | null) { return value ? new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(value)) : 'Just now'; }
 
 export default function DashboardIndex({ stats, profileCompletion, recentOrders }: DashboardProps) {
-    const kpis = [
-        { label: "This Week's Revenue", value: formatCurrency(stats.revenue), icon: ShoppingBag },
-        { label: "This Week's Sales", value: stats.sales.toLocaleString('en-IN'), icon: Package },
-        { label: 'Store Visits', value: stats.visits.toLocaleString('en-IN'), icon: TrendingUp },
-    ];
-
-    const pendingChecklist = (Object.entries(profileCompletion.items) as [keyof ProfileCompletion['items'], boolean][]).filter(
-        ([, done]) => !done,
-    );
-
-    return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-                {/* Welcome header */}
-                <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">Good day 👋</h1>
-                        <p className="text-muted-foreground mt-1 text-sm">Here's what's happening with your digital business this week.</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Button variant="outline" asChild>
-                            <Link href="/dashboard/store">
-                                <Eye /> View Store
-                            </Link>
-                        </Button>
-                        <Button asChild>
-                            <Link href="/dashboard/products">
-                                <Package /> Create Product
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Profile completion nudge */}
-                {profileCompletion.percent < 100 && (
-                    <Card className="border-primary/20 bg-primary/5">
-                        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <p className="font-semibold">Complete your profile to start selling ({profileCompletion.percent}%)</p>
-                                <ul className="text-muted-foreground mt-2 space-y-1 text-sm">
-                                    {pendingChecklist.map(([key]) => (
-                                        <li key={key} className="flex items-center gap-2">
-                                            <span className="border-muted-foreground/50 size-3.5 shrink-0 rounded-full border" />
-                                            {CHECKLIST_LABELS[key]}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                            <Button asChild>
-                                <Link href="/dashboard/settings/profile">Complete profile</Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* KPI cards */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    {kpis.map((kpi) => (
-                        <Card key={kpi.label}>
-                            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                <CardTitle className="text-muted-foreground text-sm font-medium">{kpi.label}</CardTitle>
-                                <div className="bg-primary/10 text-primary flex size-9 items-center justify-center rounded-xl">
-                                    <kpi.icon className="size-4" />
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <span className="text-2xl font-bold tracking-tight">{kpi.value}</span>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-
-                {/* Recent orders */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Recent Orders</CardTitle>
-                        <p className="text-muted-foreground mt-0.5 text-sm">Latest successful payments this week</p>
-                    </CardHeader>
-                    <CardContent>
-                        {recentOrders.length === 0 ? (
-                            <div className="text-muted-foreground flex flex-col items-center gap-2 py-10 text-center text-sm">
-                                <CreditCard className="size-8" />
-                                No orders yet — once you make a sale, it'll show up here.
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm">
-                                    <thead>
-                                        <tr className="text-muted-foreground border-b text-xs tracking-wide uppercase">
-                                            <th className="py-2.5 pr-3 font-semibold">Order</th>
-                                            <th className="py-2.5 pr-3 font-semibold">Buyer</th>
-                                            <th className="py-2.5 pr-3 font-semibold">Product</th>
-                                            <th className="py-2.5 pr-3 text-right font-semibold">Amount</th>
-                                            <th className="py-2.5 font-semibold">Paid At</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {recentOrders.map((order) => (
-                                            <tr key={order.id} className="hover:bg-muted/40 border-b last:border-0">
-                                                <td className="text-primary py-3 pr-3 font-medium whitespace-nowrap">#{order.order_number}</td>
-                                                <td className="py-3 pr-3">{order.buyer_name ?? 'Anonymous'}</td>
-                                                <td className="py-3 pr-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="max-w-[180px] truncate">{order.product?.title ?? 'Deleted product'}</span>
-                                                        {order.product && <ProductTypeBadge type={order.product.type} />}
-                                                    </div>
-                                                </td>
-                                                <td className="py-3 pr-3 text-right font-semibold">{formatCurrency(Number(order.total_amount))}</td>
-                                                <td className="text-muted-foreground py-3 whitespace-nowrap">{formatDate(order.paid_at)}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
-        </AppLayout>
-    );
+    const { auth } = usePage<SharedData>().props;
+    const firstName = auth.user.name.trim().split(/\s+/)[0] || 'there';
+    const completedCount = Object.values(profileCompletion.items).filter(Boolean).length;
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    return <AppLayout breadcrumbs={breadcrumbs}>
+        <Head title="Dashboard" />
+        <main className="min-h-full bg-[#F6F5F2] text-[#14141B] mx-auto w-full max-w-7xl space-y-6 p-4 md:p-8">
+            <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="text-sm font-medium text-primary">Creator dashboard</p><h1 className="mt-1 text-2xl font-bold tracking-tight md:text-3xl">{greeting}, {firstName} <span aria-hidden="true">👋</span></h1><p className="mt-1 text-sm text-muted-foreground md:text-base">Everything you need to grow, sell and succeed.</p></div><div className="inline-flex w-fit items-center gap-2 rounded-full border bg-background px-3 py-2 text-xs font-semibold shadow-sm"><CalendarDays className="size-3.5 text-muted-foreground" />This week</div></section>
+            <div className="grid items-start gap-6 xl:grid-cols-12"><div className="space-y-6 xl:col-span-8">
+                <section><div className="mb-3 flex items-center justify-between"><h2 className="font-semibold">Quick start</h2><span className="text-xs text-muted-foreground">{completedCount} of 4 steps completed</span></div><div className="grid gap-3 sm:grid-cols-3">{[
+                    { title: 'Create your store', description: 'Set up your online store & branding', href: '/dashboard/store', icon: Store, tone: 'bg-indigo-100 text-indigo-700' },
+                    { title: 'Edit profile', description: 'Manage your creator details & bio', href: '/dashboard/settings/profile', icon: UserRound, tone: 'bg-sky-100 text-sky-700' },
+                    { title: 'Refer & earn', description: 'Invite creators, earn cash rewards', href: '/dashboard/refer-earn', icon: Sparkles, tone: 'bg-orange-100 text-orange-700' },
+                ].map(item => <Link key={item.title} href={item.href} className="group rounded-xl border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"><div className="flex items-start justify-between"><span className={`flex size-10 items-center justify-center rounded-lg ${item.tone}`}><item.icon className="size-5" /></span><ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" /></div><h3 className="mt-6 text-sm font-semibold group-hover:text-primary">{item.title}</h3><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.description}</p></Link>)}</div></section>
+                <section className="rounded-xl border bg-card p-5 shadow-sm"><div className="mb-4 flex items-center justify-between border-b pb-3"><div><h2 className="font-semibold">This week overview</h2><p className="mt-0.5 text-xs text-muted-foreground">Real-time stats</p></div><span className="flex items-center gap-1.5 text-xs text-emerald-600"><span className="size-2 rounded-full bg-emerald-500" />Live tracking</span></div><div className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">{[{ label: 'Store visits', value: stats.visits.toLocaleString('en-IN'), icon: Eye }, { label: 'Sales', value: stats.sales.toLocaleString('en-IN'), icon: ShoppingBag }, { label: 'Total revenue', value: formatCurrency(stats.revenue), icon: CircleDollarSign }].map(item => <div key={item.label} className="py-4 first:pt-0 last:pb-0 sm:px-5 sm:py-0 sm:first:pl-0 sm:last:pr-0"><div className="flex items-center justify-between text-xs text-muted-foreground"><span>{item.label}</span><item.icon className="size-4" /></div><p className="mt-2 text-3xl font-bold tracking-tight">{item.value}</p><p className="mt-1 text-xs text-muted-foreground">This week</p></div>)}</div></section>
+                {profileCompletion.percent < 100 && <section className="rounded-xl border border-amber-200 bg-amber-50/70 p-5 shadow-sm dark:border-amber-900 dark:bg-amber-950/20"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div className="flex gap-3"><div className="flex size-12 shrink-0 items-center justify-center rounded-full border-4 border-amber-200 bg-background text-xs font-bold text-amber-700">{profileCompletion.percent}%</div><div><h2 className="font-semibold text-amber-950 dark:text-amber-100">Complete your profile to start selling</h2><p className="mt-1 text-xs leading-relaxed text-amber-800 dark:text-amber-200">Complete the essentials so buyers know who they&apos;re paying.</p></div></div><Link href="/dashboard/settings/profile" className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-700">Complete profile <ArrowRight className="size-3.5" /></Link></div><div className="mt-4 grid gap-2 border-t border-amber-200/70 pt-4 sm:grid-cols-2 lg:grid-cols-4">{checklist.map((item, index) => { const done = profileCompletion.items[item.key]; return <Link href={item.href} key={item.key} className={`flex items-center gap-2 rounded-lg border p-2.5 transition hover:bg-background ${done ? 'border-emerald-200 bg-background/70' : 'border-amber-200 bg-background/40'}`}><span className={`flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${done ? 'bg-emerald-500 text-white' : 'border border-amber-500 text-amber-700'}`}>{done ? <Check className="size-3" /> : index + 1}</span><span className="min-w-0"><span className="block truncate text-xs font-semibold">{item.label}</span><span className="block truncate text-[10px] text-muted-foreground">{done ? 'Done' : item.description}</span></span></Link>; })}</div></section>}
+                <section><div className="mb-3"><h2 className="font-semibold">Start selling</h2><p className="mt-1 text-xs text-muted-foreground">Choose a product format to launch in less than 2 minutes.</p></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{sellingOptions.map(item => <Link key={item.title} href={item.href} className="group flex min-h-48 flex-col rounded-xl border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"><span className={`flex size-10 items-center justify-center rounded-lg ${item.tone}`}><item.icon className="size-5" /></span><h3 className="mt-4 text-sm font-semibold">{item.title}</h3><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.description}</p><span className="mt-auto inline-flex items-center gap-1 pt-4 text-xs font-semibold text-primary">{item.action}<ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span></Link>)}</div></section>
+            </div><aside className="space-y-6 xl:sticky xl:top-6 xl:col-span-4">
+                <section className="rounded-xl border-2 border-orange-200 bg-gradient-to-b from-card to-orange-50 p-5 shadow-sm dark:border-orange-900 dark:to-orange-950/20"><span className="inline-flex items-center gap-1 rounded-full bg-orange-500 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white"><Rocket className="size-3" />Pro membership</span><h2 className="mt-4 text-lg font-bold">Level up your business</h2><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Remove platform fees and unlock more tools for your creator brand.</p><ul className="my-5 space-y-2.5 text-xs">{['0% platform fee on all sales', 'Connect your custom domain', 'Automated WhatsApp reminders', 'Priority phone support'].map(benefit => <li key={benefit} className="flex gap-2"><span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600"><Check className="size-2.5" /></span>{benefit}</li>)}</ul><Link href="/dashboard/settings/billing" className="flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-orange-500 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-600">Explore Pro features <ArrowRight className="size-3.5" /></Link></section>
+                <section className="rounded-xl border bg-card p-5 shadow-sm"><div className="mb-4 flex items-center justify-between border-b pb-3"><h2 className="font-semibold">Recent activity</h2><span className="text-[11px] text-muted-foreground">Latest sales</span></div>{recentOrders.length === 0 ? <div className="flex flex-col items-center py-7 text-center"><span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary"><ShoppingBag className="size-5" /></span><h3 className="mt-3 text-sm font-semibold">No orders yet</h3><p className="mt-1 max-w-56 text-xs leading-relaxed text-muted-foreground">Once you make a sale, it&apos;ll show up here with buyer and settlement details.</p><Link href="/dashboard/products" className="mt-4 text-xs font-semibold text-primary">Create your first product <ArrowRight className="inline size-3" /></Link></div> : <div className="space-y-3">{recentOrders.slice(0, 5).map(order => <div key={order.id} className="flex items-start gap-3"><span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><Banknote className="size-4" /></span><div className="min-w-0 flex-1"><div className="flex justify-between gap-2"><p className="truncate text-xs font-semibold">{order.buyer_name ?? 'Anonymous'}</p><p className="whitespace-nowrap text-xs font-semibold">{formatCurrency(Number(order.total_amount))}</p></div><p className="mt-0.5 truncate text-[11px] text-muted-foreground">{order.product?.title ?? 'Product'} {order.product && <span className="ml-1 rounded-full bg-[#EEF0FF] px-1.5 py-0.5 text-[9px] font-semibold capitalize text-[#4F46E5]">{order.product.type.replace('_', ' ')}</span>}</p><p className="mt-0.5 text-[10px] text-muted-foreground">{formatDate(order.paid_at)}</p></div></div>)}</div>}</section>
+                <section className="flex gap-3 rounded-xl border bg-muted/50 p-4 text-xs leading-relaxed text-muted-foreground"><Lightbulb className="size-5 shrink-0 text-amber-500" /><p><strong className="block text-foreground">Pro tip for Indian creators</strong>UPI checkouts convert especially well. Your store supports fast, familiar payment methods.</p></section>
+            </aside></div>
+        </main>
+    </AppLayout>;
 }

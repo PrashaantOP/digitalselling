@@ -27,11 +27,16 @@ class StoreAppearanceController extends Controller
     {
         $data = $request->validate([
             'theme' => ['required', Rule::in(['classic', 'ocean', 'sunset', 'forest', 'mono', 'paper'])],
-            'brand_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'brand_color' => ['nullable', 'regex:/^#?[0-9A-Fa-f]{6}$/'],
             'font_family' => ['nullable', 'string', 'max:50'],
             'custom_background' => ['nullable', 'image', 'max:5120'],
             'remove_background' => ['sometimes', 'boolean'],
         ]);
+
+        // Color ko hamesha '#' prefix ke saath store karte hain (DB default ke saath consistent).
+        if (! empty($data['brand_color'])) {
+            $data['brand_color'] = '#' . ltrim($data['brand_color'], '#');
+        }
 
         $store = StoreController::storeFor($this->tid());
         $appearance = StoreAppearance::firstOrNew(['store_id' => $store->id]);
