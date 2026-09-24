@@ -133,6 +133,12 @@ abstract class BaseProductController extends Controller
         return [];
     }
 
+    /** Index listing ke eager-loads (subclass detail ke saath counts wagaira jod sakti hai). */
+    protected function listRelations(): array
+    {
+        return array_filter([$this->detailRelation()]);
+    }
+
     protected function afterStoreRedirect(Product $product): ?string
     {
         return route($this->routeName() . '.edit', $this->routeIdentifier($product));
@@ -177,7 +183,7 @@ abstract class BaseProductController extends Controller
         $query = (clone $base)
             ->when($request->query('status'), fn($q, $v) => $q->where('status', $v))
             ->when($request->query('search'), fn($q, $v) => $q->where('title', 'like', "%{$v}%"))
-            ->with(array_filter([$this->detailRelation()]));
+            ->with($this->listRelations());
 
         if ($counts = $this->listCounts()) {
             $query->withCount($counts);

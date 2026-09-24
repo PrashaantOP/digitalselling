@@ -219,6 +219,8 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
 
         Route::post('locked-content/{lockedContent}/files', [LockedContentFileController::class, 'store'])->name('locked-content.files.store')->middleware('perm:locked-content.edit');
         Route::delete('locked-content-files/{lockedContentFile}', [LockedContentFileController::class, 'destroy'])->name('locked-content.files.destroy')->middleware('perm:locked-content.edit');
+        // hidden images private disk pe hain — editor thumbnails yahin se aate hain
+        Route::get('locked-content-images/{lockedContentImage}', [LockedContentFileController::class, 'showImage'])->name('locked-content.images.show')->middleware('perm:locked-content.view');
         Route::post('locked-content/{lockedContent}/images', [LockedContentFileController::class, 'storeImage'])->name('locked-content.images.store')->middleware('perm:locked-content.edit');
         Route::delete('locked-content-images/{lockedContentImage}', [LockedContentFileController::class, 'destroyImage'])->name('locked-content.images.destroy')->middleware('perm:locked-content.edit');
     });

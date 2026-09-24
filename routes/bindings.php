@@ -37,7 +37,7 @@ $product = fn (?string $type, ?string $column = null) => function ($value) use (
     $q = Product::where('creator_id', Tenant::id())
         ->when($type, fn ($q) => $q->where('type', $type));
 
-    // uuid wale types (event/course/book) guess-proof URLs dete hain, baaki id par hain
+    // uuid wale types (event/course/book/locked_content) guess-proof URLs dete hain, baaki id par hain
     if ($column === 'uuid') {
         return $q->where('uuid', $value)->firstOrFail();
     }
@@ -49,7 +49,7 @@ Route::bind('product', $product(null));
 Route::bind('course', $product('course', 'uuid'));
 Route::bind('event', fn ($value) => Product::where('creator_id', Tenant::id())->where('type', 'event')->where('uuid', $value)->firstOrFail());
 Route::bind('book', $product('book', 'uuid'));
-Route::bind('lockedContent', $product('locked_content'));
+Route::bind('lockedContent', $product('locked_content', 'uuid'));
 Route::bind('paymentPage', $product('payment_page'));
 Route::bind('service', $product('booking'));
 
