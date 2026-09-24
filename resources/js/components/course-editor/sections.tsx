@@ -44,7 +44,9 @@ export function draftFromDetail(type: SectionType, detail: CourseDetail | null):
         if (type === 'gallery') return { ...base, imagePath: (r.image_path as string | null) ?? null };
         return { ...base, text: String(r.text ?? '') };
     });
-    return { enabled: rows.length > 0 && rows.some((r) => r.is_enabled), items };
+    const enabledSections = (d.optional_sections ?? {}) as Record<string, unknown>;
+    const hasSavedToggle = Object.prototype.hasOwnProperty.call(enabledSections, type);
+    return { enabled: hasSavedToggle ? Boolean(enabledSections[type]) : rows.length > 0 && rows.some((r) => r.is_enabled), items };
 }
 
 export function draftsFromDetail(detail: CourseDetail | null): Drafts {

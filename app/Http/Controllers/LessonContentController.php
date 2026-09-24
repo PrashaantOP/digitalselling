@@ -13,6 +13,7 @@ use App\Models\LessonTextContent;
 use App\Models\LessonTextImage;
 use App\Models\LessonVideo;
 use App\Models\Quiz;
+use App\Support\Html;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -71,7 +72,7 @@ class LessonContentController extends Controller
             'remove_image_ids.*' => ['integer'],
         ]);
 
-        $text = LessonTextContent::updateOrCreate(['lesson_id' => $lesson->id], ['content' => $data['content'] ?? '']);
+        $text = LessonTextContent::updateOrCreate(['lesson_id' => $lesson->id], ['content' => Html::sanitize($data['content'] ?? '')]);
 
         foreach ($text->images()->whereIn('id', $data['remove_image_ids'] ?? [])->get() as $img) {
             $this->deletePublic($img->image_path);

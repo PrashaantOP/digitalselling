@@ -44,13 +44,29 @@ abstract class BaseProductCheckoutController extends Controller
 
         return Inertia::render('Public/' . $this->view(), [
             'product' => $product->only([
-                'id', 'type', 'title', 'slug', 'description', 'cover_type', 'cover_video_url', 'pricing_type', 'price',
-                'has_discount', 'discounted_price', 'button_text', 'theme', 'accent_color',
-                'terms_and_conditions', 'refund_policy', 'privacy_policy', 'fb_pixel_id', 'ga_tracking_id',
+                'id',
+                'type',
+                'title',
+                'slug',
+                'description',
+                'cover_type',
+                'cover_video_url',
+                'pricing_type',
+                'price',
+                'has_discount',
+                'discounted_price',
+                'button_text',
+                'theme',
+                'accent_color',
+                'terms_and_conditions',
+                'refund_policy',
+                'privacy_policy',
+                'fb_pixel_id',
+                'ga_tracking_id',
             ]) + [
                 'cover_images' => $product->coverImages->sortBy('sort_order')->pluck('image_path')->values(),
-                'checkout_questions' => $product->checkoutQuestions->sortBy('sort_order')->values()->map->only(['id', 'label', 'field_type', 'options', 'is_required']),
-                'addons' => $product->addons->pluck('addonProduct')->filter(fn ($p) => $p && $p->status === 'published')->values()
+                'checkout_questions' => $product->checkoutQuestions->where('is_enabled', true)->sortBy('sort_order')->values()->map->only(['id', 'label', 'field_type', 'options', 'is_required', 'is_enabled']),
+                'addons' => $product->addons->pluck('addonProduct')->filter(fn($p) => $p && $p->status === 'published')->values()
                     ->map->only(['id', 'title', 'type', 'pricing_type', 'price', 'has_discount', 'discounted_price']),
             ] + $this->extra($product),
             'creator' => $product->creator->only(['name', 'username', 'avatar']),

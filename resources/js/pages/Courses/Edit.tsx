@@ -51,7 +51,7 @@ function validateForm(f: FormState): Record<string, string> {
     return e;
 }
 
-export default function CourseEdit({ item: rawItem }: { item: CourseItem; publicUrl: string }) {
+export default function CourseEdit({ item: rawItem, publicUrl }: { item: CourseItem; publicUrl: string }) {
     const item = normalizeItem(rawItem);
     const [tab, setTab] = useState<Tab>('page');
     const [form, setForm] = useState<FormState>(() => toFormState(item));
@@ -77,13 +77,15 @@ export default function CourseEdit({ item: rawItem }: { item: CourseItem; public
 
     // a section was saved → the server sent fresh rows (with ids); adopt them as the new baseline
     useEffect(() => {
-        if (resetQueue.current.size === 0) return;
+        // Do not consume the queue while the request is still in flight. Inertia
+        // can render the old props during the save, which would undo the toggle.
+        if (saving || resetQueue.current.size === 0) return;
         const fresh = draftsFromDetail(item.course_detail);
         const types = [...resetQueue.current];
         resetQueue.current.clear();
         setDrafts((d) => Object.fromEntries(SECTION_ORDER.map((t) => [t, types.includes(t) ? fresh[t] : d[t]])) as Drafts);
         setDraftBase((b) => Object.fromEntries(SECTION_ORDER.map((t) => [t, types.includes(t) ? draftSignature(fresh[t]) : b[t]])) as Record<SectionType, string>);
-    }, [item]);
+    }, [item, saving]);
 
     useEffect(() => {
         if (!dirty) return;
@@ -111,18 +113,20 @@ export default function CourseEdit({ item: rawItem }: { item: CourseItem; public
     }
 
     /** Saves the main form + every changed optional section. Lesson/coupon/question edits save on their own. */
-    async function saveAll(): Promise<boolean> {
+    async function saveAll(silent = false): Promise<boolean> {
         setBanner(null);
 
         if (formDirty) {
             const problems = validateForm(form);
             if (Object.keys(problems).length) {
+                if (silent) return false;
                 showErrors(problems);
                 return false;
             }
         }
         const badSection = dirtySections.map((t) => sectionError(t, drafts[t])).find(Boolean);
         if (badSection) {
+            if (silent) return false;
             setTab('page');
             setBanner({ kind: 'error', text: badSection });
             return false;
@@ -145,7 +149,8 @@ export default function CourseEdit({ item: rawItem }: { item: CourseItem; public
         }
 
         if (ok) {
-            for (const type of dirtySections) {
+            const sectionsToSave = silent ? dirtySections.filter((t) => !sectionError(t, drafts[t])) : dirtySections;
+            for (const type of sectionsToSave) {
                 const { data, hasFiles } = draftPayload(type, drafts[type]);
                 resetQueue.current.add(type);
                 const res = await send('put', `/dashboard/courses/${item.uuid}/sections/${type}`, data, hasFiles);
@@ -173,7 +178,7 @@ export default function CourseEdit({ item: rawItem }: { item: CourseItem; public
         if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
 
         autoSaveTimer.current = setTimeout(() => {
-            void saveAll();
+            void saveAll(true);
         }, 900);
 
         return () => {
@@ -192,7 +197,10 @@ export default function CourseEdit({ item: rawItem }: { item: CourseItem; public
         if (publish && !(await saveAll())) return setPublishing(false);
         const res = await send('post', `/dashboard/courses/${item.uuid}/publish`, { status: publish ? 'published' : 'unpublished' });
         setPublishing(false);
-        if (res.ok) setBanner({ kind: 'success', text: publish ? 'Your course is live.' : 'Course unpublished.', link: publish ? `${window.location.origin}/c/${form.slug}` : undefined });
+        if (res.ok) {
+            const liveUrl = publicUrl.replace(/\/[^/]*$/, `/${form.slug}`);
+            setBanner({ kind: 'success', text: publish ? 'Your course is live.' : 'Course unpublished.', link: publish ? liveUrl : undefined });
+        }
         else setBanner({ kind: 'error', text: firstError(res.errors, `Could not ${publish ? 'publish' : 'unpublish'} the course.`) });
     }
 
@@ -340,7 +348,7 @@ export default function CourseEdit({ item: rawItem }: { item: CourseItem; public
                             </div>
                         </div>
                     </div>
-                    <div className="no-scrollbar flex flex-1 items-start justify-center overflow-y-auto p-4 md:p-6 xl:p-8">
+                    <div className="no-scrollbar flex min-h-0 flex-1 items-start justify-center overflow-hidden p-4 md:p-6 xl:p-8">
                         <CoursePreview form={form} detail={detail} coverImages={item.cover_images} checkoutQuestions={item.checkout_questions} drafts={drafts} device={device} host={window.location.host} />
                     </div>
                 </section>

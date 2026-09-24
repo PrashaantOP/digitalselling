@@ -332,7 +332,7 @@ export default function CoursesIndex({ items, counts, filters }: CoursesIndexPro
         if (!toDelete) return;
         const name = toDelete.title || 'Untitled course';
         setBusyId(toDelete.id);
-        router.delete(`${BASE}/${toDelete.id}`, {
+        router.delete(`${BASE}/${toDelete.uuid}`, {
             preserveScroll: true,
             onSuccess: () => {
                 setToDelete(null);

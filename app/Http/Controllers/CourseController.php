@@ -12,12 +12,35 @@ use Illuminate\Validation\Rule;
 
 class CourseController extends BaseProductController
 {
-    protected function type(): string { return 'course'; }
-    protected function param(): string { return 'course'; }
-    protected function view(): string { return 'Courses'; }
-    protected function routeName(): string { return 'courses'; }
-    protected function detailModel(): ?string { return CourseDetail::class; }
-    protected function detailRelation(): ?string { return 'courseDetail'; }
+    protected function type(): string
+    {
+        return 'course';
+    }
+    protected function param(): string
+    {
+        return 'course';
+    }
+    protected function view(): string
+    {
+        return 'Courses';
+    }
+    protected function routeName(): string
+    {
+        return 'courses';
+    }
+    protected function detailModel(): ?string
+    {
+        return CourseDetail::class;
+    }
+    protected function detailRelation(): ?string
+    {
+        return 'courseDetail';
+    }
+
+    protected function productDefaults(): array
+    {
+        return ['button_text' => 'Enroll now'];
+    }
 
     /** Events ki tarah dashboard URLs me id ki jagah uuid (secure, guess nahi hoga). */
     protected function routeIdentifier(Product $product): int|string
@@ -42,21 +65,21 @@ class CourseController extends BaseProductController
     protected function editRelations(): array
     {
         return [
-            'courseDetail.modules' => fn ($q) => $q->orderBy('sort_order'),
-            'courseDetail.modules.lessons' => fn ($q) => $q->orderBy('sort_order'),
+            'courseDetail.modules' => fn($q) => $q->orderBy('sort_order'),
+            'courseDetail.modules.lessons' => fn($q) => $q->orderBy('sort_order'),
             'courseDetail.modules.lessons.video',
             'courseDetail.modules.lessons.textContent.images',
             'courseDetail.modules.lessons.audio',
             'courseDetail.modules.lessons.notes.files',
             'courseDetail.modules.lessons.assignment',
             'courseDetail.modules.lessons.quiz.questions.options',
-            'courseDetail.instructions' => fn ($q) => $q->orderBy('sort_order'),
-            'courseDetail.benefits' => fn ($q) => $q->orderBy('sort_order'),
-            'courseDetail.faqs' => fn ($q) => $q->orderBy('sort_order'),
-            'courseDetail.testimonials' => fn ($q) => $q->orderBy('sort_order'),
-            'courseDetail.highlights' => fn ($q) => $q->orderBy('sort_order'),
-            'courseDetail.galleryItems' => fn ($q) => $q->orderBy('sort_order'),
-            'courseDetail.liveClasses' => fn ($q) => $q->orderBy('scheduled_at'),
+            'courseDetail.instructions' => fn($q) => $q->orderBy('sort_order'),
+            'courseDetail.benefits' => fn($q) => $q->orderBy('sort_order'),
+            'courseDetail.faqs' => fn($q) => $q->orderBy('sort_order'),
+            'courseDetail.testimonials' => fn($q) => $q->orderBy('sort_order'),
+            'courseDetail.highlights' => fn($q) => $q->orderBy('sort_order'),
+            'courseDetail.galleryItems' => fn($q) => $q->orderBy('sort_order'),
+            'courseDetail.liveClasses' => fn($q) => $q->orderBy('scheduled_at'),
             'coverImages',
             'coupons',
             'checkoutQuestions',
@@ -67,7 +90,7 @@ class CourseController extends BaseProductController
     protected function publishProblems(Product $product): array
     {
         $lessons = $product->courseDetail
-            ? \App\Models\CourseLesson::whereHas('module', fn ($q) => $q->where('course_id', $product->courseDetail->id))->where('is_published', true)->count()
+            ? \App\Models\CourseLesson::whereHas('module', fn($q) => $q->where('course_id', $product->courseDetail->id))->where('is_published', true)->count()
             : 0;
 
         return $lessons < 1 ? ['lessons' => 'Add at least one published lesson before publishing the course.'] : [];
@@ -111,14 +134,20 @@ class CourseController extends BaseProductController
             foreach ($old->testimonials as $row) {
                 $c = $row->replicate();
                 $c->course_id = $new->id;
-                $c->avatar_path = $this->cloneFile($row->avatar_path, 'public');
+                $c->avatar_path = $this->cloneFile($row->avatar_path, 'assets');
                 $c->save();
             }
             foreach ($old->galleryItems as $row) {
+                if (! $row->image_path) {
+                    continue;
+                }
+
                 $c = $row->replicate();
                 $c->course_id = $new->id;
-                $c->image_path = $this->cloneFile($row->image_path, 'public');
-                $c->save();
+                $c->image_path = $this->cloneFile($row->image_path, 'assets');
+                if ($c->image_path) {
+                    $c->save();
+                }
             }
 
             CourseContentService::recount($new->id);
@@ -140,7 +169,7 @@ class CourseController extends BaseProductController
         if ($a = $lesson->audio) {
             $c = $a->replicate();
             $c->lesson_id = $newLesson->id;
-            $c->audio_path = $this->cloneFile($a->audio_path, 'public');
+            $c->audio_path = $this->cloneFile($a->audio_path, 'assets');
             $c->save();
         }
 
@@ -151,7 +180,7 @@ class CourseController extends BaseProductController
             foreach ($t->images as $img) {
                 $ci = $img->replicate();
                 $ci->lesson_text_content_id = $c->id;
-                $ci->image_path = $this->cloneFile($img->image_path, 'public');
+                $ci->image_path = $this->cloneFile($img->image_path, 'assets');
                 $ci->save();
             }
         }
@@ -175,12 +204,12 @@ class CourseController extends BaseProductController
             foreach ($q->questions()->with('options')->get() as $question) {
                 $nqq = $question->replicate();
                 $nqq->quiz_id = $nq->id;
-                $nqq->question_image_path = $this->cloneFile($question->question_image_path, 'public');
+                $nqq->question_image_path = $this->cloneFile($question->question_image_path, 'assets');
                 $nqq->save();
                 foreach ($question->options as $opt) {
                     $no = $opt->replicate();
                     $no->question_id = $nqq->id;
-                    $no->option_image_path = $this->cloneFile($opt->option_image_path, 'public');
+                    $no->option_image_path = $this->cloneFile($opt->option_image_path, 'assets');
                     $no->save();
                 }
             }

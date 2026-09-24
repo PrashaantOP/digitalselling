@@ -103,6 +103,7 @@ export interface CheckoutQuestion {
     field_type: 'text' | 'phone' | 'email' | 'number' | 'dropdown';
     options: string[] | null;
     is_required: boolean;
+    is_enabled: boolean;
 }
 
 export interface CourseDetail {
@@ -178,6 +179,7 @@ export interface FormState {
 }
 
 export const DEFAULT_ACCENT = '#4F46E5';
+export const DEFAULT_BUTTON_TEXT = 'Enroll now';
 export const HEX_RE = /^#[0-9A-Fa-f]{6}$/;
 
 const numStr = (v: string | number | null | undefined) => (v === null || v === undefined || v === '' ? '' : String(Number(v)));
@@ -218,7 +220,7 @@ export function toFormState(item: CourseItem): FormState {
         price: numStr(item.price),
         has_discount: Boolean(item.has_discount),
         discounted_price: numStr(item.discounted_price),
-        button_text: item.button_text ?? '',
+        button_text: item.button_text || DEFAULT_BUTTON_TEXT,
         theme: (['default', 'light', 'dark'].includes(item.theme ?? '') ? item.theme : 'default') as ThemeKey,
         accent_color: HEX_RE.test(item.accent_color ?? '') ? (item.accent_color as string) : DEFAULT_ACCENT,
         post_purchase_message: item.post_purchase_message ?? '',
@@ -248,7 +250,8 @@ export function formPayload(f: FormState): Record<string, unknown> {
         price: free ? 0 : Number(f.price) || 0,
         has_discount: free ? false : f.has_discount,
         discounted_price: free || !f.has_discount ? null : Number(f.discounted_price) || 0,
-        button_text: f.button_text.trim(),
+        // controller me `required` hai — khali chhodne par save fail hota tha
+        button_text: f.button_text.trim() || DEFAULT_BUTTON_TEXT,
         theme: f.theme,
         accent_color: f.accent_color,
         post_purchase_message: orNull(f.post_purchase_message),

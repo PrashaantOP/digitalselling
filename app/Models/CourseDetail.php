@@ -18,11 +18,13 @@ class CourseDetail extends Model
         'access_days',
         'certificate_enabled',
         'total_lessons',
+        'optional_sections',
     ];
 
 
     protected $casts = [
         'certificate_enabled' => 'boolean',
+        'optional_sections' => 'array',
     ];
 
 

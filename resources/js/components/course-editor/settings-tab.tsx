@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Check, Loader2, Plus, Trash2, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { firstError, send } from './api';
 import { type CheckoutQuestion, type Coupon, DEFAULT_ACCENT, type FormState, HEX_RE, type ThemeKey } from './types';
 import { Field, IconBtn, INPUT, invalid, Notice, PanelTitle, TEXTAREA, Toggle } from './ui';
@@ -32,21 +32,45 @@ function QuestionRow({ productId, question, onCancel }: { productId: number; que
     const [required, setRequired] = useState(question?.is_required ?? true);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [enabled, setEnabled] = useState(question?.is_enabled ?? true);
 
     const optionList = options.split('\n').map((o) => o.trim()).filter(Boolean);
     const valid = label.trim() !== '' && (type !== 'dropdown' || optionList.length > 0);
-    const dirty = !question || label.trim() !== question.label || type !== question.field_type || required !== question.is_required || (type === 'dropdown' && optionList.join('\n') !== (question.options ?? []).join('\n'));
+
+    const isState = question?.field_type === 'dropdown' && question.label === 'State';
+    // email/phone checkout pe hamesha collect hote hain — creator inhe off/delete nahi kar sakta
+    const isLocked = Boolean(question && ['email', 'phone'].includes(question.field_type));
+    const effectiveRequired = isState ? false : isLocked ? true : required;
+    const effectiveEnabled = isLocked ? true : enabled;
+
+    // Save (autosave + button) dono `dirty` pe depend karte hain, isliye jo bhi field save
+    // hota hai wo yahan hona chahiye — `is_enabled` chhoot gaya tha, to Show toggle kabhi
+    // server tak pahunchta hi nahi tha. Effective values se compare karo warna locked row
+    // ka stale flag hamesha dirty dikhega.
+    const dirty =
+        !question ||
+        label.trim() !== question.label ||
+        type !== question.field_type ||
+        effectiveRequired !== question.is_required ||
+        effectiveEnabled !== question.is_enabled ||
+        (type === 'dropdown' && optionList.join('\n') !== (question.options ?? []).join('\n'));
 
     async function save() {
         if (!valid) return;
         setBusy(true);
         setError(null);
-        const payload = { label: label.trim(), field_type: type, is_required: required, ...(type === 'dropdown' ? { options: optionList } : {}) };
+        const payload = { label: label.trim(), field_type: type, is_required: effectiveRequired, is_enabled: effectiveEnabled, ...(type === 'dropdown' ? { options: optionList } : {}) };
         const res = question ? await send('put', `/dashboard/checkout-questions/${question.id}`, payload) : await send('post', `/dashboard/products/${productId}/checkout-questions`, payload);
         setBusy(false);
         if (res.ok) onCancel?.();
         else setError(firstError(res.errors, 'Could not save the question.'));
     }
+
+    useEffect(() => {
+        if (!dirty || !valid) return;
+        const timer = window.setTimeout(() => void save(), 700);
+        return () => window.clearTimeout(timer);
+    }, [label, type, options, effectiveRequired, effectiveEnabled]);
 
     async function remove() {
         if (!question) return onCancel?.();
@@ -61,7 +85,7 @@ function QuestionRow({ productId, question, onCancel }: { productId: number; que
         <div className="flex flex-col gap-2 rounded-xl border border-[#E4E2DA] bg-white p-3">
             <div className="flex items-center gap-2">
                 <input aria-label="Question label" value={label} maxLength={150} onChange={(e) => setLabel(e.target.value)} placeholder="Question label" className={INPUT} />
-                <select aria-label="Answer type" value={type} onChange={(e) => setType(e.target.value as CheckoutQuestion['field_type'])} className="h-10 shrink-0 rounded-lg border border-[#E4E2DA] bg-white px-2 text-sm text-[#14141B] outline-none focus:border-[#4F46E5]">
+                <select aria-label="Answer type" value={type} disabled={isLocked} onChange={(e) => setType(e.target.value as CheckoutQuestion['field_type'])} className="h-10 shrink-0 rounded-lg border border-[#E4E2DA] bg-white px-2 text-sm text-[#14141B] outline-none focus:border-[#4F46E5] disabled:bg-[#F6F5F2] disabled:text-[#8A8A96]">
                     {FIELD_TYPES.map((t) => (
                         <option key={t.key} value={t.key}>
                             {t.label}
@@ -72,15 +96,19 @@ function QuestionRow({ productId, question, onCancel }: { productId: number; que
             {type === 'dropdown' && <textarea aria-label="Dropdown options" rows={3} value={options} onChange={(e) => setOptions(e.target.value)} placeholder={'One option per line\nBeginner\nIntermediate'} className={TEXTAREA} />}
             <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 text-xs font-semibold text-[#14141B]">
-                    Required <Toggle checked={required} onChange={setRequired} label="Required" />
+                    Required <Toggle checked={effectiveRequired} onChange={setRequired} label="Required" disabled={isState || isLocked} />
                 </label>
+                {question && <label className="flex items-center gap-2 text-xs font-semibold text-[#14141B]">
+                    Show <Toggle checked={effectiveEnabled} onChange={setEnabled} label={`Show ${label || 'question'}`} disabled={isLocked} />
+                </label>}
+                {isLocked && <span className="text-[11px] text-[#8A8A96]">Always collected</span>}
                 <span className="flex-1" />
                 {dirty && (
                     <button type="button" onClick={save} disabled={!valid || busy} className="flex h-8 items-center gap-1 rounded-lg bg-[#4F46E5] px-3 text-xs font-semibold text-white hover:bg-[#4338CA] disabled:opacity-50">
                         {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} {question ? 'Save' : 'Add'}
                     </button>
                 )}
-                <IconBtn label={question ? 'Delete question' : 'Cancel'} danger onClick={remove} disabled={busy}>
+                <IconBtn label={isLocked ? 'Always collected at checkout' : isState ? 'State cannot be deleted' : question ? 'Delete question' : 'Cancel'} danger onClick={remove} disabled={busy || isState || isLocked}>
                     <X className="size-4" />
                 </IconBtn>
             </div>
@@ -96,7 +124,7 @@ function CheckoutQuestions({ productId, questions }: { productId: number; questi
             <PanelTitle>Checkout experience</PanelTitle>
             <p className="-mt-2 text-sm text-[#6B6B78]">Buyers sign in with phone OTP, then answer these questions before payment.</p>
             {questions.map((q) => (
-                <QuestionRow key={`${q.id}:${q.label}:${q.field_type}:${q.is_required}:${(q.options ?? []).join('|')}`} productId={productId} question={q} />
+                <QuestionRow key={`${q.id}:${q.label}:${q.field_type}:${q.is_required}:${q.is_enabled}:${(q.options ?? []).join('|')}`} productId={productId} question={q} />
             ))}
             {adding && <QuestionRow productId={productId} question={null} onCancel={() => setAdding(false)} />}
             {!adding && (

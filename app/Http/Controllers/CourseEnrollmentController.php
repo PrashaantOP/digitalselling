@@ -4,13 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Enrollment;
 use App\Models\Product;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class CourseEnrollmentController extends Controller
 {
-    public function index(Request $request, Product $course)
+    public function index(Request $request, string $courseUuid)
     {
+        $course = Product::query()
+            ->where('creator_id', Tenant::id())
+            ->where('type', 'course')
+            ->where('uuid', $courseUuid)
+            ->firstOrFail();
+
         abort_unless($course->courseDetail, 404);
 
         $enrollments = Enrollment::with('customer:id,name,email,phone')

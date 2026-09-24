@@ -18,6 +18,7 @@ class CheckoutQuestion extends Model
         'field_type',
         'options',
         'is_required',
+        'is_enabled',
         'sort_order',
     ];
 
@@ -25,6 +26,7 @@ class CheckoutQuestion extends Model
     protected $casts = [
         'options' => 'array',
         'is_required' => 'boolean',
+        'is_enabled' => 'boolean',
     ];
 
 

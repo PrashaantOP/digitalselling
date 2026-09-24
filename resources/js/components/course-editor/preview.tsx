@@ -1,9 +1,18 @@
 import { cn } from '@/lib/utils';
-import { Award, Check, ChevronDown, Clock, Lock, Play, Video } from 'lucide-react';
+import { Award, BookOpen, Check, ChevronDown, ClipboardCheck, Clock, FileText, Headphones, ListChecks, Lock, Play, Video, type LucideIcon } from 'lucide-react';
 import { assetUrl } from './api';
 import { type Drafts, FileThumb } from './sections';
 import { type CheckoutQuestion, type CourseDetail, DEFAULT_ACCENT, type FormState, HEX_RE, type ThemeKey } from './types';
 import { sanitizeHtml, toEditorHtml } from './ui';
+
+const LESSON_ICONS: Record<string, LucideIcon> = {
+    video: Video,
+    text_image: BookOpen,
+    audio: Headphones,
+    quiz: ListChecks,
+    assignment: ClipboardCheck,
+    notes_pdf: FileText,
+};
 
 export type Device = 'desktop' | 'mobile';
 
@@ -131,21 +140,24 @@ export function CoursePreview({ form, detail, coverImages, checkoutQuestions, dr
                                 <div className="px-4 py-3 text-sm font-bold" style={{ color: t.text, borderBottom: `1px solid ${t.border}` }}>
                                     Module {i + 1}: {m.title}
                                 </div>
-                                {m.lessons.map((l) => (
-                                    <div key={l.id} className="flex items-center gap-3 px-4 py-2.5 text-sm" style={{ color: t.text }}>
-                                        <span className="flex size-7 shrink-0 items-center justify-center rounded-full" style={{ background: t.page, color: t.muted }}>
-                                            <Play className="size-3" />
-                                        </span>
-                                        <span className="min-w-0 flex-1 truncate">{l.title}</span>
-                                        <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase" style={{ border: `1px solid ${t.border}`, color: l.is_free_preview ? accent : t.muted }}>
-                                            {l.is_free_preview ? 'Free preview' : (
-                                                <>
-                                                    <Lock className="size-2.5" /> Locked
-                                                </>
-                                            )}
-                                        </span>
-                                    </div>
-                                ))}
+                                {m.lessons.map((l) => {
+                                    const Icon = LESSON_ICONS[l.type] ?? FileText;
+                                    return (
+                                        <div key={l.id} className="flex items-center gap-3 px-4 py-2.5 text-sm" style={{ color: t.text }}>
+                                            <span className="flex size-7 shrink-0 items-center justify-center rounded-full" style={{ background: t.page, color: t.muted }}>
+                                                <Icon className="size-3" />
+                                            </span>
+                                            <span className="min-w-0 flex-1 truncate">{l.title}</span>
+                                            <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase" style={{ border: `1px solid ${t.border}`, color: l.is_free_preview ? accent : t.muted }}>
+                                                {l.is_free_preview ? 'Free preview' : (
+                                                    <>
+                                                        <Lock className="size-2.5" /> Locked
+                                                    </>
+                                                )}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         ))}
                     </div>
@@ -257,23 +269,25 @@ export function CoursePreview({ form, detail, coverImages, checkoutQuestions, dr
             <p className="text-xs" style={{ color: t.muted }}>
                 Access to this purchase will be sent to this email
             </p>
+            {fakeInput('Full name')}
             {fakeInput('Email address')}
             {fakeInput('Phone number', '+91')}
+            {/* email/phone upar hamesha dikhte hain; baaki sirf tab jab creator ne on rakha ho */}
             {checkoutQuestions
-                .filter((q) => !['email', 'phone'].includes(q.field_type) || !/name|phone|email/i.test(q.label))
+                .filter((q) => q.is_enabled && !['email', 'phone'].includes(q.field_type))
                 .map((q) => (
                     <div key={q.id}>{fakeInput(`${q.label}${q.is_required ? '' : ' (optional)'}`)}</div>
                 ))}
-            <div className="flex h-12 items-center justify-between rounded-lg px-4 text-sm font-extrabold tracking-wide text-white uppercase" style={{ background: accent }}>
+            <button type="button" disabled className="flex h-12 w-full cursor-not-allowed items-center justify-between rounded-lg px-4 text-sm font-extrabold tracking-wide text-white uppercase opacity-90" style={{ background: accent }}>
                 <span className="truncate">{cta}</span>
                 <span className="shrink-0">{form.pricing_type === 'customer_decides' ? '' : `${shownPrice} →`}</span>
-            </div>
+            </button>
         </aside>
     );
 
     return (
-        <div className={cn('mx-auto w-full transition-all', mobile ? 'max-w-[390px]' : 'max-w-[1040px]')}>
-            <div className={cn('overflow-hidden shadow-xl', mobile ? 'rounded-[2.5rem] border-[10px] border-[#14141B]' : 'rounded-xl border border-[#DAD8D0]')} style={{ background: t.page }}>
+        <div className={cn('mx-auto flex h-[min(720px,calc(100vh-150px))] w-full transition-all', mobile ? 'max-w-[390px]' : 'max-w-[1040px]')}>
+            <div className={cn('flex h-full w-full flex-col overflow-hidden shadow-xl', mobile ? 'rounded-[2.5rem] border-[10px] border-[#14141B]' : 'rounded-xl border border-[#DAD8D0]')} style={{ background: t.page }}>
                 {mobile ? (
                     <div className="mx-auto my-1 h-1.5 w-20 rounded-full bg-[#14141B]/80" />
                 ) : (
@@ -287,7 +301,7 @@ export function CoursePreview({ form, detail, coverImages, checkoutQuestions, dr
                     </div>
                 )}
                 <div className="h-1" style={{ background: accent }} />
-                <div className={cn('p-6', mobile ? 'flex flex-col gap-6' : 'grid grid-cols-[minmax(0,1fr)_320px] items-start gap-8 p-8')}>
+                <div className={cn('no-scrollbar min-h-0 flex-1 overflow-y-auto p-6', mobile ? 'flex flex-col gap-6' : 'grid grid-cols-[minmax(0,1fr)_320px] items-start gap-8 p-8')}>
                     {mobile ? (
                         <>
                             {main}

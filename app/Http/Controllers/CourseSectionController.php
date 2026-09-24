@@ -8,6 +8,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Support\Tenant;
 
 /**
  * Course page ke 6 optional sections ka ek generic controller:
@@ -32,8 +33,14 @@ class CourseSectionController extends Controller
         'gallery' => ['relation' => 'galleryItems', 'fields' => [], 'file' => ['image', 'image_path'], 'file_required' => true],
     ];
 
-    public function update(Request $request, Product $course, string $type)
+    public function update(Request $request, string $courseUuid, string $type)
     {
+        $course = Product::query()
+            ->where('creator_id', Tenant::id())
+            ->where('type', 'course')
+            ->where('uuid', $courseUuid)
+            ->firstOrFail();
+
         $cfg = self::SECTIONS[$type] ?? abort(404);
 
         $detail = $course->courseDetail;
@@ -46,7 +53,11 @@ class CourseSectionController extends Controller
             'items.*.is_enabled' => ['sometimes', 'boolean'],
         ];
         foreach ($cfg['fields'] as $field => $rule) {
-            $rules["items.*.$field"] = explode('|', $rule);
+            $fieldRules = explode('|', $rule);
+            if (! $request->boolean('is_enabled')) {
+                $fieldRules[0] = 'nullable';
+            }
+            $rules["items.*.$field"] = $fieldRules;
         }
         if (isset($cfg['file'])) {
             $rules['items.*.' . $cfg['file'][0]] = ['nullable', 'image', 'max:5120'];
@@ -57,9 +68,29 @@ class CourseSectionController extends Controller
         $relation = $detail->{$cfg['relation']}();
         $existing = $relation->get()->keyBy('id');
         $keep = [];
+        $enabledSections = $detail->optional_sections ?? [];
+        if (array_key_exists('is_enabled', $data)) {
+            $enabledSections[$type] = (bool) $data['is_enabled'];
+        }
 
-        DB::transaction(function () use ($request, $data, $cfg, $relation, $existing, &$keep) {
+        // Turning a section off should preserve its saved content. In particular,
+        // do not insert new empty FAQ/testimonial rows into non-nullable columns.
+        if (array_key_exists('is_enabled', $data) && ! $data['is_enabled']) {
+            $detail->forceFill(['optional_sections' => $enabledSections])->save();
+
+            return $this->done($request, ucfirst($type) . ' saved.', [
+                'items' => $relation->orderBy('sort_order')->get(),
+            ]);
+        }
+
+        DB::transaction(function () use ($request, $data, $cfg, $relation, $existing, &$keep, $detail, $enabledSections, $type) {
+            $detail->forceFill(['optional_sections' => $enabledSections])->save();
+
             foreach (array_values($data['items']) as $i => $item) {
+                if ($type === 'gallery' && ! $request->hasFile("items.$i.image") && empty($item['id'])) {
+                    continue;
+                }
+
                 $model = ! empty($item['id']) && $existing->has($item['id']) ? $existing[$item['id']] : $relation->getRelated()->newInstance();
 
                 foreach (array_keys($cfg['fields']) as $field) {
@@ -71,7 +102,7 @@ class CourseSectionController extends Controller
                     if ($request->hasFile("items.$i.$requestKey")) {
                         $this->deletePublic($model->{$column});
                         $model->{$column} = $this->putPublic($request->file("items.$i.$requestKey"), 'course');
-                    } elseif (! empty($cfg['file_required']) && ! $model->{$column}) {
+                    } elseif (! empty($cfg['file_required']) && ($data['is_enabled'] ?? false) && ! $model->{$column}) {
                         throw ValidationException::withMessages(["items.$i.$requestKey" => 'An image is required.']);
                     }
                 }

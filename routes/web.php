@@ -164,7 +164,7 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
 
     Route::prefix('dashboard')->middleware('perm:courses.edit')->group(function () {
         // modules
-        Route::post('courses/{course}/modules', [CourseModuleController::class, 'store'])->name('modules.store');
+        Route::post('courses/{courseUuid}/modules', [CourseModuleController::class, 'store'])->name('modules.store');
         Route::post('modules/reorder', [CourseModuleController::class, 'reorder'])->name('modules.reorder');
         Route::put('modules/{module}', [CourseModuleController::class, 'update'])->name('modules.update');
         Route::delete('modules/{module}', [CourseModuleController::class, 'destroy'])->name('modules.destroy');
@@ -190,7 +190,7 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
         Route::delete('live-classes/{liveClass}', [LiveClassController::class, 'destroy'])->name('live-classes.destroy');
 
         // course page sections (generic)
-        Route::put('courses/{course}/sections/{type}', [CourseSectionController::class, 'update'])
+        Route::put('courses/{courseUuid}/sections/{type}', [CourseSectionController::class, 'update'])
             ->whereIn('type', ['instructions', 'benefits', 'faqs', 'testimonials', 'highlights', 'gallery'])
             ->name('course-sections.update');
 
@@ -199,7 +199,7 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
     });
 
     Route::prefix('dashboard')->middleware('perm:courses.view')->group(function () {
-        Route::get('courses/{course}/students', [CourseEnrollmentController::class, 'index'])->name('enrollments.index');
+        Route::get('courses/{courseUuid}/students', [CourseEnrollmentController::class, 'index'])->name('enrollments.index');
         Route::get('enrollments/{enrollment}', [CourseEnrollmentController::class, 'show'])->name('enrollments.show');
         Route::get('assignments/submissions', [AssignmentSubmissionController::class, 'index'])->name('submissions.index');
         Route::get('assignments/submissions/{submission}/file', [AssignmentSubmissionController::class, 'file'])->name('submissions.file');
@@ -223,9 +223,9 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
         Route::delete('locked-content-images/{lockedContentImage}', [LockedContentFileController::class, 'destroyImage'])->name('locked-content.images.destroy')->middleware('perm:locked-content.edit');
     });
 
-    // Shared nested resources (saare product types) — permission: kisi bhi product module ka edit
+    // Shared nested resources (saare product types) — permission bound product ke type se aati hai
     Route::prefix('dashboard')
-        ->middleware('perm:courses.edit,events.edit,books.edit,locked-content.edit,payment-pages.edit,bookings.edit')
+        ->middleware('perm.product:edit')
         ->group(function () {
             Route::post('products/{product}/coupons', [CouponController::class, 'store'])->name('coupons.store');
             Route::put('coupons/{coupon}', [CouponController::class, 'update'])->name('coupons.update');
@@ -253,8 +253,14 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
         Route::put('{booking}/status', [BookingController::class, 'updateStatus'])->name('bookings.status')->middleware('perm:bookings.edit')->whereNumber('booking');
     });
     // Sessions tab (products of type=booking) => /dashboard/bookings/sessions...
-    $productCrud('bookings/sessions', BookingServiceController::class, 'service', 'booking-services', 'bookings',
-        ['index', 'store', 'update', 'duplicate', 'destroy']);
+    $productCrud(
+        'bookings/sessions',
+        BookingServiceController::class,
+        'service',
+        'booking-services',
+        'bookings',
+        ['index', 'store', 'update', 'duplicate', 'destroy']
+    );
 
     // ---- 12. AutoDM ----
     Route::get('/dashboard/autodm', [AutodmRuleController::class, 'index'])->name('autodm.index')->middleware('perm:autodm.view');

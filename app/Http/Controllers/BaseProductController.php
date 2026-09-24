@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\RespondsFlexibly;
 use App\Models\Product;
+use App\Support\Html;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,48 @@ use Inertia\Inertia;
 abstract class BaseProductController extends Controller
 {
     use RespondsFlexibly;
+
+    /** Checkout pe email/phone hamesha collect hote hain — creator inhe off ya delete nahi kar sakta. */
+    public const LOCKED_FIELD_TYPES = ['email', 'phone'];
+
+    public const INDIAN_STATES = [
+        'Andhra Pradesh',
+        'Arunachal Pradesh',
+        'Assam',
+        'Bihar',
+        'Chhattisgarh',
+        'Goa',
+        'Gujarat',
+        'Haryana',
+        'Himachal Pradesh',
+        'Jharkhand',
+        'Karnataka',
+        'Kerala',
+        'Madhya Pradesh',
+        'Maharashtra',
+        'Manipur',
+        'Meghalaya',
+        'Mizoram',
+        'Nagaland',
+        'Odisha',
+        'Punjab',
+        'Rajasthan',
+        'Sikkim',
+        'Tamil Nadu',
+        'Telangana',
+        'Tripura',
+        'Uttar Pradesh',
+        'Uttarakhand',
+        'West Bengal',
+        'Andaman and Nicobar Islands',
+        'Chandigarh',
+        'Dadra and Nagar Haveli and Daman and Diu',
+        'Delhi',
+        'Jammu and Kashmir',
+        'Ladakh',
+        'Lakshadweep',
+        'Puducherry',
+    ];
 
     /** products.type value */
     abstract protected function type(): string;
@@ -53,6 +96,12 @@ abstract class BaseProductController extends Controller
 
     /** Draft banate waqt detail row ke default values (NOT NULL columns ke liye) */
     protected function detailDefaults(): array
+    {
+        return [];
+    }
+
+    /** Naye draft ke liye type-specific products-table defaults */
+    protected function productDefaults(): array
     {
         return [];
     }
@@ -126,8 +175,8 @@ abstract class BaseProductController extends Controller
         $base = Product::where('creator_id', $this->tid())->where('type', $this->type());
 
         $query = (clone $base)
-            ->when($request->query('status'), fn ($q, $v) => $q->where('status', $v))
-            ->when($request->query('search'), fn ($q, $v) => $q->where('title', 'like', "%{$v}%"))
+            ->when($request->query('status'), fn($q, $v) => $q->where('status', $v))
+            ->when($request->query('search'), fn($q, $v) => $q->where('title', 'like', "%{$v}%"))
             ->with(array_filter([$this->detailRelation()]));
 
         if ($counts = $this->listCounts()) {
@@ -160,16 +209,39 @@ abstract class BaseProductController extends Controller
                 'status' => 'draft',
                 'pricing_type' => $data['pricing_type'] ?? 'fixed',
                 'price' => $data['price'] ?? 0,
-            ]);
+            ] + $this->productDefaults());
 
             if ($model = $this->detailModel()) {
                 $model::create(['product_id' => $product->id] + $this->detailDefaults());
             }
 
+            $this->ensureDefaultCheckoutQuestions($product);
+
             return $product;
         });
 
         return $this->done($request, 'Draft created.', ['id' => $product->id, 'slug' => $product->slug], $this->afterStoreRedirect($product), 201);
+    }
+
+    protected function ensureDefaultCheckoutQuestions(Product $product): void
+    {
+        // `match` = kis column se dekhein ki question pehle se hai. email/phone ek hi baar
+        // ho sakte hain (field_type), GSTIN/State label se match hote hain warna creator ka
+        // koi bhi text question GSTIN ko seed hone se rok deta.
+        $defaults = [
+            ['label' => 'Email address', 'field_type' => 'email', 'options' => null, 'is_required' => true, 'match' => 'field_type'],
+            ['label' => 'Phone number', 'field_type' => 'phone', 'options' => null, 'is_required' => true, 'match' => 'field_type'],
+            ['label' => 'GSTIN', 'field_type' => 'text', 'options' => null, 'is_required' => false, 'match' => 'label'],
+            ['label' => 'State', 'field_type' => 'dropdown', 'options' => self::INDIAN_STATES, 'is_required' => false, 'match' => 'label'],
+        ];
+
+        foreach ($defaults as $i => $default) {
+            $column = $default['match'];
+
+            if (! $product->checkoutQuestions()->where($column, $default[$column])->exists()) {
+                $product->checkoutQuestions()->create(Arr::except($default, 'match') + ['is_enabled' => true, 'sort_order' => $i]);
+            }
+        }
     }
 
     public function edit(Request $request)
@@ -186,6 +258,12 @@ abstract class BaseProductController extends Controller
     {
         $product = $this->item($request);
         $rules = $this->commonRules($product) + $this->detailRules($product);
+
+        // Validate se PEHLE sanitize: escaping se string lambi ho sakti hai (`<` => `&lt;`),
+        // aur description column sirf TEXT hai — warna max:20000 pass karke DB pe truncate ho jaata.
+        if (is_string($request->input('description'))) {
+            $request->merge(['description' => Html::sanitize($request->input('description'))]);
+        }
 
         $data = $request->validate($rules);
 
@@ -260,7 +338,8 @@ abstract class BaseProductController extends Controller
             'slug' => ['sometimes', 'required', 'alpha_dash', 'max:150', Rule::unique('products', 'slug')->ignore($product->id)],
             'description' => ['nullable', 'string', 'max:20000'],
             'cover_type' => ['nullable', Rule::in(['image', 'video'])],
-            'cover_video_url' => ['nullable', 'url', 'max:500'],
+            // sirf http/https — bare `url` rule javascript: aur data: URLs bhi pass kar deta hai
+            'cover_video_url' => ['nullable', 'url:http,https', 'max:500'],
             'pricing_type' => ['sometimes', Rule::in(['fixed', 'customer_decides', 'free'])],
             'price' => ['sometimes', 'numeric', 'min:0', 'max:10000000'],
             'has_discount' => ['sometimes', 'boolean'],
@@ -272,8 +351,9 @@ abstract class BaseProductController extends Controller
             'terms_and_conditions' => ['nullable', 'string', 'max:20000'],
             'refund_policy' => ['nullable', 'string', 'max:20000'],
             'privacy_policy' => ['nullable', 'string', 'max:20000'],
-            'fb_pixel_id' => ['nullable', 'string', 'max:50'],
-            'ga_tracking_id' => ['nullable', 'string', 'max:50'],
+            // public page pe jaate hain aur aage script tags me inject honge => sirf ID-shaped strings
+            'fb_pixel_id' => ['nullable', 'string', 'max:50', 'regex:/^[A-Za-z0-9_-]+$/'],
+            'ga_tracking_id' => ['nullable', 'string', 'max:50', 'regex:/^[A-Za-z0-9_-]+$/'],
         ];
     }
 

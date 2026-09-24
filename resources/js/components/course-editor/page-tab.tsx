@@ -134,11 +134,11 @@ export function PageTab({
             </div>
 
             <Field label="Description" htmlFor="course_description" counter={`${form.description.length}/20000`} error={errors.description}>
-                <RichText id="course_description" value={form.description} onChange={(v) => setField('description', v)} placeholder="Tell learners what they will gain from this course…" error={Boolean(errors.description)} />
+                <RichText id="course_description" value={form.description} onChange={(v) => setField('description', v)} placeholder="Tell learners what they will gain from this course, what they will miss if they don't enroll, and why now is the right time to join." error={Boolean(errors.description)} />
             </Field>
 
             <Field label="Button text" htmlFor="button_text" required counter={`${form.button_text.length}/30`} error={errors.button_text}>
-                <input id="button_text" value={form.button_text} maxLength={30} onChange={(e) => setField('button_text', e.target.value)} placeholder="ENROLL NOW" className={cn(INPUT, invalid(errors.button_text))} />
+                <input id="button_text" value={form.button_text} maxLength={30} onChange={(e) => setField('button_text', e.target.value)} placeholder="Enroll now" className={cn(INPUT, invalid(errors.button_text))} />
             </Field>
 
             <div className="flex flex-col gap-3">

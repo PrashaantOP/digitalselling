@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { router } from '@inertiajs/react';
 import { ArrowDown, ArrowUp, BookOpen, Check, ChevronRight, ClipboardCheck, FileText, Headphones, ListChecks, Loader2, Pencil, Plus, Trash2, Video, X, type LucideIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { firstError, send } from './api';
@@ -44,7 +45,10 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
         return res.ok;
     }
 
-    const addModule = () => run(() => send('post', `/dashboard/courses/${courseId}/modules`, { title: `Module ${modules.length + 1}` }), 'Could not add the module.');
+    const addModule = async () => {
+        const ok = await run(() => send('post', `/dashboard/courses/${courseId}/modules`, { title: `Module ${modules.length + 1}` }), 'Could not add the module.');
+        if (ok) router.reload({ only: ['item'] });
+    };
     const renameModule = (m: Module, title: string) => title.trim() && title.trim() !== m.title && run(() => send('put', `/dashboard/modules/${m.id}`, { title: title.trim() }), 'Could not rename the module.');
     const renameLesson = (l: Lesson, title: string) => title.trim() && title.trim() !== l.title && run(() => send('put', `/dashboard/lessons/${l.id}`, { title: title.trim() }), 'Could not rename the lesson.');
     const patchLesson = (l: Lesson, patch: Partial<Pick<Lesson, 'is_published' | 'is_free_preview'>>) => run(() => send('put', `/dashboard/lessons/${l.id}`, patch), 'Could not update the lesson.');

@@ -8,13 +8,20 @@ use App\Models\Product;
 use App\Services\CourseContentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Support\Tenant;
 
 class CourseModuleController extends Controller
 {
     use RespondsFlexibly;
 
-    public function store(Request $request, Product $course)
+    public function store(Request $request, string $courseUuid)
     {
+        $course = Product::query()
+            ->where('creator_id', Tenant::id())
+            ->where('type', 'course')
+            ->where('uuid', $courseUuid)
+            ->firstOrFail();
+
         $data = $request->validate(['title' => ['required', 'string', 'max:150']]);
 
         $detail = $course->courseDetail;
@@ -53,7 +60,7 @@ class CourseModuleController extends Controller
         ]);
 
         $valid = CourseModule::whereIn('id', $data['order'])
-            ->whereHas('course.product', fn ($q) => $q->where('creator_id', $this->tid()))
+            ->whereHas('course.product', fn($q) => $q->where('creator_id', $this->tid()))
             ->pluck('id')->all();
 
         abort_unless(count($valid) === count($data['order']), 404);
