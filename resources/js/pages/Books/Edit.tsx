@@ -3,10 +3,13 @@ import { cn, formatCurrency } from '@/lib/utils';
 import type { RequestPayload } from '@inertiajs/core';
 import { Head, router } from '@inertiajs/react';
 import { assetUrl, firstError } from '@/components/course-editor/api';
+import { DEFAULT_ACCENT, HEX_RE } from '@/components/course-editor/types';
+import { RichText, sanitizeHtml, toEditorHtml } from '@/components/course-editor/ui';
 import {
     ArrowRight,
-    BookOpen,
     Check,
+    ChevronDown,
+    Download,
     ExternalLink,
     Eye,
     FileText,
@@ -15,16 +18,16 @@ import {
     Loader2,
     Lock,
     Monitor,
+    Play,
     Rocket,
     Save,
     Smartphone,
     Sparkles,
-    UploadCloud,
     X,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
-type BookFormat = 'pdf' | 'epub' | 'other';
+type BookFormat = 'pdf' | 'epub' | 'mobi' | 'zip';
 type PricingType = 'fixed' | 'customer_decides' | 'free';
 type Status = 'draft' | 'unpublished' | 'published';
 
@@ -37,14 +40,31 @@ interface CoverImage {
 interface BookDetail {
     product_id: number;
     author_name: string | null;
+    subtitle: string | null;
     pages: number | null;
     format: BookFormat | null;
     file_path: string | null;
     external_link: string | null;
+    whats_inside: string[] | null;
+    faqs: BookFaq[] | null;
+}
+
+type BookFaq = {
+    question: string;
+    answer: string;
+};
+
+interface CheckoutQuestion {
+    id: number;
+    label: string;
+    field_type: string;
+    is_required: boolean;
+    is_enabled: boolean;
 }
 
 interface BookItem {
     id: number;
+    uuid: string;
     creator_id: number;
     type: 'book';
     title: string;
@@ -57,12 +77,14 @@ interface BookItem {
     has_discount: boolean;
     discounted_price: string | number | null;
     button_text: string;
+    accent_color: string | null;
     status: Status;
     published_at: string | null;
     created_at: string;
     book_detail: BookDetail | null;
     cover_images?: CoverImage[];
     coupons?: Coupon[];
+    checkout_questions?: CheckoutQuestion[];
 }
 
 interface Coupon {
@@ -79,6 +101,10 @@ interface BooksEditProps {
 }
 
 const LABEL_CLASS = 'text-xs font-semibold tracking-wider text-[#14141B] uppercase';
+const HINT_CLASS = 'text-[11px] text-[#8A8A96]';
+const INPUT_CLASS =
+    'h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15 disabled:cursor-not-allowed disabled:bg-[#F6F5F2] disabled:text-[#8A8A96]';
+const ADD_BUTTON_CLASS = 'h-11 w-fit rounded-lg border border-[#E4E2DA] bg-white px-4 text-[13px] font-semibold text-[#14141B] shadow-sm transition hover:bg-[#F6F5F2]';
 
 const STATUS_BADGE: Record<Status, { label: string; cls: string }> = {
     draft: { label: 'Draft', cls: 'bg-[#FFF4DB] text-[#B46E00]' },
@@ -86,7 +112,7 @@ const STATUS_BADGE: Record<Status, { label: string; cls: string }> = {
     unpublished: { label: 'Unpublished', cls: 'bg-[#F0EFEA] text-[#6B6B78]' },
 };
 
-const FORMAT_LABEL: Record<BookFormat, string> = { pdf: 'PDF', epub: 'EPUB', other: 'File' };
+const FORMAT_LABEL: Record<BookFormat, string> = { pdf: 'PDF', epub: 'EPUB', mobi: 'MOBI', zip: 'ZIP' };
 
 /* ------------------------------------------------------------------ */
 /*  AUTO-SAVE HOOK                                                     */
@@ -158,38 +184,31 @@ function useAutoSave(url: string) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  UPLOAD THUMBNAIL (cover images)                                    */
+/*  SMALL FORM PIECES                                                  */
 /* ------------------------------------------------------------------ */
 
-function UploadTile({
-    label,
-    hint,
+/** Kisi bhi button ko file picker bana deta hai (hidden input + click). */
+function PickButton({
     onPick,
+    accept,
     multiple,
-    accept = 'image/*',
+    disabled,
+    className,
+    children,
 }: {
-    label: string;
-    hint?: string;
     onPick: (files: File[]) => void;
+    accept: string;
     multiple?: boolean;
-    accept?: string;
+    disabled?: boolean;
+    className?: string;
+    children: ReactNode;
 }) {
     const inputRef = useRef<HTMLInputElement>(null);
 
     return (
-        <div>
-            <button
-                type="button"
-                onClick={() => inputRef.current?.click()}
-                className={cn(
-                    'group flex aspect-[16/9] w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed text-[13px] font-medium transition',
-                    'border-[#E4E2DA] bg-white text-[#8A8A96] hover:border-[#4F46E5] hover:bg-[#F6F5F2] hover:text-[#4F46E5]',
-                )}
-            >
-                <span className="flex size-9 items-center justify-center rounded-lg bg-[#F6F5F2] text-[#8A8A96] transition group-hover:bg-white group-hover:text-[#4F46E5]">
-                    <UploadCloud className="size-4" />
-                </span>
-                {label}
+        <>
+            <button type="button" disabled={disabled} onClick={() => inputRef.current?.click()} className={cn(className, 'disabled:cursor-wait disabled:opacity-60')}>
+                {children}
             </button>
             <input
                 ref={inputRef}
@@ -203,24 +222,54 @@ function UploadTile({
                     e.target.value = '';
                 }}
             />
-            {hint && <p className="mt-1.5 text-[11px] text-[#8A8A96]">{hint}</p>}
-        </div>
+        </>
     );
+}
+
+function RemoveButton({ label, onClick, busy }: { label: string; onClick: () => void; busy?: boolean }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            disabled={busy}
+            aria-label={label}
+            className="shrink-0 rounded-lg p-1.5 text-[#D93838] transition hover:bg-[#FFEDE8] disabled:opacity-50"
+        >
+            {busy ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
+        </button>
+    );
+}
+
+function FieldError({ message }: { message?: string | null }) {
+    return message ? <p className="text-[11px] font-medium text-[#D93838]">{message}</p> : null;
 }
 
 /* ------------------------------------------------------------------ */
 /*  PREVIEW PANE                                                       */
 /* ------------------------------------------------------------------ */
 
-function PreviewPane({ item, publicUrl, device }: { item: BookItem; publicUrl: string; device: 'desktop' | 'mobile' }) {
+function PreviewPane({ item, host, device }: { item: BookItem; host: string; device: 'desktop' | 'mobile' }) {
+    const mobile = device === 'mobile';
+    const accent = HEX_RE.test(item.accent_color ?? '') ? (item.accent_color as string) : DEFAULT_ACCENT;
     const title = item.title?.trim() || 'Your book title here';
-    const description = item.description?.trim() || 'Describe your book — what readers will learn, who it is for, why it is worth buying.';
+    const description = sanitizeHtml(toEditorHtml(item.description ?? ''));
     const author = item.book_detail?.author_name?.trim();
     const pages = item.book_detail?.pages;
     const format = item.book_detail?.format ?? 'pdf';
-    const price = item.pricing_type === 'free' ? 'Free' : formatCurrency(Number(item.discounted_price && item.has_discount ? item.discounted_price : item.price));
+    const price = Number(item.price) || 0;
+    const discounted = item.pricing_type === 'fixed' && item.has_discount && Number(item.discounted_price) > 0 && Number(item.discounted_price) < price;
+    const shownPrice = item.pricing_type === 'free' ? 'Free' : formatCurrency(discounted ? Number(item.discounted_price) : price);
+    const cta = item.button_text?.trim() || 'Buy & Download';
     const covers = item.cover_images ?? [];
-    const isMobile = device === 'mobile';
+    const videoUrl = item.cover_video_url?.trim();
+    const subtitle = item.book_detail?.subtitle?.trim();
+    const points = item.book_detail?.whats_inside ?? [];
+    const faqs = item.book_detail?.faqs ?? [];
+    const payWhatYouWant = item.pricing_type === 'customer_decides';
+    // email/phone upar hamesha dikhte hain; GSTIN/State book checkout pe nahi aate; baaki sirf tab jab creator ne on rakha ho
+    const questions = (item.checkout_questions ?? []).filter(
+        (q) => q.is_enabled && !['email', 'phone'].includes(q.field_type) && !/gstin/i.test(q.label) && !(q.field_type === 'dropdown' && /state/i.test(q.label)),
+    );
     const [activeCover, setActiveCover] = useState(0);
     const coverTrack = useRef<HTMLDivElement>(null);
 
@@ -229,100 +278,190 @@ function PreviewPane({ item, publicUrl, device }: { item: BookItem; publicUrl: s
         coverTrack.current?.children[index]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }
 
-    return (
-        <div
-            className={cn(
-                'relative mx-auto flex h-[min(720px,calc(100vh-150px))] w-full items-start justify-center transition-all duration-300',
-                isMobile ? 'max-w-[380px]' : 'max-w-[860px]',
+    const label = (text: string) => (
+        <h3 className="mb-3 text-[11px] font-bold tracking-[0.14em] uppercase" style={{ color: accent }}>
+            {text}
+        </h3>
+    );
+
+    const main = (
+        <div className="flex min-w-0 flex-col gap-8">
+            <div>
+                <h1 className="text-3xl font-extrabold tracking-tight break-words text-[#14141B]">{title}</h1>
+                {subtitle && <p className="mt-2 text-lg leading-snug text-[#4B4B57]">{subtitle}</p>}
+                {author && <p className="mt-2 text-[15px] text-[#6B6B78]">by {author}</p>}
+            </div>
+
+            {/* video trailer cover ke upar dikhta hai (editor hint jaisa) */}
+            {videoUrl && (
+                <div className="flex aspect-video items-center justify-center gap-2 overflow-hidden rounded-xl border border-[#E4E2DA] bg-[#F6F5F2] text-sm text-[#6B6B78]">
+                    <Play className="size-5" style={{ color: accent }} /> <span className="max-w-[70%] truncate">{videoUrl}</span>
+                </div>
             )}
-        >
-            {/* mock browser frame */}
-            <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-white/10 bg-white shadow-2xl shadow-black/40">
-                {/* traffic lights + url */}
-                <div className="flex items-center gap-2 border-b border-[#E4E2DA] bg-[#F6F5F2] px-4 py-2.5">
-                    <span className="flex items-center gap-1.5">
+
+            {covers.length > 0 && (
+                    <div className="relative aspect-video overflow-hidden rounded-xl border border-[#E4E2DA] bg-[#F6F5F2]">
+                        <div
+                            ref={coverTrack}
+                            onScroll={(event) => setActiveCover(Math.round(event.currentTarget.scrollLeft / event.currentTarget.clientWidth))}
+                            className="flex aspect-video snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                        >
+                            {covers.map((cover) => (
+                                <img key={cover.id} src={assetUrl(cover.image_path)} alt="" className="size-full shrink-0 snap-center object-cover" />
+                            ))}
+                        </div>
+                        {covers.length > 1 && (
+                            <div className="absolute right-0 bottom-3 left-0 z-10 flex items-center justify-center gap-1.5">
+                                {covers.map((cover, index) => (
+                                    <button
+                                        key={cover.id}
+                                        type="button"
+                                        aria-label={`Show image ${index + 1}`}
+                                        aria-pressed={activeCover === index}
+                                        onClick={() => showCover(index)}
+                                        className={cn('size-2 rounded-full border border-white/80 shadow-sm transition', activeCover === index ? 'bg-white' : 'bg-white/45 hover:bg-white/75')}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+                <PreviewPill label="Format" value={FORMAT_LABEL[format]} />
+                <PreviewPill label="Pages" value={pages ? String(pages) : '—'} />
+            </div>
+
+            <div>
+                {label('About this book')}
+                {description ? (
+                    <div className="text-[15px] leading-relaxed text-[#14141B] [&_li]:ml-4 [&_p]:mb-2 [&_ul]:list-disc" dangerouslySetInnerHTML={{ __html: description }} />
+                ) : (
+                    <p className="text-[15px] leading-relaxed text-[#6B6B78]">What's this book about? Who is it for?</p>
+                )}
+            </div>
+
+            {points.length > 0 && (
+                <div>
+                    {label("What's inside")}
+                    <ul className="flex flex-col gap-2.5">
+                        {points.map((point, i) => (
+                            <li key={i} className="flex items-start gap-3 text-[15px] text-[#14141B]">
+                                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-white" style={{ background: accent }}>
+                                    <Check className="size-3" />
+                                </span>
+                                <span className="min-w-0 break-words">{point}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            {faqs.length > 0 && (
+                <div>
+                    {label('FAQ')}
+                    <div className="flex flex-col gap-2">
+                        {faqs.map((faq, i) => (
+                            <div key={i} className="rounded-xl border border-[#E4E2DA] bg-white px-4 py-3">
+                                <div className="flex items-center justify-between gap-2 text-sm font-semibold text-[#14141B]">
+                                    {faq.question} <ChevronDown className="size-4 shrink-0 text-[#6B6B78]" />
+                                </div>
+                                {faq.answer && <p className="mt-1.5 text-sm whitespace-pre-line text-[#6B6B78]">{faq.answer}</p>}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
+    const fakeInput = (text: string, prefix?: string) => (
+        <div className="flex h-11 items-center gap-2 rounded-lg border border-[#DAD8D0] bg-white px-3 text-sm text-[#8A8A96]">
+            {prefix && <span className="border-r border-[#E4E2DA] pr-2">{prefix}</span>}
+            <span className="truncate">{text}</span>
+        </div>
+    );
+
+    const side = (
+        <aside className="flex flex-col gap-3 rounded-2xl border border-[#E4E2DA] bg-white p-5 text-[#14141B] shadow-sm">
+            <div className="flex items-center gap-2.5 text-sm text-[#6B6B78]">
+                <FileText className="size-4" /> {FORMAT_LABEL[format]}
+                {pages ? ` · ${pages} pages` : ''}
+            </div>
+            <div className="flex items-center gap-2.5 text-sm text-[#6B6B78]">
+                <Download className="size-4" /> Instant download after payment
+            </div>
+            <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold">{payWhatYouWant ? 'Pay what you want' : shownPrice}</span>
+                {discounted && <span className="text-sm text-[#8A8A96] line-through">{formatCurrency(price)}</span>}
+            </div>
+            {payWhatYouWant && price > 0 && <p className="-mt-2 text-xs text-[#6B6B78]">Minimum {formatCurrency(price)}</p>}
+            <p className="text-xs text-[#6B6B78]">Access to this purchase will be sent to this email</p>
+            {payWhatYouWant && fakeInput(`Your amount (min ${formatCurrency(price)})`, '₹')}
+            {fakeInput('Full name')}
+            {fakeInput('Email address')}
+            {fakeInput('Phone number', '+91')}
+            {questions.map((q) => (
+                <div key={q.id}>{fakeInput(`${q.label}${q.is_required ? '' : ' (optional)'}`)}</div>
+            ))}
+            <button
+                type="button"
+                disabled
+                className="flex h-12 w-full cursor-not-allowed items-center justify-between gap-2 rounded-xl px-4 text-sm font-bold tracking-wide text-white uppercase"
+                style={{ background: accent }}
+            >
+                <span className="truncate">{cta}</span>
+                <span className="flex shrink-0 items-center gap-1">
+                    {!payWhatYouWant && shownPrice} <ArrowRight className="size-4" />
+                </span>
+            </button>
+        </aside>
+    );
+
+    return (
+        <div className={cn('mx-auto flex h-full max-h-[760px] w-full transition-all duration-300', mobile ? 'max-w-[390px]' : 'max-w-[1040px]')}>
+            <div
+                className={cn(
+                    'flex h-full w-full flex-col overflow-hidden bg-[#FAF9F5] shadow-2xl shadow-black/40',
+                    mobile ? 'rounded-[2.5rem] border-[10px] border-[#14141B]' : 'rounded-xl border border-white/10',
+                )}
+            >
+                {mobile ? (
+                    <div className="mx-auto my-1 h-1.5 w-20 shrink-0 rounded-full bg-[#14141B]/80" />
+                ) : (
+                    <div className="flex shrink-0 items-center gap-2 bg-[#2A2A35] px-4 py-3">
                         <span className="size-3 rounded-full bg-[#FF5F57]" />
                         <span className="size-3 rounded-full bg-[#FEBC2E]" />
                         <span className="size-3 rounded-full bg-[#28C840]" />
-                    </span>
-                    <div className="mx-auto flex max-w-[420px] flex-1 items-center gap-1.5 rounded-md bg-white px-3 py-1 text-[11px] text-[#8A8A96]">
-                        <Lock className="size-3" />
-                        <span className="truncate">{publicUrl}</span>
+                        <span className="mx-auto flex max-w-[60%] min-w-0 items-center gap-1.5 rounded-md bg-[#14141B] px-4 py-1 text-[11px] text-[#C9C9D4]">
+                            <Lock className="size-3 shrink-0" />
+                            <span className="truncate">
+                                {host}/b/{item.slug || 'your-book'}
+                            </span>
+                        </span>
                     </div>
-                    <span className="size-6" />
-                </div>
-
-                {/* blue accent strip — matches Course/Event preview */}
-                <div className="h-1 w-full bg-[#2E6EF7]" />
-
-                {/* page content */}
-                <div className={cn('min-h-0 flex-1 overflow-y-auto bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden', isMobile ? 'px-8 py-8' : 'px-12 py-10')}>
-                    {/* cover image gallery */}
-                    {covers.length > 0 && (
-                        <div className="relative mx-auto mb-7 aspect-video overflow-hidden rounded-xl border border-[#E4E2DA] bg-[#F6F5F2]">
-                            <div
-                                ref={coverTrack}
-                                onScroll={(event) => setActiveCover(Math.round(event.currentTarget.scrollLeft / event.currentTarget.clientWidth))}
-                                className="flex aspect-video snap-x snap-mandatory overflow-x-auto bg-[#F6F5F2] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                            >
-                                {covers.map((cover) => (
-                                    <img key={cover.id} src={assetUrl(cover.image_path)} alt="" className="size-full shrink-0 snap-center object-cover" />
-                                ))}
-                            </div>
-                            {covers.length > 1 && (
-                                <div className="absolute right-0 bottom-3 left-0 z-10 flex items-center justify-center gap-1.5">
-                                    {covers.map((cover, index) => (
-                                        <button
-                                            key={cover.id}
-                                            type="button"
-                                            aria-label={`Show image ${index + 1}`}
-                                            aria-pressed={activeCover === index}
-                                            onClick={() => showCover(index)}
-                                            className={cn(
-                                                'size-2 rounded-full border border-white/80 shadow-sm transition',
-                                                activeCover === index ? 'bg-white' : 'bg-white/45 hover:bg-white/75',
-                                            )}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                )}
+                <div className="h-1 shrink-0" style={{ background: accent }} />
+                <div
+                    className={cn(
+                        'min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+                        mobile ? 'flex flex-col gap-6 p-5' : 'grid grid-cols-[minmax(0,1fr)_300px] items-start gap-8 p-8',
                     )}
-
-                    <h1
-                        className={cn(
-                            'font-extrabold tracking-tight text-[#14141B]',
-                            isMobile ? 'text-left text-[34px] leading-[1.08]' : 'text-center text-[40px] leading-[1.1]',
-                        )}
-                    >
-                        {title}
-                    </h1>
-                    {author && (
-                        <p className={cn('mt-2 text-[15px] text-[#8A8A96]', isMobile ? 'text-left' : 'text-center')}>by {author}</p>
+                >
+                    {mobile ? (
+                        <>
+                            {main}
+                            {side}
+                        </>
+                    ) : (
+                        <>
+                            {main}
+                            <div className="sticky top-0">{side}</div>
+                        </>
                     )}
-
-                    <div className={cn('mx-auto mt-7 grid gap-3', isMobile ? 'mt-5 grid-cols-3' : 'max-w-[720px] grid-cols-3')}>
-                        <PreviewPill label="FORMAT" value={FORMAT_LABEL[format]} />
-                        <PreviewPill label="PAGES" value={pages ? String(pages) : '—'} />
-                        <PreviewPill label="PRICE" value={price} />
-                    </div>
-
-                    <div className="mx-auto mt-8 max-w-[640px]">
-                        <p className="text-[11px] font-bold tracking-widest text-[#4F46E5] uppercase">About this book</p>
-                        <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-[#14141B]">{description}</p>
-
-                        <button
-                            type="button"
-                            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2E6EF7] py-4 text-[15px] font-semibold text-white shadow-md transition hover:bg-[#1F58DD]"
-                        >
-                            {item.button_text?.trim() || 'Buy now'}
-                            <ArrowRight className="size-4" />
-                        </button>
-
-                        <p className="mt-8 text-center text-[11px] text-[#8A8A96]">
-                            Built with <span className="font-semibold text-[#4F46E5]">SuperCreators</span>
-                        </p>
-                    </div>
+                    <p className={cn('text-center text-[11px] text-[#8A8A96]', !mobile && 'col-span-2')}>
+                        Built with <span className="font-semibold text-[#4F46E5]">SuperCreators</span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -331,7 +470,7 @@ function PreviewPane({ item, publicUrl, device }: { item: BookItem; publicUrl: s
 
 function PreviewPill({ label, value }: { label: string; value: string }) {
     return (
-        <div className="rounded-xl bg-[#F6F5F2] px-4 py-3">
+        <div className="rounded-xl border border-[#E4E2DA] bg-white px-4 py-3">
             <p className="text-[10px] font-bold tracking-widest text-[#8A8A96] uppercase">{label}</p>
             <p className="mt-1 truncate text-[14px] font-semibold text-[#14141B]">{value}</p>
         </div>
@@ -346,15 +485,20 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
     const initial = useMemo(
         () => ({
             title: item.title ?? '',
-            description: item.description ?? '',
+            // server description ko sanitized HTML me save karta hai — purana plain text bhi paragraphs ban jaata hai
+            description: toEditorHtml(item.description ?? ''),
             cover_video_url: item.cover_video_url ?? '',
             author_name: item.book_detail?.author_name ?? '',
-            pages: item.book_detail?.pages ?? '',
+            subtitle: item.book_detail?.subtitle ?? '',
+            pages: (item.book_detail?.pages ?? '') as number | '',
+            format: (item.book_detail?.format ?? 'pdf') as BookFormat,
+            whats_inside: item.book_detail?.whats_inside ?? [],
+            faqs: item.book_detail?.faqs ?? [],
             pricing_type: item.pricing_type,
             price: Number(item.price ?? 0),
             has_discount: item.has_discount ?? false,
-            discounted_price: item.discounted_price === null ? '' : Number(item.discounted_price),
-            button_text: item.button_text ?? 'Buy now',
+            discounted_price: (item.discounted_price === null ? '' : Number(item.discounted_price)) as number | '',
+            button_text: item.button_text ?? 'Buy & Download',
             slug: item.slug ?? '',
         }),
         [item],
@@ -378,18 +522,21 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
     const [fileError, setFileError] = useState<string | null>(null);
     const [linkInput, setLinkInput] = useState(item.book_detail?.external_link ?? '');
 
-    const { status: saveStatus, errors: saveErrors, queue: queueSave, flush: flushSave } = useAutoSave(`/dashboard/books/${item.id}`);
+    const { status: saveStatus, errors: saveErrors, queue: queueSave, flush: flushSave } = useAutoSave(`/dashboard/books/${item.uuid}`);
 
     useEffect(() => setCoverImages(item.cover_images ?? []), [item.cover_images]);
     useEffect(() => {
         setBookDetail(item.book_detail);
         setLinkInput(item.book_detail?.external_link ?? '');
+        // file upload server pe format khud set karta hai (extension se) — select ko usi se sync rakho, bina save ke
+        const format = item.book_detail?.format;
+        if (format) setForm((f) => (f.format === format ? f : { ...f, format }));
     }, [item.book_detail]);
 
     async function uploadCovers(files: File[]) {
         const remaining = 8 - coverImages.length;
         if (files.length > remaining) return setCoverError(`You can upload up to 8 cover images (${remaining} remaining).`);
-        if (files.some((file) => !file.type.startsWith('image/') || file.size > 5 * 1024 * 1024)) return setCoverError('Each cover image must be an image up to 5 MB.');
+        if (files.some((file) => !file.type.startsWith('image/') || file.size > 10 * 1024 * 1024)) return setCoverError('Each cover image must be an image up to 10 MB.');
 
         setCoverBusy(true);
         setCoverError(null);
@@ -425,12 +572,12 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
         const allowed = ['pdf', 'epub', 'mobi', 'zip'];
         const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
         if (!allowed.includes(ext)) return setFileError('Upload a PDF, EPUB, MOBI or ZIP file.');
-        if (file.size > 200 * 1024 * 1024) return setFileError('File must be under 200 MB.');
+        if (file.size > 100 * 1024 * 1024) return setFileError('File must be under 100 MB — paste a Google Drive link for bigger files.');
 
         setFileBusy(true);
         setFileError(null);
         router.post(
-            `/dashboard/books/${item.id}/file`,
+            `/dashboard/books/${item.uuid}/file`,
             { file },
             {
                 forceFormData: true,
@@ -445,11 +592,13 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
 
     function saveExternalLink() {
         const link = linkInput.trim();
+        // blur + Enter dono yahan aate hain — khali ya adhoora link server tak mat bhejo
         if (!link || fileBusy) return;
+        if (!/^https?:\/\/\S+\.\S+/i.test(link)) return setFileError('Enter a full link starting with https://');
         setFileBusy(true);
         setFileError(null);
         router.post(
-            `/dashboard/books/${item.id}/file`,
+            `/dashboard/books/${item.uuid}/file`,
             { external_link: link },
             {
                 preserveScroll: true,
@@ -466,7 +615,7 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
         setFileBusy(true);
         setFileError(null);
         router.post(
-            `/dashboard/books/${item.id}/file`,
+            `/dashboard/books/${item.uuid}/file`,
             { remove_file: true },
             {
                 preserveScroll: true,
@@ -503,8 +652,17 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
             button_text: f.button_text,
             slug: f.slug,
             author_name: f.author_name || null,
+            subtitle: f.subtitle || null,
             pages: f.pages === '' ? null : f.pages,
+            format: f.format,
+            whats_inside: f.whats_inside,
+            faqs: f.faqs,
         };
+    }
+
+    /** `faqs.0.question` jaise nested errors ko bhi parent field ke neeche dikhao */
+    function errorFor(field: string) {
+        return saveErrors[field] ?? Object.entries(saveErrors).find(([key]) => key.startsWith(`${field}.`))?.[1];
     }
 
     // ----- publish / unpublish -------------------------------------
@@ -515,7 +673,7 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
         setPublishError(null);
         setPublishing(true);
         router.post(
-            `/dashboard/books/${item.id}/publish`,
+            `/dashboard/books/${item.uuid}/publish`,
             { status: 'published' },
             {
                 preserveScroll: true,
@@ -587,15 +745,18 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
             book_detail: {
                 product_id: item.id,
                 author_name: form.author_name || null,
+                subtitle: form.subtitle || null,
                 pages: form.pages === '' ? null : Number(form.pages),
-                format: bookDetail?.format ?? 'pdf',
+                format: form.format,
+                whats_inside: form.whats_inside.filter((p) => p.trim()),
+                faqs: form.faqs.filter((f) => f.question.trim()),
                 file_path: bookDetail?.file_path ?? null,
                 external_link: bookDetail?.external_link ?? null,
             },
         }),
         [item, form, coverImages, bookDetail],
     );
-    const previewPublicUrl = `${publicUrl.slice(0, publicUrl.lastIndexOf('/') + 1)}${form.slug || 'your-book'}`;
+    const previewHost = publicUrl.replace(/^https?:\/\//, '').split('/')[0];
 
     // ----- helpers -------------------------------------------------
 
@@ -638,7 +799,7 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
                     {/* scrollable form body */}
                     <div className="flex-1 overflow-y-auto px-4 py-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:px-6 md:py-6">
                         <div className="mx-auto flex max-w-[440px] flex-col gap-5">
-                            <h1 className="text-xl font-bold tracking-tight text-[#14141B]">Tell us about your book</h1>
+                            <h1 className="text-xl font-bold tracking-tight text-[#14141B]">Sell your book / e-book</h1>
 
                             {/* Book title */}
                             <div className="flex flex-col gap-1.5">
@@ -654,25 +815,139 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
                                     value={form.title}
                                     onChange={(e) => patch({ title: e.target.value })}
                                     placeholder="Your book title here"
-                                    className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                    className={INPUT_CLASS}
                                 />
+                                <FieldError message={errorFor('title')} />
                             </div>
 
-                            {/* Author + pages */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="flex flex-col gap-1.5">
-                                    <label htmlFor="book_author" className={LABEL_CLASS}>
-                                        Author name
-                                    </label>
-                                    <input
-                                        id="book_author"
-                                        maxLength={150}
-                                        value={form.author_name}
-                                        onChange={(e) => patch({ author_name: e.target.value })}
-                                        placeholder="e.g. Jane Doe"
-                                        className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
-                                    />
+                            {/* Author */}
+                            <div className="flex flex-col gap-1.5">
+                                <label htmlFor="book_author" className={LABEL_CLASS}>
+                                    Author
+                                </label>
+                                <input
+                                    id="book_author"
+                                    maxLength={150}
+                                    value={form.author_name}
+                                    onChange={(e) => patch({ author_name: e.target.value })}
+                                    placeholder="Your name"
+                                    className={INPUT_CLASS}
+                                />
+                                <FieldError message={errorFor('author_name')} />
+                            </div>
+
+                            {/* Subtitle */}
+                            <div className="flex flex-col gap-1.5">
+                                <label htmlFor="book_subtitle" className={LABEL_CLASS}>
+                                    Subtitle
+                                </label>
+                                <input
+                                    id="book_subtitle"
+                                    maxLength={150}
+                                    value={form.subtitle}
+                                    onChange={(e) => patch({ subtitle: e.target.value })}
+                                    className={INPUT_CLASS}
+                                />
+                                <p className={HINT_CLASS}>One short line under the title (optional)</p>
+                                <FieldError message={errorFor('subtitle')} />
+                            </div>
+
+                            {/* Cover images */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className={LABEL_CLASS}>Cover image</label>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {coverImages.map((image, index) => (
+                                        <div key={image.id} className="group relative aspect-square overflow-hidden rounded-lg bg-[#F6F5F2]">
+                                            <img src={assetUrl(image.image_path)} alt={`Cover ${index + 1}`} className="size-full object-cover" />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeCover(image.id)}
+                                                disabled={coverBusy}
+                                                aria-label={`Remove cover image ${index + 1}`}
+                                                className="absolute top-1 right-1 rounded-full bg-white/90 p-1 text-[#D93838] shadow hover:bg-white disabled:opacity-50"
+                                            >
+                                                <X className="size-3.5" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {coverImages.length < 8 && (
+                                        <PickButton
+                                            accept="image/*"
+                                            multiple
+                                            onPick={uploadCovers}
+                                            disabled={coverBusy}
+                                            className="flex aspect-square items-center justify-center rounded-lg border border-dashed border-[#E4E2DA] bg-white text-[12px] font-medium text-[#4B4B57] transition hover:border-[#4F46E5] hover:text-[#4F46E5]"
+                                        >
+                                            {coverBusy ? <Loader2 className="size-4 animate-spin" /> : '+ Upload'}
+                                        </PickButton>
+                                    )}
                                 </div>
+                                <p className={HINT_CLASS}>1280 × 720 recommended · up to 10 MB each</p>
+                                {coverError && <FieldError message={coverError} />}
+                            </div>
+
+                            {/* Video link */}
+                            <div className="flex flex-col gap-1.5">
+                                <label htmlFor="book_video" className={LABEL_CLASS}>
+                                    Or add a video link
+                                </label>
+                                <input
+                                    id="book_video"
+                                    type="url"
+                                    value={form.cover_video_url}
+                                    onChange={(e) => patch({ cover_video_url: e.target.value })}
+                                    placeholder="https://youtu.be/…"
+                                    className={INPUT_CLASS}
+                                />
+                                <p className={HINT_CLASS}>A trailer / flip-through — shown above the cover</p>
+                                <FieldError message={errorFor('cover_video_url')} />
+                            </div>
+
+                            {/* Description */}
+                            <div className="flex flex-col gap-1.5">
+                                <div className="flex items-center justify-between">
+                                    <label htmlFor="book_desc" className={LABEL_CLASS}>
+                                        Description <span className="text-[#D93838]">*</span>
+                                    </label>
+                                    <span className="text-[11px] text-[#8A8A96]">{descCount}/20000</span>
+                                </div>
+                                <RichText
+                                    id="book_desc"
+                                    value={form.description}
+                                    onChange={(html) => patch({ description: html })}
+                                    placeholder="What's this book about? Who is it for?"
+                                    error={Boolean(saveErrors.description)}
+                                />
+                                <FieldError message={errorFor('description')} />
+                            </div>
+
+                            {/* What's inside */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className={LABEL_CLASS}>What's inside</label>
+                                {form.whats_inside.map((point, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        <input
+                                            value={point}
+                                            maxLength={150}
+                                            autoFocus={point === '' && index === form.whats_inside.length - 1}
+                                            onChange={(e) => patch({ whats_inside: form.whats_inside.map((p, i) => (i === index ? e.target.value : p)) })}
+                                            placeholder={`Point ${index + 1} — e.g. 12 chapters on …`}
+                                            className={INPUT_CLASS}
+                                        />
+                                        <RemoveButton label={`Remove point ${index + 1}`} onClick={() => patch({ whats_inside: form.whats_inside.filter((_, i) => i !== index) })} />
+                                    </div>
+                                ))}
+                                {form.whats_inside.length < 20 && (
+                                    <button type="button" onClick={() => patch({ whats_inside: [...form.whats_inside, ''] })} className={ADD_BUTTON_CLASS}>
+                                        + Add point
+                                    </button>
+                                )}
+                                <p className={HINT_CLASS}>Chapters, bonuses, templates — shown as a checklist</p>
+                                <FieldError message={errorFor('whats_inside')} />
+                            </div>
+
+                            {/* Pages + format */}
+                            <div className="grid grid-cols-2 gap-3">
                                 <div className="flex flex-col gap-1.5">
                                     <label htmlFor="book_pages" className={LABEL_CLASS}>
                                         Pages
@@ -685,13 +960,25 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
                                         value={form.pages}
                                         onChange={(e) => patch({ pages: e.target.value === '' ? '' : Number(e.target.value) })}
                                         placeholder="e.g. 120"
-                                        className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                        className={INPUT_CLASS}
                                     />
+                                    <FieldError message={errorFor('pages')} />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                    <label htmlFor="book_format" className={LABEL_CLASS}>
+                                        Format
+                                    </label>
+                                    <select id="book_format" value={form.format} onChange={(e) => patch({ format: e.target.value as BookFormat })} className={INPUT_CLASS}>
+                                        <option value="pdf">PDF</option>
+                                        <option value="epub">EPUB</option>
+                                        <option value="mobi">MOBI</option>
+                                        <option value="zip">ZIP</option>
+                                    </select>
                                 </div>
                             </div>
 
                             {/* Book file / external link — required to publish */}
-                            <div className="flex flex-col gap-1.5">
+                            <div className="flex flex-col gap-2">
                                 <label className={LABEL_CLASS}>
                                     Book file <span className="text-[#D93838]">*</span>
                                 </label>
@@ -703,17 +990,9 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
                                         </span>
                                         <div className="min-w-0 flex-1">
                                             <p className="truncate text-[13px] font-semibold text-[#14141B]">{fileName ?? 'Book file uploaded'}</p>
-                                            <p className="text-[11px] text-[#8A8A96]">{FORMAT_LABEL[bookDetail?.format ?? 'other']} · ready to sell</p>
+                                            <p className="text-[11px] text-[#8A8A96]">{FORMAT_LABEL[bookDetail?.format ?? 'pdf'] ?? 'PDF'} · ready to sell</p>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={removeBookFile}
-                                            disabled={fileBusy}
-                                            aria-label="Remove book file"
-                                            className="rounded-lg p-1.5 text-[#D93838] transition hover:bg-[#FFEDE8] disabled:opacity-50"
-                                        >
-                                            {fileBusy ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
-                                        </button>
+                                        <RemoveButton label="Remove book file" onClick={removeBookFile} busy={fileBusy} />
                                     </div>
                                 ) : hasLink ? (
                                     <div className="flex items-center gap-3 rounded-lg border border-[#E4E2DA] bg-[#F8F7F4] px-3 py-2.5">
@@ -724,134 +1003,124 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
                                             <p className="truncate text-[13px] font-semibold text-[#14141B]">{bookDetail?.external_link}</p>
                                             <p className="text-[11px] text-[#8A8A96]">External link · ready to sell</p>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={removeBookFile}
-                                            disabled={fileBusy}
-                                            aria-label="Remove book link"
-                                            className="rounded-lg p-1.5 text-[#D93838] transition hover:bg-[#FFEDE8] disabled:opacity-50"
-                                        >
-                                            {fileBusy ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
-                                        </button>
+                                        <RemoveButton label="Remove book link" onClick={removeBookFile} busy={fileBusy} />
                                     </div>
                                 ) : (
-                                    <UploadTile
-                                        label={fileBusy ? 'Uploading…' : '+ Upload book file'}
-                                        hint="PDF, EPUB, MOBI or ZIP · up to 200 MB"
-                                        onPick={uploadBookFile}
-                                        accept=".pdf,.epub,.mobi,.zip"
-                                    />
-                                )}
-
-                                {!hasFile && !hasLink && (
-                                    <div className="mt-1 flex gap-2">
+                                    <>
+                                        <PickButton accept=".pdf,.epub,.mobi,.zip" onPick={uploadBookFile} disabled={fileBusy} className={cn(ADD_BUTTON_CLASS, 'inline-flex items-center gap-2')}>
+                                            {fileBusy ? (
+                                                <>
+                                                    <Loader2 className="size-4 animate-spin" /> Uploading…
+                                                </>
+                                            ) : (
+                                                '+ Upload file'
+                                            )}
+                                        </PickButton>
+                                        <div className="flex items-center gap-3 text-[10px] font-semibold tracking-widest text-[#8A8A96] uppercase">
+                                            <span className="h-px flex-1 bg-[#E4E2DA]" /> or <span className="h-px flex-1 bg-[#E4E2DA]" />
+                                        </div>
                                         <input
                                             type="url"
                                             value={linkInput}
+                                            disabled={fileBusy}
                                             onChange={(e) => setLinkInput(e.target.value)}
-                                            placeholder="Or paste a Google Drive / external link"
-                                            className="h-10 min-w-0 flex-1 rounded-lg border border-[#E4E2DA] bg-white px-3 text-xs text-[#14141B] outline-none focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                            onBlur={saveExternalLink}
+                                            onKeyDown={(e) => e.key === 'Enter' && saveExternalLink()}
+                                            placeholder="Paste a Google Drive / download link (https://…)"
+                                            className={INPUT_CLASS}
                                         />
-                                        <button
-                                            type="button"
-                                            onClick={saveExternalLink}
-                                            disabled={fileBusy || !linkInput.trim()}
-                                            className="h-10 shrink-0 rounded-lg bg-[#14141B] px-3 text-xs font-semibold text-white transition hover:bg-[#2B2B34] disabled:cursor-not-allowed disabled:opacity-40"
-                                        >
-                                            Save link
-                                        </button>
-                                    </div>
+                                        <p className={HINT_CLASS}>For Google Drive, set sharing to “Anyone with the link”. Use a link for files over 100 MB.</p>
+                                    </>
                                 )}
-                                <p className="text-[10px] text-[#8A8A96]">Required before publishing — buyers get this the moment payment settles.</p>
-                                {fileError && <p className="text-[11px] font-medium text-[#D93838]">{fileError}</p>}
+                                <p className={HINT_CLASS}>Buyers download this after paying · upload up to 100 MB, or paste a link</p>
+                                {fileError && <FieldError message={fileError} />}
                             </div>
 
                             {/* Pricing */}
-                            <div className="flex flex-col gap-3">
-                                <div className="grid grid-cols-2 gap-3">
-                                    {[
-                                        { value: 'fixed' as const, label: 'Paid' },
-                                        { value: 'free' as const, label: 'Free' },
-                                    ].map((option) => {
-                                        const active = form.pricing_type === option.value;
-                                        return (
-                                            <button
-                                                key={option.value}
-                                                type="button"
-                                                aria-pressed={active}
-                                                onClick={() => patch({ pricing_type: option.value })}
+                            <div className="grid grid-cols-2 gap-3">
+                                {[
+                                    { value: 'fixed' as const, label: 'Fixed price' },
+                                    { value: 'customer_decides' as const, label: 'Customer decides' },
+                                ].map((option) => {
+                                    const active = form.pricing_type === option.value;
+                                    return (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            aria-pressed={active}
+                                            onClick={() => patch({ pricing_type: option.value, ...(option.value === 'customer_decides' ? { has_discount: false } : {}) })}
+                                            className={cn(
+                                                'flex h-14 items-center justify-between rounded-xl border px-4 text-sm font-semibold transition',
+                                                active ? 'border-[#4F46E5] bg-[#EEF2FF] text-[#14141B]' : 'border-[#E4E2DA] bg-white text-[#14141B] hover:border-[#4F46E5]/45',
+                                            )}
+                                        >
+                                            {option.label}
+                                            <span
                                                 className={cn(
-                                                    'flex h-12 items-center justify-between rounded-lg border px-3 text-sm font-semibold transition',
-                                                    active
-                                                        ? 'border-[#4F46E5] bg-[#EEF2FF] text-[#4F46E5]'
-                                                        : 'border-[#E4E2DA] bg-white text-[#14141B] hover:border-[#4F46E5]/45',
+                                                    'flex size-5 items-center justify-center rounded-full border',
+                                                    active ? 'border-[#4F46E5] bg-[#4F46E5] text-white' : 'border-[#D9D7CE]',
                                                 )}
                                             >
-                                                {option.label}
-                                                <span
-                                                    className={cn(
-                                                        'flex size-4 items-center justify-center rounded-full border',
-                                                        active ? 'border-[#4F46E5] bg-[#4F46E5] text-white' : 'border-[#D9D7CE]',
-                                                    )}
-                                                >
-                                                    {active && <Check className="size-2.5" />}
-                                                </span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                                <div className="flex flex-col gap-1.5">
-                                    <label htmlFor="book_price" className={LABEL_CLASS}>
-                                        Price <span className="text-[#D93838]">*</span>
-                                    </label>
-                                    <div className="relative">
-                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-[#8A8A96]">₹</span>
-                                        <input
-                                            id="book_price"
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            disabled={form.pricing_type === 'free'}
-                                            value={form.pricing_type === 'free' ? 0 : form.price}
-                                            onChange={(e) => patch({ price: Number(e.target.value) || 0 })}
-                                            className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white py-0 pr-3 pl-7 text-sm text-[#14141B] shadow-sm outline-none transition disabled:cursor-not-allowed disabled:bg-[#F6F5F2] disabled:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
-                                        />
-                                    </div>
-                                </div>
+                                                {active && <Check className="size-3" />}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
                             </div>
 
-                            <label className="flex cursor-pointer items-center gap-2.5 text-[12px] font-semibold text-[#14141B]">
+                            <div className="flex flex-col gap-1.5">
+                                <label htmlFor="book_price" className={LABEL_CLASS}>
+                                    {form.pricing_type === 'customer_decides' ? 'Minimum price (₹)' : 'Price (₹)'} <span className="text-[#D93838]">*</span>
+                                </label>
                                 <input
-                                    type="checkbox"
-                                    checked={form.has_discount}
-                                    onChange={(e) => patch({ has_discount: e.target.checked })}
-                                    className="size-3.5 rounded border-[#D9D7CE] text-[#4F46E5] focus:ring-[#4F46E5]"
+                                    id="book_price"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    disabled={form.pricing_type === 'free'}
+                                    value={form.pricing_type === 'free' ? 0 : form.price}
+                                    onChange={(e) => patch({ price: Number(e.target.value) || 0 })}
+                                    className={INPUT_CLASS}
                                 />
-                                Offer discounted price
-                            </label>
+                                {form.pricing_type === 'customer_decides' && <p className={HINT_CLASS}>Buyers can pay this amount or more.</p>}
+                                <FieldError message={errorFor('price')} />
+                            </div>
 
-                            {form.has_discount && (
-                                <div className="flex flex-col gap-1.5">
-                                    <label htmlFor="book_discounted_price" className={LABEL_CLASS}>
-                                        Discounted price
-                                    </label>
-                                    <div className="relative">
-                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-[#8A8A96]">₹</span>
+                            {form.pricing_type === 'fixed' && (
+                                <>
+                                    <label className="flex cursor-pointer items-center gap-2.5 text-[13px] font-semibold text-[#14141B]">
                                         <input
-                                            id="book_discounted_price"
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            max={form.price || undefined}
-                                            value={form.discounted_price}
-                                            onChange={(e) => patch({ discounted_price: e.target.value === '' ? '' : Number(e.target.value) })}
-                                            placeholder="0"
-                                            className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white py-0 pr-3 pl-7 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                            type="checkbox"
+                                            checked={form.has_discount}
+                                            onChange={(e) => patch({ has_discount: e.target.checked })}
+                                            className="size-4 rounded border-[#D9D7CE] text-[#4F46E5] focus:ring-[#4F46E5]"
                                         />
-                                    </div>
-                                </div>
+                                        Offer discounted price
+                                    </label>
+
+                                    {form.has_discount && (
+                                        <div className="flex flex-col gap-1.5">
+                                            <label htmlFor="book_discounted_price" className={LABEL_CLASS}>
+                                                Discounted price (₹)
+                                            </label>
+                                            <input
+                                                id="book_discounted_price"
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                max={form.price || undefined}
+                                                value={form.discounted_price}
+                                                onChange={(e) => patch({ discounted_price: e.target.value === '' ? '' : Number(e.target.value) })}
+                                                placeholder="0"
+                                                className={INPUT_CLASS}
+                                            />
+                                            <FieldError message={errorFor('discounted_price')} />
+                                        </div>
+                                    )}
+                                </>
                             )}
 
+                            {/* Coupons */}
                             <div className="flex flex-col gap-2">
                                 <label className={LABEL_CLASS}>Discount coupons</label>
                                 {coupons.map((coupon) => (
@@ -876,125 +1145,98 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
                                         maxLength={30}
                                         onChange={(e) => setCouponCode(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))}
                                         placeholder="CODE"
-                                        className="h-10 min-w-0 flex-1 rounded-lg border border-[#E4E2DA] bg-white px-3 text-xs font-semibold text-[#14141B] outline-none focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                        className={cn(INPUT_CLASS, 'min-w-0 flex-1')}
                                     />
-                                    <div className="relative w-24">
+                                    <div className="relative w-28 shrink-0">
                                         <input
                                             type="number"
                                             min="1"
                                             max="100"
                                             value={couponPercent}
                                             onChange={(e) => setCouponPercent(e.target.value)}
-                                            className="h-10 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 pr-7 text-xs text-[#14141B] outline-none focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                            className={cn(INPUT_CLASS, 'pr-7')}
                                         />
-                                        <span className="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-[#8A8A96]">%</span>
+                                        <span className="absolute top-1/2 right-3 -translate-y-1/2 text-sm text-[#8A8A96]">%</span>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={addCoupon}
-                                        disabled={addingCoupon || !couponCode.trim()}
-                                        className="h-10 rounded-lg bg-[#14141B] px-3 text-xs font-semibold text-white transition hover:bg-[#2B2B34] disabled:cursor-not-allowed disabled:opacity-40"
-                                    >
+                                    <button type="button" onClick={addCoupon} disabled={addingCoupon || !couponCode.trim()} className={cn(ADD_BUTTON_CLASS, 'shrink-0 disabled:cursor-not-allowed disabled:opacity-40')}>
                                         {addingCoupon ? '…' : '+ Add'}
                                     </button>
                                 </div>
-                                <p className="text-[10px] text-[#8A8A96]">Buyers enter this code at checkout for a discount.</p>
+                                <p className={HINT_CLASS}>Buyers enter these at checkout for a % off</p>
                             </div>
 
+                            {/* FAQs */}
+                            <div className="flex flex-col gap-2">
+                                <label className={LABEL_CLASS}>FAQs</label>
+                                {form.faqs.map((faq, index) => (
+                                    <div key={index} className="flex flex-col gap-2 rounded-xl border border-[#E4E2DA] bg-[#F8F7F4] p-3">
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                value={faq.question}
+                                                maxLength={200}
+                                                autoFocus={faq.question === '' && index === form.faqs.length - 1}
+                                                onChange={(e) => patch({ faqs: form.faqs.map((f, i) => (i === index ? { ...f, question: e.target.value } : f)) })}
+                                                placeholder="Question"
+                                                className={INPUT_CLASS}
+                                            />
+                                            <RemoveButton label={`Remove FAQ ${index + 1}`} onClick={() => patch({ faqs: form.faqs.filter((_, i) => i !== index) })} />
+                                        </div>
+                                        <textarea
+                                            rows={2}
+                                            value={faq.answer}
+                                            maxLength={1000}
+                                            onChange={(e) => patch({ faqs: form.faqs.map((f, i) => (i === index ? { ...f, answer: e.target.value } : f)) })}
+                                            placeholder="Answer"
+                                            className="w-full resize-y rounded-lg border border-[#E4E2DA] bg-white px-3 py-2.5 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                        />
+                                    </div>
+                                ))}
+                                {form.faqs.length < 20 && (
+                                    <button type="button" onClick={() => patch({ faqs: [...form.faqs, { question: '', answer: '' }] })} className={ADD_BUTTON_CLASS}>
+                                        + Add FAQ
+                                    </button>
+                                )}
+                                <p className={HINT_CLASS}>Answer the questions buyers ask before paying</p>
+                                <FieldError message={errorFor('faqs')} />
+                            </div>
+
+                            {/* Button text */}
                             <div className="flex flex-col gap-1.5">
-                                <label htmlFor="book_button_text" className={LABEL_CLASS}>
-                                    Buy button text
-                                </label>
+                                <div className="flex items-center justify-between">
+                                    <label htmlFor="book_button_text" className={LABEL_CLASS}>
+                                        Button text
+                                    </label>
+                                    <span className="text-[11px] text-[#8A8A96]">{form.button_text.length}/25</span>
+                                </div>
                                 <input
                                     id="book_button_text"
-                                    maxLength={30}
+                                    maxLength={25}
                                     value={form.button_text}
                                     onChange={(e) => patch({ button_text: e.target.value })}
-                                    placeholder="Buy now"
-                                    className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                    placeholder="Buy & Download"
+                                    className={INPUT_CLASS}
                                 />
+                                <FieldError message={errorFor('button_text')} />
                             </div>
 
+                            {/* Page URL */}
                             <div className="flex flex-col gap-1.5">
                                 <label htmlFor="book_slug" className={LABEL_CLASS}>
                                     Page URL <span className="text-[#D93838]">*</span>
                                 </label>
-                                <div className="flex h-11 items-center rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm shadow-sm focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/15">
-                                    <span className="mr-1 text-[#8A8A96]">/b/</span>
+                                <div className="flex h-11 items-stretch overflow-hidden rounded-lg border border-[#E4E2DA] bg-white text-sm shadow-sm focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/15">
+                                    <span className="flex items-center border-r border-[#E4E2DA] bg-[#F6F5F2] px-3 text-[#8A8A96]">/b/</span>
                                     <input
                                         id="book_slug"
                                         value={form.slug}
                                         maxLength={150}
                                         onChange={(e) => patch({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
                                         placeholder="your-book"
-                                        className="min-w-0 flex-1 bg-transparent text-sm text-[#14141B] outline-none placeholder:text-[#8A8A96]"
+                                        className="min-w-0 flex-1 bg-transparent px-3 text-sm text-[#14141B] outline-none placeholder:text-[#8A8A96]"
                                     />
                                 </div>
-                                <p className="text-[10px] text-[#8A8A96]">Required before publishing.</p>
-                                {saveErrors.slug && <p className="text-[11px] font-medium text-[#D93838]">{saveErrors.slug}</p>}
-                            </div>
-
-                            {/* Cover images */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className={LABEL_CLASS}>Cover images</label>
-                                <div className="grid grid-cols-4 gap-2">
-                                    {coverImages.map((image, index) => (
-                                        <div key={image.id} className="group relative aspect-video overflow-hidden rounded-lg bg-[#F6F5F2]">
-                                            <img src={assetUrl(image.image_path)} alt={`Cover ${index + 1}`} className="size-full object-cover" />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeCover(image.id)}
-                                                disabled={coverBusy}
-                                                aria-label={`Remove cover image ${index + 1}`}
-                                                className="absolute top-1 right-1 rounded-full bg-white/90 p-1 text-[#D93838] shadow hover:bg-white disabled:opacity-50"
-                                            >
-                                                <X className="size-3.5" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                                {coverImages.length < 8 && (
-                                    <UploadTile
-                                        label={coverBusy ? 'Uploading…' : '+ Upload images'}
-                                        hint="Up to 8 images · 5 MB each · 1280 × 720 recommended"
-                                        onPick={uploadCovers}
-                                        multiple
-                                    />
-                                )}
-                                {coverError && <p className="text-[11px] font-medium text-[#D93838]">{coverError}</p>}
-                            </div>
-
-                            {/* Video link */}
-                            <div className="flex flex-col gap-1.5">
-                                <label htmlFor="book_video" className={LABEL_CLASS}>
-                                    Or a video trailer link
-                                </label>
-                                <input
-                                    id="book_video"
-                                    type="url"
-                                    value={form.cover_video_url}
-                                    onChange={(e) => patch({ cover_video_url: e.target.value })}
-                                    placeholder="https://youtu.be/…"
-                                    className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
-                                />
-                            </div>
-
-                            {/* Description */}
-                            <div className="flex flex-col gap-1.5">
-                                <div className="flex items-center justify-between">
-                                    <label htmlFor="book_desc" className={LABEL_CLASS}>
-                                        Description <span className="text-[#D93838]">*</span>
-                                    </label>
-                                    <span className="text-[11px] text-[#8A8A96]">{descCount}/20000</span>
-                                </div>
-                                <textarea
-                                    id="book_desc"
-                                    rows={5}
-                                    value={form.description}
-                                    onChange={(e) => patch({ description: e.target.value })}
-                                    placeholder="Describe your book — what readers will learn, who it is for, why it is worth buying."
-                                    className="w-full rounded-lg border border-[#E4E2DA] bg-white px-3 py-2.5 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
-                                />
+                                <p className={HINT_CLASS}>Required before publishing</p>
+                                <FieldError message={errorFor('slug')} />
                             </div>
 
                             {publishError && (
@@ -1055,8 +1297,8 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
                     </div>
 
                     {/* scrollable preview area */}
-                    <div className="flex flex-1 items-start justify-center overflow-hidden p-4 md:p-6 xl:p-8">
-                        <PreviewPane item={previewItem} publicUrl={previewPublicUrl} device={device} />
+                    <div className="flex min-h-0 flex-1 items-start justify-center overflow-hidden p-4 md:p-6 xl:p-8">
+                        <PreviewPane item={previewItem} host={previewHost} device={device} />
                     </div>
 
                     {/* helper tip */}
@@ -1125,4 +1367,3 @@ function SaveStatusPill({ status }: { status: SaveStatus }) {
     );
 }
 
-void BookOpen;

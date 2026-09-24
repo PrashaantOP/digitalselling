@@ -17,7 +17,9 @@ class BookFileController extends Controller
     public function upload(Request $request, Product $book)
     {
         $data = $request->validate([
-            'file' => ['nullable', 'file', 'mimes:pdf,epub,mobi,zip', 'max:204800'],
+            // `mimes:` content sniff karta hai — asli .mobi files aksar octet-stream detect hoti hain aur reject ho jaati.
+            // File private disk pe rehti hai aur sirf download (attachment) ki tarah milti hai, isliye extension check kaafi hai.
+            'file' => ['nullable', 'file', 'extensions:pdf,epub,mobi,zip', 'max:102400'],
             'external_link' => ['nullable', 'url', 'max:500'],
             'remove_file' => ['sometimes', 'boolean'],
         ]);
@@ -32,7 +34,7 @@ class BookFileController extends Controller
             $this->deletePrivate($detail->file_path);
             $file = $request->file('file');
             $detail->file_path = $this->putPrivate($file, 'books');
-            $detail->format = in_array($ext = strtolower($file->getClientOriginalExtension()), ['pdf', 'epub'], true) ? $ext : 'other';
+            $detail->format = in_array($ext = strtolower($file->getClientOriginalExtension()), ['pdf', 'epub', 'mobi', 'zip'], true) ? $ext : 'pdf';
             $detail->external_link = null;
         } elseif (! empty($data['external_link'])) {
             $this->deletePrivate($detail->file_path);

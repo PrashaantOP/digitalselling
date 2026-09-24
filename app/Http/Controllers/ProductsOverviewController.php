@@ -43,8 +43,8 @@ class ProductsOverviewController extends Controller
             ->paginate(15)
             ->withQueryString()
             ->through(function (Product $p) {
-                // course/event ki dashboard routes uuid pe bind hoti hain (bindings.php), id pe 404 aata hai
-                $key = in_array($p->type, ['course', 'event'], true) ? $p->uuid : $p->id;
+                // course/event/book ki dashboard routes uuid pe bind hoti hain (bindings.php), id pe 404 aata hai
+                $key = in_array($p->type, ['course', 'event', 'book'], true) ? $p->uuid : $p->id;
                 $editUrl = '/dashboard/' . self::EDIT_BASE[$p->type] . "/{$key}/edit";
 
                 return [

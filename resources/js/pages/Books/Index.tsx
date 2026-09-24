@@ -32,7 +32,7 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Books', href: BASE }];
 
 type BookStatus = 'draft' | 'unpublished' | 'published';
 type PricingType = 'fixed' | 'customer_decides' | 'free';
-type BookFormat = 'pdf' | 'epub' | 'other';
+type BookFormat = 'pdf' | 'epub' | 'mobi' | 'zip';
 
 interface BookDetail {
     author_name: string | null;
@@ -44,6 +44,7 @@ interface BookDetail {
 
 interface BookRow {
     id: number;
+    uuid: string;
     title: string;
     slug: string;
     status: BookStatus;
@@ -97,7 +98,8 @@ const STATUS_META: Record<BookStatus, { label: string; chip: string; dot: string
 const FORMAT_META: Record<BookFormat, { label: string; chip: string }> = {
     pdf: { label: 'PDF', chip: 'bg-[#FFEDE8] text-[#C2410C]' },
     epub: { label: 'EPUB', chip: 'bg-[#E1F6F3] text-[#0D9488]' },
-    other: { label: 'File', chip: 'bg-[#E6F2FF] text-[#0284C7]' },
+    mobi: { label: 'MOBI', chip: 'bg-[#FFF4DB] text-[#B46E00]' },
+    zip: { label: 'ZIP', chip: 'bg-[#E6F2FF] text-[#0284C7]' },
 };
 
 const TILE_TONES = [
@@ -424,7 +426,7 @@ function PriceCell({ book }: { book: BookRow }) {
 
 function FormatChip({ book }: { book: BookRow }) {
     const format = book.book_detail?.format ?? 'pdf';
-    const meta = FORMAT_META[format] ?? FORMAT_META.other;
+    const meta = FORMAT_META[format] ?? FORMAT_META.pdf;
     return <span className={cn('inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold', meta.chip)}>{meta.label}</span>;
 }
 
@@ -575,13 +577,13 @@ export default function BooksIndex({ items, counts, filters }: BooksIndexProps) 
 
         if (action === 'duplicate') {
             // redirects to the edit page of the new draft copy
-            router.post(`${BASE}/${book.id}/duplicate`, {}, done);
+            router.post(`${BASE}/${book.uuid}/duplicate`, {}, done);
             return;
         }
 
         const status = action === 'publish' ? 'published' : 'unpublished';
         router.post(
-            `${BASE}/${book.id}/publish`,
+            `${BASE}/${book.uuid}/publish`,
             { status },
             {
                 ...done,
@@ -603,7 +605,7 @@ export default function BooksIndex({ items, counts, filters }: BooksIndexProps) 
         if (!toDelete) return;
         const name = toDelete.title || 'Untitled book';
         setBusyId(toDelete.id);
-        router.delete(`${BASE}/${toDelete.id}`, {
+        router.delete(`${BASE}/${toDelete.uuid}`, {
             preserveScroll: true,
             onSuccess: () => {
                 setToDelete(null);
@@ -789,7 +791,7 @@ export default function BooksIndex({ items, counts, filters }: BooksIndexProps) 
                                             )}
                                             {items.data.map((book) => {
                                                 const conversion = book.views_count > 0 ? (book.sales_count / book.views_count) * 100 : null;
-                                                const editUrl = `${BASE}/${book.id}/edit`;
+                                                const editUrl = `${BASE}/${book.uuid}/edit`;
                                                 return (
                                                     <tr
                                                         key={book.id}

@@ -15,10 +15,19 @@ class BookDetail extends Model
     protected $fillable = [
         'product_id',
         'author_name',
+        'subtitle',
         'pages',
         'format',
         'file_path',
         'external_link',
+        'whats_inside',
+        'faqs',
+    ];
+
+
+    protected $casts = [
+        'whats_inside' => 'array',
+        'faqs' => 'array',
     ];
 
 

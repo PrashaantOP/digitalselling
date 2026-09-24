@@ -20,7 +20,7 @@ class ProductCoverImageController extends Controller
     {
         $request->validate([
             'images' => ['required', 'array', 'min:1', 'max:' . self::MAX],
-            'images.*' => ['image', 'max:5120'],
+            'images.*' => ['image', 'max:10240'],
         ]);
 
         if ($product->coverImages()->count() + count($request->file('images')) > self::MAX) {
