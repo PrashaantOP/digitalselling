@@ -1,4 +1,5 @@
 import { type SharedData } from '@/types';
+import { VideoEmbed } from '@/components/public/video-embed';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowRight, Award, BookOpen, Check, ChevronDown, ClipboardCheck, Clock, FileText, Headphones, Link2, ListChecks, Lock, Video, type LucideIcon } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
@@ -164,10 +165,7 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
                         {(cover || product.cover_video_url) && (
                             <div className="overflow-hidden rounded-xl border border-[#E4E2DA] bg-white">
                                 {product.cover_video_url ? (
-                                    <div className="flex aspect-video items-center justify-center gap-2 text-sm" style={{ background: '#F6F5F2', color: '#6B6B78' }}>
-                                        <Video className="size-5" style={{ color: accent }} />
-                                        <span className="max-w-[70%] truncate">{product.cover_video_url}</span>
-                                    </div>
+                                    <VideoEmbed url={product.cover_video_url} accent={accent} className="rounded-none border-0" />
                                 ) : (
                                     <img src={asset(cover)} alt="" className="aspect-video w-full object-cover" />
                                 )}

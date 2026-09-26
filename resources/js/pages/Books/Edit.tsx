@@ -27,9 +27,10 @@ import {
     type Device,
 } from '@/components/product-editor/ui';
 import { useAutoSave } from '@/components/product-editor/use-auto-save';
+import { VideoEmbed } from '@/components/public/video-embed';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
-import { Check, ChevronDown, Download, FileText, Link2, Loader2, Play } from 'lucide-react';
+import { Check, ChevronDown, Download, FileText, Link2, Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 type BookFormat = 'pdf' | 'epub' | 'mobi' | 'zip';
@@ -127,12 +128,8 @@ function PreviewPane({ item, host, device }: { item: BookItem; host: string; dev
                 {author && <p className="mt-2 text-[15px] text-[#6B6B78]">by {author}</p>}
             </div>
 
-            {/* video trailer cover ke upar dikhta hai (editor hint jaisa) */}
-            {videoUrl && (
-                <div className="flex aspect-video items-center justify-center gap-2 overflow-hidden rounded-xl border border-[#E4E2DA] bg-[#F6F5F2] text-sm text-[#6B6B78]">
-                    <Play className="size-5" style={{ color: accent }} /> <span className="max-w-[70%] truncate">{videoUrl}</span>
-                </div>
-            )}
+            {/* video trailer cover ke upar — public page jaisa hi thumbnail + play */}
+            <VideoEmbed url={videoUrl} accent={accent} />
 
             {covers.length > 0 && (
                 <div className="relative aspect-video overflow-hidden rounded-xl border border-[#E4E2DA] bg-[#F6F5F2]">

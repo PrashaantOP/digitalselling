@@ -1,5 +1,6 @@
+import { VideoEmbed } from '@/components/public/video-embed';
 import { cn } from '@/lib/utils';
-import { Award, BookOpen, Check, ChevronDown, ClipboardCheck, Clock, FileText, Headphones, ListChecks, Lock, Play, Video, type LucideIcon } from 'lucide-react';
+import { Award, BookOpen, Check, ChevronDown, ClipboardCheck, Clock, FileText, Headphones, ListChecks, Lock, Video, type LucideIcon } from 'lucide-react';
 import { assetUrl } from './api';
 import { type Drafts, FileThumb } from './sections';
 import { type CheckoutQuestion, type CourseDetail, DEFAULT_ACCENT, type FormState, HEX_RE, type ThemeKey } from './types';
@@ -67,9 +68,7 @@ export function CoursePreview({ form, detail, coverImages, checkoutQuestions, dr
             {(coverImages.length > 0 || form.cover_video_url.trim()) && (
                 <div className="overflow-hidden rounded-xl" style={{ border: `1px solid ${t.border}` }}>
                     {form.cover_video_url.trim() ? (
-                        <div className="flex aspect-video items-center justify-center gap-2 text-sm" style={{ background: t.card, color: t.muted }}>
-                            <Play className="size-5" style={{ color: accent }} /> <span className="max-w-[70%] truncate">{form.cover_video_url}</span>
-                        </div>
+                        <VideoEmbed url={form.cover_video_url} accent={accent} className="rounded-none border-0" />
                     ) : (
                         <div className="relative">
                             <img src={assetUrl(coverImages[0].image_path)} alt="" className="aspect-video w-full object-cover" />

@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\StoreLinkClick;
 use App\Models\StorePageView;
 use App\Models\Visitor;
+use App\Support\StorefrontCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -30,6 +31,7 @@ class StoreAnalyticsController extends Controller
         return Inertia::render('Store/Edit', [
             'tab' => 'analytics',
             'store' => $store->load(['appearance', 'socialLinks', 'headerButtons']),
+            'products' => StorefrontCatalog::for($store->user),
             'analytics' => [
                 'days' => $days,
                 'totals' => [

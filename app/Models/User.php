@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PlanPricing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -24,6 +25,7 @@ class User extends Authenticatable
         'role',
         'parent_creator_id',
         'plan',
+        'plan_expires_at',
         'status',
     ];
 
@@ -35,6 +37,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'phone_verified_at' => 'datetime',
+        'plan_expires_at' => 'datetime',
         'password' => 'hashed',
     ];
 
@@ -57,6 +60,12 @@ class User extends Authenticatable
     public function isSuperAdmin(): bool
     {
         return $this->role === 'super_admin';
+    }
+
+    /** Trial expiry ko dhyan me rakh ke — seedha `plan === 'pro'` mat check karo. */
+    public function onPro(): bool
+    {
+        return PlanPricing::effectivePlan($this) === 'pro';
     }
 
     public static function uniqueUsername(string $name, ?int $ignoreId = null): string

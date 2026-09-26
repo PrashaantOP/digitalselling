@@ -35,6 +35,12 @@ Route::post('/book/{username}/{serviceSlug}', [BookingPageController::class, 'st
 // ---- Analytics: link click beacon ----
 Route::post('/track/click', [LinkClickController::class, 'store'])->middleware('throttle:60,1')->name('track.click');
 
+// ---- Webapp: /w/{username} (catch-all se pehle hona zaroori) ----
+Route::get('/w/{username}', [StorefrontController::class, 'webapp'])
+    ->where('username', '[A-Za-z0-9_.\-]+')
+    ->middleware($pages)
+    ->name('webapp.show');
+
 // ---- Storefront: catch-all, ABSOLUTE LAST ----
 $reserved = implode('|', array_map('preg_quote', CreatorProfileController::RESERVED_USERNAMES));
 

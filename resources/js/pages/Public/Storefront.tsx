@@ -1,3 +1,4 @@
+import { OwnerPreviewBanner } from '@/components/store-page/owner-preview-banner';
 import { Head } from '@inertiajs/react';
 import { Check, Globe, Instagram, Menu, MessageCircle, Monitor, Sparkles, Star, Users, Video, Youtube } from 'lucide-react';
 import { type CSSProperties, useEffect, useMemo, useState } from 'react';
@@ -40,6 +41,7 @@ type StorefrontProps = {
     socialLinks?: SocialLink[];
     headerButtons?: HeaderButton[];
     products?: ProductCard[];
+    ownerPreview?: boolean;
 };
 
 const formatCurrency = (value: number | string) =>
@@ -300,7 +302,7 @@ const css = `
   @media (max-width: 480px) { .nav { height: 66px; gap: 8px; } .brand-tag { display: none; } .brand-name { font-size: 14px; } .mark { width: 30px; height: 30px; font-size: 14px; } .nav-right { gap: 8px; } .nav-right .btn { padding: 8px 14px; font-size: 13px; } .icon-btn { width: 32px; height: 32px; font-size: 13px; } .menu-btn { width: 32px; height: 32px; } }
 `;
 
-export default function Storefront({ creator, store, appearance, socialLinks = [], headerButtons = [], products = [] }: StorefrontProps) {
+export default function Storefront({ creator, store, appearance, socialLinks = [], headerButtons = [], products = [], ownerPreview = false }: StorefrontProps) {
     const [theme, setTheme] = useState<'light' | 'dark'>('dark');
     const [menuOpen, setMenuOpen] = useState(false);
 
@@ -349,6 +351,7 @@ export default function Storefront({ creator, store, appearance, socialLinks = [
                 <meta name="description" content={store.meta_description || subtitle} />
             </Head>
             <style>{css}</style>
+            {ownerPreview && <OwnerPreviewBanner />}
             <div style={{ ...themeVars, background: 'var(--bg)', color: 'var(--text)' }}>
                 <header className="site">
                     <div className="wrap nav">
@@ -361,6 +364,7 @@ export default function Storefront({ creator, store, appearance, socialLinks = [
                             <a href="#courses">Courses</a>
                             <a href="#about">About</a>
                             <a href="#footer">Contact</a>
+                            <a href={`/${creator.username}`}>Store</a>
                         </nav>
                         <div className="nav-right">
                             <button className="menu-btn" aria-label="Open menu" onClick={() => setMenuOpen((v) => !v)}>
@@ -378,6 +382,7 @@ export default function Storefront({ creator, store, appearance, socialLinks = [
                         <a href="#" onClick={() => setMenuOpen(false)}>Home</a>
                         <a href="#courses" onClick={() => setMenuOpen(false)}>Courses</a>
                         <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
+                        <a href={`/${creator.username}`}>Store</a>
                         <a href="#footer" onClick={() => setMenuOpen(false)}>Contact</a>
                         <a href="#" onClick={() => setMenuOpen(false)}>Log in</a>
                     </div>
@@ -519,7 +524,7 @@ export default function Storefront({ creator, store, appearance, socialLinks = [
                                     <li><a href="#courses">Courses</a></li>
                                     <li><a href="#about">Features</a></li>
                                     <li><a href="#">Community</a></li>
-                                    <li><a href="#">Store</a></li>
+                                    <li><a href={`/${creator.username}`}>Store</a></li>
                                 </ul>
                             </div>
                             <div className="footer-col">

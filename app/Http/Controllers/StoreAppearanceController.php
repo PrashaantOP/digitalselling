@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\HandlesUploads;
 use App\Http\Controllers\Concerns\RespondsFlexibly;
 use App\Models\StoreAppearance;
+use App\Support\StorefrontCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -19,6 +20,7 @@ class StoreAppearanceController extends Controller
 
         return Inertia::render('Store/Edit', [
             'store' => $store->load(['appearance', 'socialLinks', 'headerButtons']),
+            'products' => StorefrontCatalog::for($store->user),
             'tab' => 'appearance',
         ]);
     }

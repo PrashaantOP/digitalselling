@@ -1,3 +1,4 @@
+import { VideoEmbed } from '@/components/public/video-embed';
 import { firstError } from '@/components/course-editor/api';
 import { EditorShell, publishProduct } from '@/components/product-editor/editor-shell';
 import {
@@ -444,6 +445,8 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
                     className={INPUT_CLASS}
                 />
                 <FieldError message={errorFor('hidden_video_url')} />
+                {/* unlock ke baad buyer ko aisa hi player dikhega */}
+                <VideoEmbed url={form.hidden_video_url} accent="#4F46E5" className="mt-1" />
             </div>
 
             {/* Hidden files */}

@@ -30,6 +30,7 @@ use App\Http\Controllers\PaymentAccountController;
 use App\Http\Controllers\PaymentPageController;
 use App\Http\Controllers\PaymentTransactionController;
 use App\Http\Controllers\PayoutController;
+use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\ProductAddonController;
 use App\Http\Controllers\ProductsOverviewController;
 use App\Http\Controllers\ProductCoverImageController;
@@ -49,7 +50,6 @@ use App\Http\Controllers\StoreSettingsController;
 use App\Http\Controllers\StoreSocialLinkController;
 use App\Http\Controllers\SubAdminController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,9 +60,16 @@ use Inertia\Inertia;
 | Webhooks => routes/webhooks.php (bootstrap/app.php me alag register hota hai, CSRF/session ke bina).
 */
 
-Route::get('/', function () {
-    return Inertia::render('welcome');
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Footer ke product + legal/company pages — public.php ke catch-all /{username} se pehle hone chahiye
+Route::get('/products/{type}', [HomeController::class, 'product'])
+    ->whereIn('type', array_keys(HomeController::PRODUCT_PAGES))
+    ->name('products.page');
+
+Route::get('/{page}', [HomeController::class, 'page'])
+    ->whereIn('page', HomeController::PAGES)
+    ->name('legal.show');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

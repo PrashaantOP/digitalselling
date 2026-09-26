@@ -1,10 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { StorePageView } from '@/components/store-page/store-page-view';
+import { THEMES, type StoreProduct } from '@/components/store-page/types';
 import AppLayout from '@/layouts/app-layout';
 import { cn, formatCurrency } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { type FormDataConvertible } from '@inertiajs/core';
 import {
     AlertTriangle,
@@ -17,10 +19,8 @@ import {
     Globe,
     Image as ImageIcon,
     Info,
-    Instagram,
     Link2,
     Loader2,
-    MessageCircle,
     Monitor,
     MousePointerClick,
     Palette,
@@ -36,7 +36,6 @@ import {
     TrendingUp,
     UploadCloud,
     Users,
-    Youtube,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -110,15 +109,6 @@ const TABS: { key: StoreTab; label: string; href: string }[] = [
     { key: 'analytics', label: 'Analytics', href: '/dashboard/store/analytics' },
     { key: 'appearance', label: 'Appearance', href: '/dashboard/store/appearance' },
     { key: 'settings', label: 'Settings', href: '/dashboard/store/settings' },
-];
-
-const THEMES: { value: StoreAppearance['theme']; label: string; subtitle: string; swatch: string; preview: string }[] = [
-    { value: 'classic', label: 'Classic', subtitle: 'Dark Velvet', swatch: 'bg-[#3D0814]', preview: 'from-[#3D0814] via-[#22040B] to-[#0A0103]' },
-    { value: 'ocean', label: 'Ocean', subtitle: 'Deep Navy', swatch: 'bg-[#0F3057]', preview: 'from-[#0A192F] via-[#0F3057] to-[#1E40AF]' },
-    { value: 'sunset', label: 'Sunset', subtitle: 'Warm Dusk', swatch: 'bg-[#831843]', preview: 'from-[#311042] via-[#831843] to-[#F97316]' },
-    { value: 'forest', label: 'Forest', subtitle: 'Deep Emerald', swatch: 'bg-[#064E3B]', preview: 'from-[#062C1E] via-[#064E3B] to-[#047857]' },
-    { value: 'mono', label: 'Mono', subtitle: 'Slate Black', swatch: 'bg-[#1A1A22]', preview: 'from-[#121217] via-[#1A1A22] to-[#252530]' },
-    { value: 'paper', label: 'Paper', subtitle: 'Editorial Off-White', swatch: 'bg-[#EFECE4]', preview: 'from-[#FDFCF9] via-[#F6F4EE] to-[#EFECE4]' },
 ];
 
 const SOCIAL_PLATFORMS: { value: SocialPlatform; label: string; placeholder: string }[] = [
@@ -306,10 +296,12 @@ function FixedSaveBar({ status, onSave, saving, right }: { status: SaveStatus; o
 
 function MobilePreview({
     displayName,
+    username,
     bio,
     isLive = true,
     theme = 'classic',
     brandColor = '#4F46E5',
+    fontFamily = null,
     backgroundUrl = null,
     columnLayout = 'single',
     avatar,
@@ -317,107 +309,73 @@ function MobilePreview({
     buttons = [],
 }: {
     displayName: string;
+    username?: string | null;
     bio: string;
     isLive?: boolean;
     theme?: StoreAppearance['theme'];
     brandColor?: string;
+    fontFamily?: string | null;
     backgroundUrl?: string | null;
     columnLayout?: 'single' | 'double';
     avatar?: string | null;
     socials?: SocialLink[];
     buttons?: HeaderButton[];
 }) {
-    const initials = (displayName || 'U').trim().charAt(0).toUpperCase();
-    const activeTheme = THEMES.find((t) => t.value === theme) ?? THEMES[0];
-    const activeSocials = socials.filter((s) => s.url);
+    // asli published products — wahi jo /username pe dikhenge (StorefrontCatalog)
+    const { products = [] } = usePage<{ products?: StoreProduct[] }>().props;
+    const handle = username || slugify(displayName || 'username');
 
     return (
         <div className="sticky top-20 flex flex-col items-center xl:top-24">
             <div className="relative w-[330px] rounded-[44px] border-4 border-[#2A2A35] bg-[#14141B] p-3 shadow-2xl">
-                <div
-                    className={cn('relative flex h-[640px] flex-col overflow-hidden rounded-[34px] bg-gradient-to-b text-white', activeTheme.preview)}
-                    style={backgroundUrl ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.6)), url(${backgroundUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
-                >
-                    <div className="flex items-center justify-between px-5 pt-3 text-[11px] font-semibold text-white/90">
+                <div className="relative flex h-[640px] flex-col overflow-hidden rounded-[34px] bg-black">
+                    <div className="flex items-center justify-between bg-black px-5 pt-3 pb-1.5 text-[11px] font-semibold text-white/90">
                         <span>9:41</span>
-                        <span className="h-4 w-20 rounded-full bg-black/80" />
+                        <span className="h-4 w-20 rounded-full bg-[#1c1c22]" />
                         <Smartphone className="size-3.5" />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 pt-3">
-                        <div className="flex flex-col items-center text-center">
-                            <div className="relative mb-2">
-                                {avatar ? (
-                                    <img src={avatar} alt="" className="size-16 rounded-full border-2 border-white/70 object-cover" />
-                                ) : (
-                                    <div className="flex size-16 items-center justify-center rounded-full border-2 border-white/70 text-2xl font-bold" style={{ backgroundColor: brandColor }}>{initials}</div>
-                                )}
-                                {isLive && <span className="absolute right-0 bottom-0 size-4 rounded-full border-2 border-black/40 bg-[#059669]" />}
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <h3 className="text-[15px] font-bold tracking-tight">{displayName || 'Your Name'}</h3>
-                                <CheckCircle2 className="size-3.5 text-sky-300" />
-                            </div>
-                            <p className="text-[11px] text-white/60">@{slugify(displayName || 'username')}</p>
-                            <p className="mt-1.5 max-w-[230px] text-[11px] leading-snug text-white/80">{bio || 'Welcome to my store 🚀'}</p>
-
-                            {activeSocials.length > 0 && (
-                                <div className="my-3 flex items-center gap-1.5">
-                                    {activeSocials.map((s) => (
-                                        <span key={s.platform} className="flex size-6 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm">
-                                            {s.platform === 'instagram' ? <Instagram className="size-3" /> : s.platform === 'youtube' ? <Youtube className="size-3" /> : s.platform === 'whatsapp' ? <MessageCircle className="size-3" /> : <Globe className="size-3" />}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {buttons.length > 0 && (
-                            <div className="mb-3 flex flex-col gap-1.5">
-                                {buttons.map((b) => (
-                                    <div key={b.id} className="flex w-full items-center justify-between rounded-full px-3 py-2 text-[11px] font-medium" style={{ backgroundColor: brandColor }}>
-                                        <span className="truncate">{b.label}</span>
-                                        <Link2 className="size-3.5" />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        <div className="text-left">
-                            <span className="px-0.5 text-[9px] font-semibold tracking-wider text-white/50 uppercase">Featured Products</span>
-                            <div className={cn('mt-2 gap-2', columnLayout === 'double' ? 'grid grid-cols-2' : 'flex flex-col')}>
-                                {[{ t: 'Design System Masterclass 2024', p: '₹14,999' }, { t: 'Figma Tokens Guide', p: '₹799' }].map((p) => (
-                                    <div key={p.t} className={cn('flex items-center justify-between gap-2 rounded-xl border border-white/15 bg-white/10 p-2.5 backdrop-blur-md', columnLayout === 'double' && 'flex-col items-start')}>
-                                        <div className="flex min-w-0 items-center gap-2">
-                                            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/15">
-                                                <ShoppingBag className="size-4" />
-                                            </span>
-                                            <div className="flex min-w-0 flex-col">
-                                                <span className="truncate text-[11px] font-semibold">{p.t}</span>
-                                                <span className="text-[11px] font-bold text-emerald-300">{p.p}</span>
-                                            </div>
-                                        </div>
-                                        <span className="shrink-0 rounded-md bg-white px-2 py-1 text-[10px] font-semibold" style={{ color: brandColor }}>Buy →</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="mt-4 flex items-center justify-center gap-1 border-t border-white/10 pt-2 text-[10px] text-white/40">
-                            <span>Powered by</span>
-                            <span className="font-bold text-white/60">Kiln Studio</span>
-                        </div>
+                    <div className="no-scrollbar flex-1 overflow-y-auto">
+                        <StorePageView
+                            mode="preview"
+                            data={{
+                                displayName,
+                                username: handle,
+                                bio,
+                                avatarUrl: avatar ?? null,
+                                isLive,
+                                theme,
+                                brandColor,
+                                fontFamily,
+                                backgroundUrl,
+                                columnLayout,
+                                sensitive: false,
+                                socials,
+                                buttons,
+                                products,
+                            }}
+                        />
                     </div>
 
-                    <div className="flex justify-center pb-2">
+                    <div className="flex justify-center bg-black pt-1.5 pb-2">
                         <span className="h-1 w-24 rounded-full bg-white/40" />
                     </div>
                 </div>
             </div>
             <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-[#8A8A96]">
                 <span className="size-1.5 rounded-full bg-[#059669]" />
-                Live preview · 375×812 Mobile · Updates in real time
+                Live preview · Updates in real time
             </p>
+            {username && (
+                <div className="mt-2 flex items-center gap-2 text-xs font-semibold">
+                    <a href={`/${username}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-[#E4E2DA] bg-white px-3 py-1.5 text-[#14141B] transition hover:border-[#4F46E5] hover:text-[#4F46E5]">
+                        <StoreIcon className="size-3.5" /> View store
+                    </a>
+                    <a href={`/w/${username}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-[#E4E2DA] bg-white px-3 py-1.5 text-[#14141B] transition hover:border-[#4F46E5] hover:text-[#4F46E5]">
+                        <Globe className="size-3.5" /> View website
+                    </a>
+                </div>
+            )}
         </div>
     );
 }
@@ -517,7 +475,7 @@ function StoreTab({ store }: { store: Store }) {
                                 </span>
                             </div>
                             <p className="text-xs text-[#8A8A96]">
-                                Your store is at <code className="font-mono text-[11px] text-[#4B4B57]">creatorapp.in/{form.username}</code> and bookings at <code className="font-mono text-[11px] text-[#4B4B57]">/book/{form.username}</code>
+                                Your store is at <code className="font-mono text-[11px] text-[#4B4B57]">creatorapp.in/{form.username}</code>, your website at <code className="font-mono text-[11px] text-[#4B4B57]">/w/{form.username}</code> and bookings at <code className="font-mono text-[11px] text-[#4B4B57]">/book/{form.username}</code>
                             </p>
                         </div>
 
@@ -595,7 +553,7 @@ function StoreTab({ store }: { store: Store }) {
                 <HeaderButtonsSection store={store} />
             </div>
 
-            <MobilePreview displayName={form.display_name} bio={form.bio} isLive={form.is_live} theme={store.appearance?.theme ?? 'classic'} brandColor={brandColor} backgroundUrl={backgroundUrl} columnLayout={store.column_layout} avatar={avatarUrl} socials={store.social_links} buttons={store.header_buttons} />
+            <MobilePreview displayName={form.display_name} username={form.username} fontFamily={store.appearance?.font_family} bio={form.bio} isLive={form.is_live} theme={store.appearance?.theme ?? 'classic'} brandColor={brandColor} backgroundUrl={backgroundUrl} columnLayout={store.column_layout} avatar={avatarUrl} socials={store.social_links} buttons={store.header_buttons} />
 
             <FixedSaveBar status={status} onSave={flushNow} saving={status === 'saving'} />
         </div>
@@ -718,6 +676,7 @@ function AppearanceTab({ store }: { store: Store }) {
         return stored.startsWith('#') ? stored : `#${stored}`;
     });
     const fontRef = useRef(appearance?.font_family ?? FONT_OPTIONS[0]);
+    const [font, setFont] = useState(fontRef.current);
     const bgInputRef = useRef<HTMLInputElement>(null);
 
     function selectTheme(next: StoreAppearance['theme']) {
@@ -732,6 +691,7 @@ function AppearanceTab({ store }: { store: Store }) {
 
     function changeFont(next: string) {
         fontRef.current = next;
+        setFont(next);
         save({ theme, brand_color: brandColor.replace('#', ''), font_family: next });
     }
 
@@ -879,7 +839,7 @@ function AppearanceTab({ store }: { store: Store }) {
                 </SectionCard>
             </div>
 
-            <MobilePreview displayName={store.display_name} bio={store.bio ?? ''} isLive={store.is_live} theme={theme} brandColor={brandColor} backgroundUrl={backgroundUrl} columnLayout={store.column_layout} avatar={store.avatar ? `/assets/${store.avatar}` : null} socials={store.social_links} buttons={store.header_buttons} />
+            <MobilePreview displayName={store.display_name} username={store.username} fontFamily={font} bio={store.bio ?? ''} isLive={store.is_live} theme={theme} brandColor={brandColor} backgroundUrl={backgroundUrl} columnLayout={store.column_layout} avatar={store.avatar ? `/assets/${store.avatar}` : null} socials={store.social_links} buttons={store.header_buttons} />
 
             <FixedSaveBar status={status} onSave={flushNow} saving={status === 'saving'} />
         </div>
@@ -1017,7 +977,7 @@ function SettingsTab({ store }: { store: Store }) {
                 </SectionCard>
             </div>
 
-            <MobilePreview displayName={store.display_name} bio={store.bio ?? ''} isLive={store.is_live} theme={store.appearance?.theme ?? 'classic'} brandColor={brandHex(store.appearance?.brand_color)} backgroundUrl={store.appearance?.custom_background_path ? `/assets/${store.appearance.custom_background_path}` : null} columnLayout={form.column_layout} avatar={store.avatar ? `/assets/${store.avatar}` : null} socials={store.social_links} buttons={store.header_buttons} />
+            <MobilePreview displayName={store.display_name} username={form.username} fontFamily={store.appearance?.font_family} bio={store.bio ?? ''} isLive={store.is_live} theme={store.appearance?.theme ?? 'classic'} brandColor={brandHex(store.appearance?.brand_color)} backgroundUrl={store.appearance?.custom_background_path ? `/assets/${store.appearance.custom_background_path}` : null} columnLayout={form.column_layout} avatar={store.avatar ? `/assets/${store.avatar}` : null} socials={store.social_links} buttons={store.header_buttons} />
 
             <FixedSaveBar status={status} onSave={flushNow} saving={status === 'saving'} />
         </div>

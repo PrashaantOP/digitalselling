@@ -3,6 +3,7 @@ import { cn, formatCurrency } from '@/lib/utils';
 import type { RequestPayload } from '@inertiajs/core';
 import { Head, router } from '@inertiajs/react';
 import { assetUrl, firstError } from '@/components/course-editor/api';
+import { VideoEmbed } from '@/components/public/video-embed';
 import {
     ArrowRight,
     Check,
@@ -302,6 +303,9 @@ function PreviewPane({ item, publicUrl, device }: { item: EventItem; publicUrl: 
 
                 {/* page content */}
                 <div className={cn('min-h-0 flex-1 overflow-y-auto bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden', isMobile ? 'px-8 py-8' : 'px-12 py-10')}>
+                    {/* video link ho to cover ke upar — thumbnail pe click karte hi play */}
+                    <VideoEmbed url={item.cover_video_url} accent="#2E6EF7" className="mx-auto mb-7" />
+
                     {/* cover image gallery */}
                     {covers.length > 0 && (
                         <div className="relative mx-auto mb-7 aspect-video overflow-hidden rounded-xl border border-[#E4E2DA] bg-[#F6F5F2]">

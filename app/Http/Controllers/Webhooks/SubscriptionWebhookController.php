@@ -44,8 +44,8 @@ class SubscriptionWebhookController extends Controller
                 $subscription->cancelled_at = null;
                 $subscription->save();
 
-                // users.plan enum ('free','pro') — paid plan = pro
-                $user->update(['plan' => $plan->slug === 'free' ? 'free' : 'pro']);
+                // users.plan enum ('free','pro') — paid plan = pro. Expiry hatao warna trial wali date paid user ko downgrade kar degi.
+                $user->update(['plan' => $plan->slug === 'free' ? 'free' : 'pro', 'plan_expires_at' => null]);
 
                 if ($event === 'subscription.charged' && ($payment = $request->input('payload.payment.entity'))) {
                     BillingInvoice::firstOrCreate(
@@ -73,7 +73,7 @@ class SubscriptionWebhookController extends Controller
                 $subscription->cancelled_at = now();
                 $subscription->save();
 
-                $user->update(['plan' => 'free']);
+                $user->update(['plan' => 'free', 'plan_expires_at' => null]);
                 break;
         }
 

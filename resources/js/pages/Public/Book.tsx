@@ -7,7 +7,8 @@ import {
     SectionLabel,
     type PublicCreator,
 } from '@/components/public/public-product-layout';
-import { Check, ChevronDown, Download, FileText, Video } from 'lucide-react';
+import { VideoEmbed } from '@/components/public/video-embed';
+import { Check, ChevronDown, Download, FileText } from 'lucide-react';
 import { useState } from 'react';
 
 type Product = CheckoutPricing & {
@@ -74,20 +75,8 @@ export default function Book({ product, creator, checkoutUrl }: Props) {
                 {book.author_name && <p className="mt-3 text-base text-[#6B6B78]">by {book.author_name}</p>}
             </div>
 
-            {/* video trailer cover ke upar */}
-            {product.cover_video_url && (
-                <div className="flex aspect-video items-center justify-center gap-2 overflow-hidden rounded-xl border border-[#E4E2DA] bg-[#F6F5F2] text-sm text-[#6B6B78]">
-                    <Video className="size-5" style={{ color: accent }} />
-                    <a
-                        href={product.cover_video_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="max-w-[70%] truncate underline-offset-2 hover:underline"
-                    >
-                        {product.cover_video_url}
-                    </a>
-                </div>
-            )}
+            {/* video trailer cover ke upar — thumbnail pe click karte hi player chalta hai */}
+            <VideoEmbed url={product.cover_video_url} accent={accent} />
 
             {covers.length > 0 && (
                 <div className="relative overflow-hidden rounded-xl border border-[#E4E2DA] bg-white">

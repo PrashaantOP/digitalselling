@@ -1,3 +1,4 @@
+import { VideoEmbed } from '@/components/public/video-embed';
 import { cn } from '@/lib/utils';
 import { Check, FileText, Loader2, Pencil, Plus, Trash2, Upload, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
@@ -93,6 +94,8 @@ function VideoEditor({ lesson, onSaved, startSaved }: EditorProps) {
             <Field label="Video URL" htmlFor={`video-url-${lesson.id}`} required error={s.fieldErrors.video_url} hint="YouTube, Vimeo or a direct .mp4 link.">
                 <input id={`video-url-${lesson.id}`} value={url} onChange={(e) => (setUrl(e.target.value), s.touch())} placeholder="https://www.youtube.com/watch?v=…" className={cn(INPUT, invalid(s.fieldErrors.video_url))} />
             </Field>
+            {/* link daalte hi student jaisa player preview */}
+            <VideoEmbed url={url} accent="#4F46E5" />
             <Field label="Lesson notes" htmlFor={`video-notes-${lesson.id}`} hint="Shown under the video.">
                 <textarea id={`video-notes-${lesson.id}`} rows={3} value={notes} onChange={(e) => (setNotes(e.target.value), s.touch())} className={TEXTAREA} />
             </Field>

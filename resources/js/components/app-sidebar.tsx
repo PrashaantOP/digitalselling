@@ -78,6 +78,7 @@ export function AppSidebar() {
                 <div className="min-w-0"><p className="truncate text-xs font-bold text-[#14141B]">{auth.user.name}'s Store</p><p className="truncate text-[11px] text-[#8A8A96]">{username ? storeUrl : 'Set up your store'}</p></div>
                 <ExternalLink className="size-4 shrink-0 text-[#8A8A96] transition group-hover:text-[#4F46E5]" />
             </a>
+            {username && <a href={`${baseUrl}/w/${username}`} target="_blank" rel="noreferrer" title="Open your website in a new tab" className="mt-1.5 flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium text-[#8A8A96] transition hover:bg-[#F0EFEA] hover:text-[#4F46E5]"><span className="truncate">Website · /w/{username}</span><ExternalLink className="size-3 shrink-0" /></a>}
         </div>
 
         <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

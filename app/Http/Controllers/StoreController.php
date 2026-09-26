@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HandlesUploads;
 use App\Http\Controllers\Concerns\RespondsFlexibly;
+use App\Http\Controllers\Settings\CreatorProfileController;
 use App\Models\Store;
+use App\Support\StorefrontCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -41,7 +43,7 @@ class StoreController extends Controller
     {
         $store = self::storeFor($this->tid())->load(['appearance', 'socialLinks', 'headerButtons']);
 
-        return Inertia::render('Store/Edit', ['store' => $store]);
+        return Inertia::render('Store/Edit', ['store' => $store, 'products' => StorefrontCatalog::for($store->user)]);
     }
 
     public function update(Request $request)
@@ -49,7 +51,7 @@ class StoreController extends Controller
         $store = self::storeFor($this->tid());
 
         $data = $request->validate([
-            'username' => ['required', 'string', 'max:30', 'regex:/^[a-z0-9]+$/', Rule::unique('stores', 'username')->ignore($store->id), Rule::unique('users', 'username')->ignore($store->user_id)],
+            'username' => ['required', 'string', 'max:30', 'regex:/^[a-z0-9]+$/', Rule::notIn(CreatorProfileController::RESERVED_USERNAMES), Rule::unique('stores', 'username')->ignore($store->id), Rule::unique('users', 'username')->ignore($store->user_id)],
             'display_name' => ['required', 'string', 'max:150'],
             'bio' => ['nullable', 'string', 'max:500'],
             'welcome_message' => ['nullable', 'string', 'max:500'],

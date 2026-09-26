@@ -23,6 +23,7 @@ class CreatorProfileController extends Controller
         'otp',
         'invite',
         'book',
+        'w',
         'c',
         'e',
         'b',
@@ -41,6 +42,13 @@ class CreatorProfileController extends Controller
         'up',
         'forgot-password',
         'reset-password',
+        // landing footer pages (HomeController::PAGES)
+        'privacy-policy',
+        'terms',
+        'refund-policy',
+        'about',
+        'contact',
+        'products',
     ];
 
     public function edit()

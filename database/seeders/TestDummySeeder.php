@@ -103,11 +103,11 @@ class TestDummySeeder extends Seeder
             ]);
 
             // ---------- 3. PLAN / SUBSCRIPTION / BILLING / NOTIFICATIONS ----------
-            $planId = $this->upsert('subscription_plans', ['slug' => 'pro-monthly'], [
-                'name' => 'Pro Monthly',
+            // Wahi Pro plan jo migration seed karta hai (₹499/month, 10%) — alag dummy plan landing pricing pe dikh jaata
+            $planId = $this->upsert('subscription_plans', ['slug' => 'pro'], [
+                'name' => 'Pro',
                 'monthly_price' => 499,
-                'commission_rate' => 0.00,
-                'features' => json_encode(['0% fee', 'custom domain']),
+                'commission_rate' => 10.00,
                 'is_active' => true,
             ]);
             $subscriptionId = $this->upsert('subscriptions', ['user_id' => $userId, 'plan_id' => $planId], [
