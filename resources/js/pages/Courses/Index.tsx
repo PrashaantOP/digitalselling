@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useRefreshOnBack } from '@/hooks/use-refresh-on-back';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -255,6 +256,9 @@ function RowActions({ course, busy, onAction }: { course: CourseRow; busy: boole
 /* ------------------------------------------------------------------ */
 
 export default function CoursesIndex({ items, counts, filters }: CoursesIndexProps) {
+    // back/forward se lautne par list stale na rahe (naya draft ya duplicate turant dikhe)
+    useRefreshOnBack(['items', 'counts']);
+
     const [search, setSearch] = useState(filters.search ?? '');
     const [creating, setCreating] = useState(false);
     const [notice, setNotice] = useState<Notice | null>(null);
@@ -383,7 +387,7 @@ export default function CoursesIndex({ items, counts, filters }: CoursesIndexPro
 
                     {/* First-run empty state */}
                     {totalCourses === 0 && !hasFilters ? (
-                        <div className="flex flex-col items-center gap-3 rounded-xl bg-white px-6 py-14 text-center shadow-sm">
+                        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-white px-6 py-14 text-center shadow-sm">
                             <span className="flex size-14 items-center justify-center rounded-2xl bg-[#EEF2FF] text-[#4F46E5]">
                                 <GraduationCap className="size-7" />
                             </span>

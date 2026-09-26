@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useRefreshOnBack } from '@/hooks/use-refresh-on-back';
 import AppLayout from '@/layouts/app-layout';
 import { cn, formatCurrency } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -78,6 +79,9 @@ const FILTER_TABS: { type: 'all' | ProductType; label: string }[] = [
 ];
 
 export default function ProductsIndex({ products, counts, filters }: ProductsIndexProps) {
+    // back/forward se lautne par list stale na rahe (naya draft ya duplicate turant dikhe)
+    useRefreshOnBack(['products', 'counts']);
+
     const [search, setSearch] = useState(filters.search ?? '');
 
     function applyFilter(type: string | null) {

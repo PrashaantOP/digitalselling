@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { ArrowRight, Link2, type LucideIcon } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 
@@ -38,6 +39,8 @@ export function CheckoutCard({
     cta,
     checkoutUrl,
     shareText,
+    collectName = true,
+    collectNote = false,
 }: {
     accent: string;
     pricing: CheckoutPricing;
@@ -46,6 +49,10 @@ export function CheckoutCard({
     cta: string;
     checkoutUrl: string;
     shareText: string;
+    /** Payment pages "Full name" collection ko optional bana sakte hain — baaki products me hamesha true. */
+    collectName?: boolean;
+    /** Payment pages ek optional "note / reference" field bhi maang sakte hain. */
+    collectNote?: boolean;
 }) {
     const basePrice = Number(pricing.price) || 0;
     const discounted =
@@ -61,7 +68,7 @@ export function CheckoutCard({
     const customQuestions = questions.filter((q) => !isGstOrState(q) && !['email', 'phone'].includes(q.field_type));
 
     const [amount, setAmount] = useState(basePrice > 0 ? String(basePrice) : '');
-    const [fields, setFields] = useState({ name: '', email: '', phone: '' });
+    const [fields, setFields] = useState({ name: '', email: '', phone: '', note: '' });
     const [answers, setAnswers] = useState<Record<number, string>>({});
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -104,7 +111,7 @@ export function CheckoutCard({
     return (
         <aside className="h-fit rounded-2xl border border-[#E4E2DA] bg-white p-5 shadow-sm lg:sticky lg:top-6">
             {rows.map((row, i) => (
-                <div key={row.text} className={`${i > 0 ? 'mt-2' : ''}flex items-center gap-2.5 text-sm text-[#6B6B78]`}>
+                <div key={row.text} className={cn('flex items-center gap-2.5 text-sm text-[#6B6B78]', i > 0 && 'mt-2')}>
                     <row.icon className="size-4 shrink-0" /> <span className="min-w-0">{row.text}</span>
                 </div>
             ))}
@@ -133,14 +140,16 @@ export function CheckoutCard({
                         />
                     </div>
                 )}
-                <input
-                    value={fields.name}
-                    onChange={(e) => set('name', e.target.value)}
-                    required
-                    maxLength={150}
-                    placeholder="Full name"
-                    className={INPUT}
-                />
+                {collectName && (
+                    <input
+                        value={fields.name}
+                        onChange={(e) => set('name', e.target.value)}
+                        required
+                        maxLength={150}
+                        placeholder="Full name"
+                        className={INPUT}
+                    />
+                )}
                 <input
                     type="email"
                     value={fields.email}
@@ -162,6 +171,16 @@ export function CheckoutCard({
                         className="h-full min-w-0 flex-1 rounded-r-lg px-3 text-sm text-[#14141B] outline-none placeholder:text-[#8A8A96]"
                     />
                 </div>
+                {collectNote && (
+                    <textarea
+                        value={fields.note}
+                        onChange={(e) => set('note', e.target.value)}
+                        maxLength={500}
+                        rows={2}
+                        placeholder="Note / reference (optional)"
+                        className={cn(INPUT, 'h-auto min-h-22 resize-none py-2.5')}
+                    />
+                )}
                 {customQuestions.map((question) =>
                     question.field_type === 'dropdown' ? (
                         <select

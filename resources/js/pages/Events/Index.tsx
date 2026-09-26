@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { useRefreshOnBack } from '@/hooks/use-refresh-on-back';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -582,6 +583,9 @@ function RowActions({
 /* ------------------------------------------------------------------ */
 
 export default function EventsIndex({ items, counts, filters }: EventsIndexProps) {
+    // back/forward se lautne par list stale na rahe (naya draft ya duplicate turant dikhe)
+    useRefreshOnBack(['items', 'counts']);
+
     const [search, setSearch] = useState(filters.search ?? '');
     const [creating, setCreating] = useState(false);
     const [notice, setNotice] = useState<Notice | null>(null);
@@ -746,7 +750,7 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
 
                     {/* First-run empty state */}
                     {totalEvents === 0 && !hasFilters ? (
-                        <div className="flex flex-col items-center gap-3 rounded-xl bg-white px-6 py-14 text-center shadow-sm">
+                        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-white px-6 py-14 text-center shadow-sm">
                             <span className="flex size-14 items-center justify-center rounded-2xl bg-[#FFEDE8] text-[#FF6B4A]">
                                 <Calendar className="size-7" />
                             </span>

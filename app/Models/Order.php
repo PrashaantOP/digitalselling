@@ -22,6 +22,7 @@ class Order extends Model
         'buyer_phone',
         'buyer_gstin',
         'buyer_state',
+        'buyer_note',
         'coupon_id',
         'base_amount',
         'discount_amount',

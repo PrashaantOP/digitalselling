@@ -131,4 +131,9 @@ class Product extends Model
     {
         return $this->hasOne(BookingServiceDetail::class, 'product_id');
     }
+
+    public function paymentPageDetail()
+    {
+        return $this->hasOne(PaymentPageDetail::class, 'product_id');
+    }
 }

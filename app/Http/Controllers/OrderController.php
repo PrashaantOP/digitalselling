@@ -17,12 +17,16 @@ class OrderController extends Controller
     {
         abort_if($checkoutProduct->type === 'booking', 422, 'Use the booking page to book a session.');
 
+        // Payment pages ke creator "Full name" collect karna optional rakh sakte hain — baaki sab types me hamesha required hai.
+        $nameOptedOut = $checkoutProduct->type === 'payment_page' && $checkoutProduct->paymentPageDetail?->collect_full_name === false;
+
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:150'],
+            'name' => [$nameOptedOut ? 'nullable' : 'required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:150'],
             'phone' => ['required', 'string', 'regex:/^\+?[0-9]{8,15}$/'],
             'gstin' => ['nullable', 'string', 'max:20'],
             'state' => ['nullable', 'string', 'max:60'],
+            'note' => ['nullable', 'string', 'max:500'],
             'coupon_code' => ['nullable', 'string', 'max:30'],
             'amount' => [$checkoutProduct->pricing_type === 'customer_decides' ? 'required' : 'nullable', 'numeric', 'min:1', 'max:1000000'],
             'addons' => ['nullable', 'array'],
@@ -33,8 +37,8 @@ class OrderController extends Controller
         // TODO (Auth module): phone OTP verified hai ya nahi yahan check karna — abhi OTP flow baad me hai.
 
         $order = $orders->createPending($checkoutProduct->load('creator'), [
-            'name' => $data['name'], 'email' => $data['email'], 'phone' => $data['phone'],
-            'gstin' => $data['gstin'] ?? null, 'state' => $data['state'] ?? null,
+            'name' => $data['name'] ?? null, 'email' => $data['email'], 'phone' => $data['phone'],
+            'gstin' => $data['gstin'] ?? null, 'state' => $data['state'] ?? null, 'note' => $data['note'] ?? null,
         ], [
             'coupon_code' => $data['coupon_code'] ?? null,
             'amount' => $data['amount'] ?? null,

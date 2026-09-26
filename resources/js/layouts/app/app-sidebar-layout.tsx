@@ -6,7 +6,7 @@ export default function AppSidebarLayout({ children }: PropsWithChildren<{ bread
     return (
         <div className="flex min-h-screen w-full bg-[#F6F5F2]">
             <AppSidebar />
-            <div className="min-w-0 flex-1 overflow-x-clip">{children}</div>
+            <div className="flex min-w-0 flex-1 flex-col overflow-x-clip">{children}</div>
         </div>
     );
 }

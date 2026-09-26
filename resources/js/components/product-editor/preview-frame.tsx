@@ -55,12 +55,15 @@ export function PreviewCheckoutCard({
     rows,
     questions,
     cta,
+    collectName = true,
 }: {
     accent: string;
     pricing: PreviewPricing;
     rows: { icon: LucideIcon; text: string }[];
     questions: PreviewQuestion[];
     cta: string;
+    /** Payment pages "Full name" collection ko optional bana sakte hain — baaki products me hamesha true. */
+    collectName?: boolean;
 }) {
     const price = Number(pricing.price) || 0;
     const discounted =
@@ -89,7 +92,7 @@ export function PreviewCheckoutCard({
             {payWhatYouWant && price > 0 && <p className="-mt-2 text-xs text-[#6B6B78]">Minimum {formatCurrency(price)}</p>}
             <p className="text-xs text-[#6B6B78]">Access to this purchase will be sent to this email</p>
             {payWhatYouWant && fakeInput(`Your amount (min ${formatCurrency(price)})`, '₹')}
-            {fakeInput('Full name')}
+            {collectName && fakeInput('Full name')}
             {fakeInput('Email address')}
             {fakeInput('Phone number', '+91')}
             {questions.map((q) => (
