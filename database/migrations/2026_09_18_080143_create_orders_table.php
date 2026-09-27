@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('buyer_gstin', 20)->nullable();
             $table->string('buyer_state', 50)->nullable();
             $table->foreignId('coupon_id')->nullable()->constrained('coupons')->nullOnDelete();
+            // NULL = abhi settle nahi hua. Settlement cycle (settlements:run) isko bharta hai.
+            $table->foreignId('settlement_id')->nullable()->constrained('settlements')->nullOnDelete();
             $table->decimal('base_amount', 10, 2);
             $table->decimal('discount_amount', 10, 2)->default(0);
             $table->decimal('addon_amount', 10, 2)->default(0);
@@ -34,7 +36,8 @@ return new class extends Migration
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
 
-            $table->index(['creator_id', 'status']);
+            // settlement_id teesre column pe — (creator_id, status) wali queries bhi isi prefix se chalti hain
+            $table->index(['creator_id', 'status', 'settlement_id']);
             $table->index(['product_id']);
         });
     }

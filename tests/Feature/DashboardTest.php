@@ -89,7 +89,10 @@ class DashboardTest extends TestCase
             ->where('topProducts.0.title', 'Big Course')
             ->has('revenueByType', 2)
             ->where('totals.products', 2)
-            ->where('balance.earned', 450)
+            // auto-settlement ke baad balance ka shape: kuch settle nahi hua, isliye sab clearing me
+            ->where('balance.lifetime_earned', 450)
+            ->where('balance.settled', 0)
+            ->where('balance.in_transit', 0)
         );
     }
 

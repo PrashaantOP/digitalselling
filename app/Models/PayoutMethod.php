@@ -33,8 +33,8 @@ class PayoutMethod extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function payouts()
+    public function settlements()
     {
-        return $this->hasMany(Payout::class, 'payout_method_id');
+        return $this->hasMany(Settlement::class, 'payout_method_id');
     }
 }

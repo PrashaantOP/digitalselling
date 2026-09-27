@@ -143,7 +143,7 @@ class TestDummySeeder extends Seeder
                 'email' => 'test@gmail.com',
                 'profession' => 'Design Educator',
             ]);
-            $upiId = $this->upsert('payout_methods', ['user_id' => $userId, 'type' => 'upi'], [
+            $this->upsert('payout_methods', ['user_id' => $userId, 'type' => 'upi'], [
                 'upi_id' => 'testcreator@okhdfcbank',
                 'account_holder_name' => null,
                 'account_number' => null,
@@ -170,14 +170,8 @@ class TestDummySeeder extends Seeder
                 'submitted_at' => $now,
                 'verified_at' => $now,
             ]);
-            $this->upsert('payouts', ['user_id' => $userId, 'reference_number' => 'PO-TEST-001'], [
-                'payout_method_id' => $upiId,
-                'amount' => 34500,
-                'status' => 'pending',
-                'notes' => 'Test payout',
-                'requested_at' => $now,
-                'processed_at' => null,
-            ]);
+            // NOTE: settlements yahan seed nahi karte — wo `php artisan settlements:run` banata hai.
+            // Neeche ke orders ke paid_at jaan-bujh ke alag-alag din ke hain taaki T+2 hold test ho sake.
 
             // ---------- 5. REFERRALS ----------
             $this->upsert('referral_codes', ['user_id' => $userId], [
@@ -333,19 +327,20 @@ class TestDummySeeder extends Seeder
             }
 
             // ---------- 9. ORDERS ----------
-            // [order_no, product type, customer index, base amount, status, addon amount]
+            // [order_no, product type, customer index, base amount, status, addon amount, paid kitne din pehle]
+            // T+2 hold ki wajah se: 2+ din purane success orders settle honge, 0-1 din wale "clearing" me rahenge.
             $orderDefs = [
-                ['KLN-TEST-001', 'course', 0, 14999, 'success', 799],   // with book add-on
-                ['KLN-TEST-002', 'booking', 1, 2499, 'success', 0],
-                ['KLN-TEST-003', 'book', 2, 799, 'success', 0],
-                ['KLN-TEST-004', 'event', 3, 4999, 'success', 0],
-                ['KLN-TEST-005', 'locked_content', 4, 3499, 'pending', 0],
-                ['KLN-TEST-006', 'payment_page', 5, 1999, 'success', 0],
-                ['KLN-TEST-007', 'course', 6, 14999, 'failed', 0],
-                ['KLN-TEST-008', 'locked_content', 1, 3499, 'success', 0], // successful order used for unlock
+                ['KLN-TEST-001', 'course', 0, 14999, 'success', 799, 4],   // with book add-on
+                ['KLN-TEST-002', 'booking', 1, 2499, 'success', 0, 4],
+                ['KLN-TEST-003', 'book', 2, 799, 'success', 0, 3],
+                ['KLN-TEST-004', 'event', 3, 4999, 'success', 0, 2],
+                ['KLN-TEST-005', 'locked_content', 4, 3499, 'pending', 0, null],
+                ['KLN-TEST-006', 'payment_page', 5, 1999, 'success', 0, 0],  // aaj — abhi hold me
+                ['KLN-TEST-007', 'course', 6, 14999, 'failed', 0, null],
+                ['KLN-TEST-008', 'locked_content', 1, 3499, 'success', 0, 1], // kal — abhi hold me
             ];
             $orderIds = [];
-            foreach ($orderDefs as [$ono, $type, $cidx, $base, $status, $addon]) {
+            foreach ($orderDefs as [$ono, $type, $cidx, $base, $status, $addon, $paidDaysAgo]) {
                 [$bname, $bemail, $bphone] = $customers[$cidx];
                 $total = $base + $addon;
                 $fee = round($total * 0.03, 2);
@@ -371,7 +366,7 @@ class TestDummySeeder extends Seeder
                     'gateway_order_id' => 'order_' . $ono,
                     'gateway_payment_id' => $status === 'success' ? 'pay_' . $ono : null,
                     'status' => $status,
-                    'paid_at' => $status === 'success' ? $now : null,
+                    'paid_at' => $status === 'success' ? $now->copy()->subDays($paidDaysAgo ?? 0) : null,
                 ]);
                 $orderIds[$ono] = $oid;
 

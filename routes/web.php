@@ -29,7 +29,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentAccountController;
 use App\Http\Controllers\PaymentPageController;
 use App\Http\Controllers\PaymentTransactionController;
-use App\Http\Controllers\PayoutController;
+use App\Http\Controllers\SettlementController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\ProductAddonController;
 use App\Http\Controllers\ProductsOverviewController;
@@ -144,8 +144,9 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
     });
 
     // ---- 6. Payouts ----
-    Route::get('/dashboard/payouts', [PayoutController::class, 'index'])->name('payouts.index')->middleware('perm:payouts.view');
-    Route::post('/dashboard/payouts', [PayoutController::class, 'store'])->name('payouts.store')->middleware('perm:payouts.request');
+    // Settlements read-only hain — batches cycle (settlements:run) banati hai, creator request nahi karta.
+    Route::get('/dashboard/settlements', [SettlementController::class, 'index'])->name('settlements.index')->middleware('perm:payouts.view');
+    Route::get('/dashboard/settlements/{settlement}', [SettlementController::class, 'show'])->name('settlements.show')->middleware('perm:payouts.view');
 
     // ---- 7. Audience & Refer-Earn ----
     Route::get('/dashboard/audience', [AudienceController::class, 'index'])->name('audience.index')->middleware('perm:audience.view');

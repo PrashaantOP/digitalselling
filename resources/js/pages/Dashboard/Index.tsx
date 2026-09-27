@@ -425,26 +425,26 @@ function BalanceCard({ balance }: { balance: Balance }) {
                 <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-xs font-medium text-white/70">
                         <Wallet className="size-4" />
-                        Available balance
+                        Upcoming settlement
                     </span>
                     <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">INR</span>
                 </div>
-                <p className="mt-2 text-3xl font-bold tracking-tight">{formatCurrency(balance.available)}</p>
+                <p className="mt-2 text-3xl font-bold tracking-tight">{formatCurrency(balance.clearing + balance.ready)}</p>
                 <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-4 text-xs">
                     <div>
-                        <p className="text-white/60">In process</p>
-                        <p className="mt-0.5 font-semibold">{formatCurrency(balance.in_process)}</p>
+                        <p className="text-white/60">In transit</p>
+                        <p className="mt-0.5 font-semibold">{formatCurrency(balance.in_transit)}</p>
                     </div>
                     <div>
-                        <p className="text-white/60">Paid out</p>
-                        <p className="mt-0.5 font-semibold">{formatCurrency(balance.paid_out)}</p>
+                        <p className="text-white/60">Settled</p>
+                        <p className="mt-0.5 font-semibold">{formatCurrency(balance.settled)}</p>
                     </div>
                 </div>
                 <Link
-                    href="/dashboard/payouts"
+                    href="/dashboard/settlements"
                     className="mt-4 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-white text-xs font-semibold text-[#0f172a] transition hover:bg-white/90"
                 >
-                    Request payout <ArrowRight className="size-3.5" />
+                    View settlements <ArrowRight className="size-3.5" />
                 </Link>
             </div>
         </section>

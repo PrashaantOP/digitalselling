@@ -140,9 +140,9 @@ class User extends Authenticatable
         return $this->hasOne(KycVerification::class, 'user_id');
     }
 
-    public function payouts()
+    public function settlements()
     {
-        return $this->hasMany(Payout::class, 'user_id');
+        return $this->hasMany(Settlement::class, 'creator_id');
     }
 
     public function customers()

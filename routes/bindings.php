@@ -26,6 +26,7 @@ use App\Models\Product;
 use App\Models\ProductAddon;
 use App\Models\ProductCoverImage;
 use App\Models\QuizQuestion;
+use App\Models\Settlement;
 use App\Models\StoreHeaderButton;
 use App\Models\SubAdmin;
 use App\Support\Tenant;
@@ -50,7 +51,7 @@ Route::bind('course', $product('course', 'uuid'));
 Route::bind('event', fn ($value) => Product::where('creator_id', Tenant::id())->where('type', 'event')->where('uuid', $value)->firstOrFail());
 Route::bind('book', $product('book', 'uuid'));
 Route::bind('lockedContent', $product('locked_content', 'uuid'));
-Route::bind('paymentPage', $product('payment_page'));
+Route::bind('paymentPage', $product('payment_page', 'uuid'));
 Route::bind('service', $product('booking'));
 
 // ---- Product children ----
@@ -78,6 +79,8 @@ Route::bind('exception', fn ($v) => AvailabilityException::where('user_id', Tena
 Route::bind('rule', fn ($v) => AutodmRule::where('user_id', Tenant::id())->findOrFail($v));
 Route::bind('subAdmin', fn ($v) => SubAdmin::where('creator_id', Tenant::id())->findOrFail($v));
 Route::bind('booking', fn ($v) => Booking::where('creator_id', Tenant::id())->findOrFail($v));
+// settlement URL me id nahi, number (STL-…) jaata hai — aur wo bhi sirf apne tenant ka
+Route::bind('settlement', fn ($v) => Settlement::where('creator_id', Tenant::id())->where('number', $v)->firstOrFail());
 Route::bind('role', fn ($v) => Role::where(config('permission.column_names.team_foreign_key', 'team_id'), Tenant::id())->findOrFail($v));
 
 // ---- Public checkout: sirf published product ----

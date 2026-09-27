@@ -34,11 +34,14 @@ export interface TopProduct {
     sales: number;
 }
 
+/** SettlementService::balanceFor() se aata hai — auto-settlement ka paisa-kahan-hai view. */
 export interface Balance {
-    earned: number;
-    available: number;
-    in_process: number;
-    paid_out: number;
+    lifetime_earned: number;
+    settled: number;
+    in_transit: number;
+    clearing: number;
+    ready: number;
+    blocked_reason: 'kyc' | 'payout_method' | null;
 }
 
 export type ChartMetric = 'revenue' | 'sales' | 'visits';

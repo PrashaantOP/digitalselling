@@ -29,7 +29,7 @@ const mainLinks: NavLink[] = [
     { title: 'Getting Started', href: '/dashboard', icon: Sparkles },
     { title: 'Store', href: '/dashboard/store', icon: Store },
     { title: 'Payments', href: '/dashboard/payments', icon: CircleDollarSign },
-    { title: 'Payouts', href: '/dashboard/payouts', icon: Wallet },
+    { title: 'Settlements', href: '/dashboard/settlements', icon: Wallet },
     { title: 'Audience', href: '/dashboard/audience', icon: Users },
     { title: 'Refer & Earn', href: '/dashboard/refer-earn', icon: Sparkles },
     { title: 'Sub-admins', href: '/dashboard/sub-admins', icon: ShieldCheck },

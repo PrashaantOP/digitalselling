@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Store;
 use App\Models\StorePageView;
+use App\Services\SettlementService;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -65,7 +66,7 @@ class DashboardController extends Controller
                 ->select('products.id', 'products.title', 'products.type', DB::raw('SUM(orders.net_payout_amount) as revenue'), DB::raw('COUNT(*) as sales'))
                 ->groupBy('products.id', 'products.title', 'products.type')->orderByDesc('revenue')->limit(5)->get()
                 ->map(fn ($r) => ['id' => $r->id, 'title' => $r->title, 'type' => $r->type, 'revenue' => (float) $r->revenue, 'sales' => (int) $r->sales]),
-            'balance' => $canSeePayouts ? PayoutController::balance($owner->id) : null,
+            'balance' => $canSeePayouts ? app(SettlementService::class)->balanceFor($owner) : null,
             'totals' => [
                 'customers' => Customer::where('creator_id', $tid)->count(),
                 'products' => Product::where('creator_id', $tid)->count(),

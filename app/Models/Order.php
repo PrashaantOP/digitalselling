@@ -24,6 +24,7 @@ class Order extends Model
         'buyer_state',
         'buyer_note',
         'coupon_id',
+        'settlement_id',
         'base_amount',
         'discount_amount',
         'addon_amount',
@@ -69,6 +70,12 @@ class Order extends Model
     public function coupon()
     {
         return $this->belongsTo(Coupon::class, 'coupon_id');
+    }
+
+    /** NULL jab tak order settle na ho jaye. */
+    public function settlement()
+    {
+        return $this->belongsTo(Settlement::class, 'settlement_id');
     }
 
     public function addonItems()
