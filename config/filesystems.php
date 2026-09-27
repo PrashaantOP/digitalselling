@@ -33,7 +33,7 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            'serve' => false, // private files (KYC, books) kabhi /storage URL se nahi — sirf controllers se
             'throw' => false,
             'report' => false,
         ],

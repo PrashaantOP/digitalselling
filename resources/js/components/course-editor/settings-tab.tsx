@@ -25,7 +25,7 @@ const FIELD_TYPES: { key: CheckoutQuestion['field_type']; label: string }[] = [
 /*  Checkout questions                                                 */
 /* ------------------------------------------------------------------ */
 
-function QuestionRow({ productId, question, onCancel }: { productId: number; question: CheckoutQuestion | null; onCancel?: () => void }) {
+function QuestionRow({ productUuid, question, onCancel }: { productUuid: string; question: CheckoutQuestion | null; onCancel?: () => void }) {
     const [label, setLabel] = useState(question?.label ?? '');
     const [type, setType] = useState<CheckoutQuestion['field_type']>(question?.field_type ?? 'text');
     const [options, setOptions] = useState((question?.options ?? []).join('\n'));
@@ -37,10 +37,11 @@ function QuestionRow({ productId, question, onCancel }: { productId: number; que
     const optionList = options.split('\n').map((o) => o.trim()).filter(Boolean);
     const valid = label.trim() !== '' && (type !== 'dropdown' || optionList.length > 0);
 
+    // State: label, type aur states ki list fixed — creator sirf Show / Required badal sakta hai
     const isState = question?.field_type === 'dropdown' && question.label === 'State';
     // email/phone checkout pe hamesha collect hote hain — creator inhe off/delete nahi kar sakta
     const isLocked = Boolean(question && ['email', 'phone'].includes(question.field_type));
-    const effectiveRequired = isState ? false : isLocked ? true : required;
+    const effectiveRequired = isLocked ? true : required;
     const effectiveEnabled = isLocked ? true : enabled;
 
     // Save (autosave + button) dono `dirty` pe depend karte hain, isliye jo bhi field save
@@ -60,7 +61,7 @@ function QuestionRow({ productId, question, onCancel }: { productId: number; que
         setBusy(true);
         setError(null);
         const payload = { label: label.trim(), field_type: type, is_required: effectiveRequired, is_enabled: effectiveEnabled, ...(type === 'dropdown' ? { options: optionList } : {}) };
-        const res = question ? await send('put', `/dashboard/checkout-questions/${question.id}`, payload) : await send('post', `/dashboard/products/${productId}/checkout-questions`, payload);
+        const res = question ? await send('put', `/dashboard/checkout-questions/${question.uuid}`, payload) : await send('post', `/dashboard/products/${productUuid}/checkout-questions`, payload);
         setBusy(false);
         if (res.ok) onCancel?.();
         else setError(firstError(res.errors, 'Could not save the question.'));
@@ -76,7 +77,7 @@ function QuestionRow({ productId, question, onCancel }: { productId: number; que
         if (!question) return onCancel?.();
         setBusy(true);
         setError(null);
-        const res = await send('delete', `/dashboard/checkout-questions/${question.id}`);
+        const res = await send('delete', `/dashboard/checkout-questions/${question.uuid}`);
         setBusy(false);
         if (!res.ok) setError(firstError(res.errors, 'Could not delete the question.'));
     }
@@ -84,8 +85,8 @@ function QuestionRow({ productId, question, onCancel }: { productId: number; que
     return (
         <div className="flex flex-col gap-2 rounded-xl border border-[#E4E2DA] bg-white p-3">
             <div className="flex items-center gap-2">
-                <input aria-label="Question label" value={label} maxLength={150} onChange={(e) => setLabel(e.target.value)} placeholder="Question label" className={INPUT} />
-                <select aria-label="Answer type" value={type} disabled={isLocked} onChange={(e) => setType(e.target.value as CheckoutQuestion['field_type'])} className="h-10 shrink-0 rounded-lg border border-[#E4E2DA] bg-white px-2 text-sm text-[#14141B] outline-none focus:border-[#4F46E5] disabled:bg-[#F6F5F2] disabled:text-[#8A8A96]">
+                <input aria-label="Question label" value={label} maxLength={150} disabled={isState} onChange={(e) => setLabel(e.target.value)} placeholder="Question label" className={INPUT} />
+                <select aria-label="Answer type" value={type} disabled={isLocked || isState} onChange={(e) => setType(e.target.value as CheckoutQuestion['field_type'])} className="h-10 shrink-0 rounded-lg border border-[#E4E2DA] bg-white px-2 text-sm text-[#14141B] outline-none focus:border-[#4F46E5] disabled:bg-[#F6F5F2] disabled:text-[#8A8A96]">
                     {FIELD_TYPES.map((t) => (
                         <option key={t.key} value={t.key}>
                             {t.label}
@@ -93,15 +94,27 @@ function QuestionRow({ productId, question, onCancel }: { productId: number; que
                     ))}
                 </select>
             </div>
-            {type === 'dropdown' && <textarea aria-label="Dropdown options" rows={3} value={options} onChange={(e) => setOptions(e.target.value)} placeholder={'One option per line\nBeginner\nIntermediate'} className={TEXTAREA} />}
+            {type === 'dropdown' && (
+                <textarea
+                    aria-label="Dropdown options"
+                    rows={3}
+                    value={options}
+                    // readOnly (disabled nahi) taaki creator list scroll karke dekh sake
+                    readOnly={isState}
+                    onChange={(e) => setOptions(e.target.value)}
+                    placeholder={'One option per line\nBeginner\nIntermediate'}
+                    className={cn(TEXTAREA, isState && 'cursor-default bg-[#F6F5F2] text-[#8A8A96] focus:border-[#E4E2DA] focus:ring-0')}
+                />
+            )}
             <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 text-xs font-semibold text-[#14141B]">
-                    Required <Toggle checked={effectiveRequired} onChange={setRequired} label="Required" disabled={isState || isLocked} />
+                    Required <Toggle checked={effectiveRequired} onChange={setRequired} label="Required" disabled={isLocked} />
                 </label>
                 {question && <label className="flex items-center gap-2 text-xs font-semibold text-[#14141B]">
                     Show <Toggle checked={effectiveEnabled} onChange={setEnabled} label={`Show ${label || 'question'}`} disabled={isLocked} />
                 </label>}
                 {isLocked && <span className="text-[11px] text-[#8A8A96]">Always collected</span>}
+                {isState && <span className="text-[11px] text-[#8A8A96]">States list is fixed</span>}
                 <span className="flex-1" />
                 {dirty && (
                     <button type="button" onClick={save} disabled={!valid || busy} className="flex h-8 items-center gap-1 rounded-lg bg-[#4F46E5] px-3 text-xs font-semibold text-white hover:bg-[#4338CA] disabled:opacity-50">
@@ -117,16 +130,16 @@ function QuestionRow({ productId, question, onCancel }: { productId: number; que
     );
 }
 
-function CheckoutQuestions({ productId, questions }: { productId: number; questions: CheckoutQuestion[] }) {
+function CheckoutQuestions({ productUuid, questions }: { productUuid: string; questions: CheckoutQuestion[] }) {
     const [adding, setAdding] = useState(false);
     return (
         <div className="flex flex-col gap-3">
             <PanelTitle>Checkout experience</PanelTitle>
             <p className="-mt-2 text-sm text-[#6B6B78]">Buyers sign in with phone OTP, then answer these questions before payment.</p>
             {questions.map((q) => (
-                <QuestionRow key={`${q.id}:${q.label}:${q.field_type}:${q.is_required}:${q.is_enabled}:${(q.options ?? []).join('|')}`} productId={productId} question={q} />
+                <QuestionRow key={`${q.id}:${q.label}:${q.field_type}:${q.is_required}:${q.is_enabled}:${(q.options ?? []).join('|')}`} productUuid={productUuid} question={q} />
             ))}
-            {adding && <QuestionRow productId={productId} question={null} onCancel={() => setAdding(false)} />}
+            {adding && <QuestionRow productUuid={productUuid} question={null} onCancel={() => setAdding(false)} />}
             {!adding && (
                 <button type="button" onClick={() => setAdding(true)} className="w-fit text-sm font-semibold text-[#4F46E5] hover:underline">
                     + Add question
@@ -144,7 +157,7 @@ function isExpired(c: Coupon) {
     return Boolean(c.expires_at && new Date(c.expires_at).getTime() < Date.now());
 }
 
-function Coupons({ productId, coupons }: { productId: number; coupons: Coupon[] }) {
+function Coupons({ productUuid, coupons }: { productUuid: string; coupons: Coupon[] }) {
     const [open, setOpen] = useState(false);
     const [code, setCode] = useState('');
     const [percent, setPercent] = useState('');
@@ -160,7 +173,7 @@ function Coupons({ productId, coupons }: { productId: number; coupons: Coupon[] 
         if (!valid) return;
         setBusy('new');
         setErrors({});
-        const res = await send('post', `/dashboard/products/${productId}/coupons`, {
+        const res = await send('post', `/dashboard/products/${productUuid}/coupons`, {
             code: code.trim(),
             discount_percent: Number(percent),
             usage_limit: limit ? Number(limit) : null,
@@ -180,7 +193,7 @@ function Coupons({ productId, coupons }: { productId: number; coupons: Coupon[] 
     async function toggle(c: Coupon, is_active: boolean) {
         setBusy(c.id);
         setError(null);
-        const res = await send('put', `/dashboard/coupons/${c.id}`, { code: c.code, discount_percent: Number(c.discount_percent), usage_limit: c.usage_limit, expires_at: c.expires_at, is_active });
+        const res = await send('put', `/dashboard/coupons/${c.uuid}`, { code: c.code, discount_percent: Number(c.discount_percent), usage_limit: c.usage_limit, expires_at: c.expires_at, is_active });
         setBusy(null);
         if (!res.ok) setError(firstError(res.errors, 'Could not update the coupon.'));
     }
@@ -188,7 +201,7 @@ function Coupons({ productId, coupons }: { productId: number; coupons: Coupon[] 
     async function remove(c: Coupon) {
         setBusy(c.id);
         setError(null);
-        const res = await send('delete', `/dashboard/coupons/${c.id}`);
+        const res = await send('delete', `/dashboard/coupons/${c.uuid}`);
         setBusy(null);
         if (!res.ok) setError(firstError(res.errors, 'Could not delete the coupon.'));
     }
@@ -260,14 +273,14 @@ function Coupons({ productId, coupons }: { productId: number; coupons: Coupon[] 
 /* ------------------------------------------------------------------ */
 
 export function SettingsTab({
-    productId,
+    productUuid,
     form,
     setField,
     errors,
     questions,
     coupons,
 }: {
-    productId: number;
+    productUuid: string;
     form: FormState;
     setField: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
     errors: Record<string, string>;
@@ -337,9 +350,9 @@ export function SettingsTab({
                 </Field>
             </div>
 
-            <CheckoutQuestions productId={productId} questions={questions} />
+            <CheckoutQuestions productUuid={productUuid} questions={questions} />
 
-            <Coupons productId={productId} coupons={coupons} />
+            <Coupons productUuid={productUuid} coupons={coupons} />
 
             <div className="flex flex-col gap-3">
                 <PanelTitle>After purchase</PanelTitle>

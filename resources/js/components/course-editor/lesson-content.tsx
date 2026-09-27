@@ -6,7 +6,7 @@ import { assetUrl, firstError, send } from './api';
 import { normalizeLesson, type Lesson, type QuizQuestion } from './types';
 import { Field, INPUT, invalid, Notice, RichText, TEXTAREA, Toggle } from './ui';
 
-const contentUrl = (lessonId: number) => `/dashboard/lessons/${lessonId}/content`;
+const contentUrl = (lessonUuid: string) => `/dashboard/lessons/${lessonUuid}/content`;
 
 /** Shared save plumbing: busy / error / "saved" flag for one editor. */
 interface EditorProps {
@@ -16,7 +16,7 @@ interface EditorProps {
     startSaved?: boolean;
 }
 
-function useSaver(lessonId: number, onSaved?: () => void, startSaved = false) {
+function useSaver(lessonUuid: string, onSaved?: () => void, startSaved = false) {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -27,7 +27,7 @@ function useSaver(lessonId: number, onSaved?: () => void, startSaved = false) {
         setError(null);
         setFieldErrors({});
         setSaved(false);
-        const res = await send('put', contentUrl(lessonId), data, files);
+        const res = await send('put', contentUrl(lessonUuid), data, files);
         setBusy(false);
         if (res.ok) {
             setSaved(true);
@@ -85,7 +85,7 @@ function FilePicker({ label, accept, files, onChange, multiple = true, hint }: {
 /* ------------------------------------------------------------------ */
 
 function VideoEditor({ lesson, onSaved, startSaved }: EditorProps) {
-    const s = useSaver(lesson.id, onSaved, startSaved);
+    const s = useSaver(lesson.uuid, onSaved, startSaved);
     const [url, setUrl] = useState(lesson.video?.video_url ?? '');
     const [notes, setNotes] = useState(lesson.video?.notes ?? '');
     const missing = url.trim() === '';
@@ -109,7 +109,7 @@ function VideoEditor({ lesson, onSaved, startSaved }: EditorProps) {
 /* ------------------------------------------------------------------ */
 
 function TextEditor({ lesson, onSaved, startSaved }: EditorProps) {
-    const s = useSaver(lesson.id, onSaved, startSaved);
+    const s = useSaver(lesson.uuid, onSaved, startSaved);
     const text = normalizeLesson(lesson).text_content;
     const existing = text?.images ?? [];
     const [content, setContent] = useState(text?.content ?? '');
@@ -145,7 +145,7 @@ function TextEditor({ lesson, onSaved, startSaved }: EditorProps) {
 /* ------------------------------------------------------------------ */
 
 function AudioEditor({ lesson, onSaved, startSaved }: EditorProps) {
-    const s = useSaver(lesson.id, onSaved, startSaved);
+    const s = useSaver(lesson.uuid, onSaved, startSaved);
     const [url, setUrl] = useState(lesson.audio?.audio_url ?? '');
     const [file, setFile] = useState<File[]>([]);
     const [notes, setNotes] = useState(lesson.audio?.notes ?? '');
@@ -174,7 +174,7 @@ function AudioEditor({ lesson, onSaved, startSaved }: EditorProps) {
 /* ------------------------------------------------------------------ */
 
 function NotesEditor({ lesson, onSaved, startSaved }: EditorProps) {
-    const s = useSaver(lesson.id, onSaved, startSaved);
+    const s = useSaver(lesson.uuid, onSaved, startSaved);
     const existing = lesson.notes?.files ?? [];
     const [allow, setAllow] = useState(lesson.notes?.allow_download ?? false);
     const [description, setDescription] = useState(lesson.notes?.description ?? '');
@@ -210,7 +210,7 @@ function NotesEditor({ lesson, onSaved, startSaved }: EditorProps) {
 /* ------------------------------------------------------------------ */
 
 function AssignmentEditor({ lesson, onSaved, startSaved }: EditorProps) {
-    const s = useSaver(lesson.id, onSaved, startSaved);
+    const s = useSaver(lesson.uuid, onSaved, startSaved);
     const [prompt, setPrompt] = useState(lesson.assignment?.assignment_prompt ?? '');
     const [allow, setAllow] = useState(lesson.assignment?.allow_file_upload ?? true);
     return (
@@ -237,7 +237,7 @@ interface OptionDraft {
     is_correct: boolean;
 }
 
-function QuestionForm({ lessonId, question, onDone }: { lessonId: number; question?: QuizQuestion; onDone: () => void }) {
+function QuestionForm({ lessonUuid, question, onDone }: { lessonUuid: string; question?: QuizQuestion; onDone: () => void }) {
     const [text, setText] = useState(question?.question_text ?? '');
     const [type, setType] = useState<'single_choice' | 'multiple_choice'>(question?.type ?? 'single_choice');
     const [options, setOptions] = useState<OptionDraft[]>(question ? question.options.map((o) => ({ id: o.id, text: o.option_text ?? '', is_correct: o.is_correct })) : [{ text: '', is_correct: true }, { text: '', is_correct: false }]);
@@ -264,7 +264,7 @@ function QuestionForm({ lessonId, question, onDone }: { lessonId: number; questi
         setBusy(true);
         setError(null);
         const payload = { question_text: text.trim(), type, options: options.map((o) => ({ ...(o.id ? { id: o.id } : {}), text: o.text.trim(), is_correct: o.is_correct })) };
-        const res = question ? await send('put', `/dashboard/quiz-questions/${question.id}`, payload) : await send('post', `/dashboard/lessons/${lessonId}/quiz/questions`, payload);
+        const res = question ? await send('put', `/dashboard/quiz-questions/${question.uuid}`, payload) : await send('post', `/dashboard/lessons/${lessonUuid}/quiz/questions`, payload);
         setBusy(false);
         if (res.ok) onDone();
         else setError(firstError(res.errors, 'Could not save the question.'));
@@ -316,7 +316,7 @@ function QuestionForm({ lessonId, question, onDone }: { lessonId: number; questi
 }
 
 function QuizEditor({ lesson, onSaved, startSaved }: EditorProps) {
-    const s = useSaver(lesson.id, onSaved, startSaved);
+    const s = useSaver(lesson.uuid, onSaved, startSaved);
     const quiz = lesson.quiz;
     const [title, setTitle] = useState(quiz?.title ?? lesson.title);
     const [editing, setEditing] = useState<number | 'new' | null>(null);
@@ -324,9 +324,9 @@ function QuizEditor({ lesson, onSaved, startSaved }: EditorProps) {
     const [error, setError] = useState<string | null>(null);
     const questions = quiz?.questions ?? [];
 
-    async function remove(id: number) {
+    async function remove(q: QuizQuestion) {
         setError(null);
-        const res = await send('delete', `/dashboard/quiz-questions/${id}`);
+        const res = await send('delete', `/dashboard/quiz-questions/${q.uuid}`);
         setConfirmId(null);
         if (!res.ok) setError(firstError(res.errors, 'Could not delete the question.'));
     }
@@ -348,7 +348,7 @@ function QuizEditor({ lesson, onSaved, startSaved }: EditorProps) {
                 {questions.length === 0 && editing !== 'new' && <p className="rounded-lg border border-dashed border-[#E4E2DA] p-4 text-center text-xs text-[#8A8A96]">No questions yet. Add the first one — quizzes are auto-graded.</p>}
                 {questions.map((q, i) =>
                     editing === q.id ? (
-                        <QuestionForm key={q.id} lessonId={lesson.id} question={q} onDone={() => setEditing(null)} />
+                        <QuestionForm key={q.id} lessonUuid={lesson.uuid} question={q} onDone={() => setEditing(null)} />
                     ) : (
                         <div key={q.id} className="rounded-lg border border-[#E4E2DA] bg-white p-3">
                             <div className="flex items-start justify-between gap-2">
@@ -361,7 +361,7 @@ function QuizEditor({ lesson, onSaved, startSaved }: EditorProps) {
                                         <Pencil className="size-3.5" />
                                     </button>
                                     {confirmId === q.id ? (
-                                        <button type="button" onClick={() => remove(q.id)} className="rounded bg-[#D93838] px-2 py-1 text-[11px] font-semibold text-white">
+                                        <button type="button" onClick={() => remove(q)} className="rounded bg-[#D93838] px-2 py-1 text-[11px] font-semibold text-white">
                                             Confirm delete
                                         </button>
                                     ) : (
@@ -383,7 +383,7 @@ function QuizEditor({ lesson, onSaved, startSaved }: EditorProps) {
                     ),
                 )}
                 {editing === 'new' ? (
-                    <QuestionForm lessonId={lesson.id} onDone={() => setEditing(null)} />
+                    <QuestionForm lessonUuid={lesson.uuid} onDone={() => setEditing(null)} />
                 ) : (
                     <button type="button" onClick={() => setEditing('new')} className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#DAD8D0] text-sm font-semibold text-[#4F46E5] hover:bg-[#EEF2FF]">
                         <Plus className="size-4" /> Add question

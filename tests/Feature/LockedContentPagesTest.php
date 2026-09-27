@@ -131,9 +131,9 @@ class LockedContentPagesTest extends TestCase
         $this->assertStringStartsWith('creators/', $image->image_path);
         Storage::disk('local')->assertExists($image->image_path);
 
-        $this->get("/dashboard/locked-content-images/{$image->id}")->assertOk();
+        $this->get("/dashboard/locked-content-images/{$image->uuid}")->assertOk();
 
-        $this->delete("/dashboard/locked-content-images/{$image->id}")->assertSessionHasNoErrors();
+        $this->delete("/dashboard/locked-content-images/{$image->uuid}")->assertSessionHasNoErrors();
         Storage::disk('local')->assertMissing($image->image_path);
     }
 

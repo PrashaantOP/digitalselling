@@ -13,7 +13,7 @@ class MyPurchasesController extends Controller
 
     public function index()
     {
-        $orders = Order::with(['product:id,title,type,slug', 'addonItems.addonProduct:id,title,type', 'lockedContentUnlocks.lockedContent'])
+        $orders = Order::with(['product:id,uuid,title,type,slug', 'addonItems.addonProduct:id,uuid,title,type', 'lockedContentUnlocks.lockedContent'])
             ->whereIn('customer_id', $this->customerIds())->where('status', 'success')
             ->latest('paid_at')->get()
             ->map(function (Order $o) {
@@ -21,7 +21,7 @@ class MyPurchasesController extends Controller
 
                 return $o->only(['id', 'order_number', 'total_amount', 'paid_at', 'buyer_name']) + [
                     'items' => $items->map(fn ($p) => $p->only(['id', 'title', 'type']) + [
-                        'download_url' => $p->type === 'book' ? url("/me/books/{$p->id}/download") : null,
+                        'download_url' => $p->type === 'book' ? url("/me/books/{$p->uuid}/download") : null,
                     ])->values(),
                     // locked content unlock hone ke baad hidden cheezein yahin dikhti hain
                     'unlocked' => $o->lockedContentUnlocks->map(fn ($u) => [

@@ -54,6 +54,7 @@ interface SocialLink {
 
 interface HeaderButton {
     id: number;
+    uuid: string;
     label: string;
     url: string;
     icon: string | null;
@@ -607,8 +608,8 @@ function HeaderButtonsSection({ store }: { store: Store }) {
         router.post('/dashboard/store/header-buttons', { label, url, icon: null }, { preserveScroll: true, onSuccess: () => { setLabel(''); setUrl(''); }, onFinish: () => setSaving(false) });
     }
 
-    function removeButton(id: number) {
-        router.delete(`/dashboard/store/header-buttons/${id}`, { preserveScroll: true });
+    function removeButton(button: HeaderButton) {
+        router.delete(`/dashboard/store/header-buttons/${button.uuid}`, { preserveScroll: true });
     }
 
     return (
@@ -638,7 +639,7 @@ function HeaderButtonsSection({ store }: { store: Store }) {
                                 <span className="truncate font-mono text-[11px] text-[#8A8A96]">{button.url}</span>
                             </div>
                         </div>
-                        <button type="button" onClick={() => removeButton(button.id)} className="p-1 text-[#8A8A96] transition hover:text-[#D93838]">
+                        <button type="button" onClick={() => removeButton(button)} className="p-1 text-[#8A8A96] transition hover:text-[#D93838]">
                             <Trash2 className="size-4" />
                         </button>
                     </div>

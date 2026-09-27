@@ -33,10 +33,12 @@ interface PayoutMethod {
     account_number: string | null;
     ifsc: string | null;
     is_default: boolean;
+    verified_at: string | null;
 }
 
 interface SettlementRow {
     id: number;
+    uuid: string;
     number: string;
     orders_count: number;
     gross_amount: string | number;
@@ -66,7 +68,7 @@ interface SettlementBalance {
     in_transit: number;
     clearing: number;
     ready: number;
-    blocked_reason: 'kyc' | 'payout_method' | null;
+    blocked_reason: 'kyc' | 'payout_method' | 'payout_unverified' | null;
 }
 
 interface SettlementsIndexProps {
@@ -92,21 +94,21 @@ export function statusMeta(status: string) {
 const KYC_BANNER: Record<Exclude<KycStatus, 'verified'>, { title: string; body: string; cta: string; tone: string; icon: React.ReactNode }> = {
     not_started: {
         title: 'Complete KYC to receive your settlements',
-        body: 'Verify your PAN and bank details once. Tab tak aapki earnings safe jama hoti rahengi.',
+        body: 'Verify your PAN and bank details once. Until then, your earnings are held safely.',
         cta: 'Start KYC verification',
         tone: 'bg-[#FFF4DB] text-[#B46E00]',
         icon: <ShieldCheck className="size-5" />,
     },
     pending: {
         title: 'KYC is under review',
-        body: 'Verification approve hote hi agla settlement apne aap ban jayega.',
+        body: 'Your next settlement will be created automatically once verification is approved.',
         cta: 'View KYC status',
         tone: 'bg-[#FFF4DB] text-[#B46E00]',
         icon: <Clock className="size-5" />,
     },
     rejected: {
         title: 'KYC needs your attention',
-        body: 'Verification approve nahi hui — details theek karke dobara submit karein.',
+        body: 'Your verification was not approved. Please correct your details and resubmit.',
         cta: 'Fix KYC details',
         tone: 'bg-[#FFEDE8] text-[#C2410C]',
         icon: <Info className="size-5" />,
@@ -177,7 +179,7 @@ function KpiCard({ label, value, sub, icon, tone }: { label: string; value: stri
 /*  PAGE                                                               */
 /* ------------------------------------------------------------------ */
 
-export default function SettlementsIndex({ balance, settlements, methods, kycStatus, holdDays, nextRunAt }: SettlementsIndexProps) {
+export default function SettlementsIndex({ balance, settlements, methods, kycStatus, nextRunAt }: SettlementsIndexProps) {
     const kycVerified = kycStatus === 'verified';
     const hasMethods = methods.length > 0;
     const kycBanner = kycVerified ? null : (KYC_BANNER[kycStatus] ?? KYC_BANNER.not_started);
@@ -201,7 +203,7 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                                 <span className="rounded-full bg-[#E6F6EC] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#059669] uppercase">Automatic</span>
                             </div>
                             <p className="text-sm text-[#8A8A96]">
-                                Aapki sales apne aap batch hokar bank me aati hain — kuch request nahi karna padta.
+                                Your sales are automatically batched and sent to your bank — no need to request a payout.
                             </p>
                         </div>
                     </div>
@@ -213,9 +215,9 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                                 <RefreshCw className="size-5" />
                             </span>
                             <div>
-                                <p className="text-sm font-semibold text-[#14141B]">Har payment {holdDays} din baad settle hota hai</p>
+                                <p className="text-sm font-semibold text-[#14141B]">Payments are settled automatically</p>
                                 <p className="mt-0.5 text-xs text-[#8A8A96]">
-                                    Us din tak ki saari bookings ek hi settlement me aati hain — chahe woh ek din ki hon ya kai din ki.
+                                    All ready bookings are grouped into a single settlement and sent to your payout method.
                                 </p>
                             </div>
                         </div>
@@ -234,7 +236,7 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                                     <p className="text-sm font-semibold text-[#14141B]">{kycBanner.title}</p>
                                     <p className="mt-0.5 text-xs text-[#8A8A96]">
                                         {kycBanner.body}
-                                        {blockedAmount > 0 && <> <span className="font-semibold text-[#B46E00]">{money(blockedAmount)} ruka hua hai.</span></>}
+                                        {blockedAmount > 0 && <> <span className="font-semibold text-[#B46E00]">{money(blockedAmount)} is on hold.</span></>}
                                     </p>
                                 </div>
                             </div>
@@ -255,8 +257,8 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                                 <div>
                                     <p className="text-sm font-semibold text-[#14141B]">Add a payout method</p>
                                     <p className="mt-0.5 text-xs text-[#8A8A96]">
-                                        Batao paisa kahan bhejna hai — UPI ID ya bank account.
-                                        {blockedAmount > 0 && <> <span className="font-semibold text-[#B46E00]">{money(blockedAmount)} ruka hua hai.</span></>}
+                                        Tell us where to send your money — a UPI ID or bank account.
+                                        {blockedAmount > 0 && <> <span className="font-semibold text-[#B46E00]">{money(blockedAmount)} is on hold.</span></>}
                                     </p>
                                 </div>
                             </div>
@@ -268,19 +270,41 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                             </Link>
                         </div>
                     )}
+                    {kycVerified && balance.blocked_reason === 'payout_unverified' && (
+                        <div className="flex flex-col justify-between gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+                            <div className="flex items-start gap-3.5">
+                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#FFF4DB] text-[#B46E00]">
+                                    <Clock className="size-5" />
+                                </span>
+                                <div>
+                                    <p className="text-sm font-semibold text-[#14141B]">Payout method under verification</p>
+                                    <p className="mt-0.5 text-xs text-[#8A8A96]">
+                                        We're verifying {defaultMethod ? methodTitle(defaultMethod) : 'your payout method'}. Settlements will resume automatically once it's verified.
+                                        {blockedAmount > 0 && <> <span className="font-semibold text-[#B46E00]">{money(blockedAmount)} is on hold.</span></>}
+                                    </p>
+                                </div>
+                            </div>
+                            <Link
+                                href="/dashboard/payments/account"
+                                className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg border border-[#E4E2DA] bg-white px-4 text-sm font-medium text-[#14141B] transition hover:bg-[#F6F5F2]"
+                            >
+                                View payout methods
+                            </Link>
+                        </div>
+                    )}
 
                     {/* KPI cards */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         <KpiCard
                             label="Clearing"
                             value={money(balance.clearing + (balance.blocked_reason ? balance.ready : 0))}
-                            sub={balance.blocked_reason ? 'Settlement ruka hai — upar dekhein' : `Agle settlement me aayega`}
+                            sub={balance.blocked_reason ? 'Settlement on hold — see above' : 'Included in the next settlement'}
                             icon={<Hourglass className="size-3.5" />}
                             tone="bg-[#FFF4DB] text-[#B46E00]"
                         />
-                        <KpiCard label="In transit" value={money(balance.in_transit)} sub="Settlement bana, transfer baaki" icon={<Banknote className="size-3.5" />} tone="bg-[#E6F2FF] text-[#0284C7]" />
-                        <KpiCard label="Settled" value={money(balance.settled)} sub="Aapke account me pahuncha" icon={<BadgeCheck className="size-3.5" />} tone="bg-[#E6F6EC] text-[#059669]" />
-                        <KpiCard label="Lifetime earned" value={money(balance.lifetime_earned)} sub="Platform fees ke baad" icon={<TrendingUp className="size-3.5" />} tone="bg-[#E1F6F3] text-[#0D9488]" />
+                        <KpiCard label="In transit" value={money(balance.in_transit)} sub="Settlement created, transfer pending" icon={<Banknote className="size-3.5" />} tone="bg-[#E6F2FF] text-[#0284C7]" />
+                        <KpiCard label="Settled" value={money(balance.settled)} sub="Credited to your account" icon={<BadgeCheck className="size-3.5" />} tone="bg-[#E6F6EC] text-[#059669]" />
+                        <KpiCard label="Lifetime earned" value={money(balance.lifetime_earned)} sub="After platform fees" icon={<TrendingUp className="size-3.5" />} tone="bg-[#E1F6F3] text-[#0D9488]" />
                     </div>
 
                     <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -292,7 +316,7 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                                     <p className="mt-0.5 text-xs text-[#8A8A96]">
                                         {settlements.total > 0
                                             ? `Showing ${settlements.from ?? 0}–${settlements.to ?? 0} of ${settlements.total} settlements`
-                                            : 'Pehla settlement bante hi yahan dikhega'}
+                                            : 'Your first settlement will appear here once it is created'}
                                     </p>
                                 </div>
                             </div>
@@ -311,11 +335,11 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#E4E2DA]/50">
-                                        {settlements.data.length === 0 && <TableEmptyState holdDays={holdDays} />}
+                                        {settlements.data.length === 0 && <TableEmptyState />}
                                         {settlements.data.map((row) => (
                                             <tr
                                                 key={row.id}
-                                                onClick={() => router.visit(`/dashboard/settlements/${row.number}`)}
+                                                onClick={() => router.visit(`/dashboard/settlements/${row.uuid}`)}
                                                 className="group cursor-pointer transition hover:bg-[#F6F5F2]/60"
                                             >
                                                 <td className="px-6 py-3.5 whitespace-nowrap">
@@ -391,23 +415,26 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                                                     <span className="block truncate text-[13px] font-semibold text-[#14141B]">{methodTitle(m)}</span>
                                                     <span className="block truncate text-xs text-[#8A8A96]">{methodSub(m)}</span>
                                                 </div>
-                                                {m.id === defaultMethod?.id && <span className="rounded-full bg-[#E6F6EC] px-2 py-0.5 text-[10px] font-semibold text-[#059669]">Default</span>}
+                                                <div className="flex shrink-0 flex-col items-end gap-1">
+                                                    {m.id === defaultMethod?.id && <span className="rounded-full bg-[#E6F6EC] px-2 py-0.5 text-[10px] font-semibold text-[#059669]">Default</span>}
+                                                    {!m.verified_at && <span className="rounded-full bg-[#FFF4DB] px-2 py-0.5 text-[10px] font-semibold text-[#B46E00]">Unverified</span>}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="mt-3 text-xs text-[#8A8A96]">Abhi koi payout method nahi. UPI ya bank account add karein.</p>
+                                    <p className="mt-3 text-xs text-[#8A8A96]">No payout method yet. Add a UPI ID or bank account.</p>
                                 )}
                             </div>
 
                             <div className="rounded-xl bg-white p-5 shadow-sm">
-                                <h3 className="text-sm font-semibold text-[#14141B]">Settlement kaise chalta hai</h3>
+                                <h3 className="text-sm font-semibold text-[#14141B]">How settlements work</h3>
                                 <ul className="mt-4 flex flex-col gap-3.5">
                                     {[
-                                        { icon: <Hourglass className="size-4" />, tone: 'bg-[#FFF4DB] text-[#B46E00]', text: `Har payment ${holdDays} din hold hota hai — refund ke liye buffer.` },
-                                        { icon: <RefreshCw className="size-4" />, tone: 'bg-[#EEF2FF] text-[#4F46E5]', text: 'Roz ek cycle chalti hai jo us waqt ki saari ready bookings ek settlement me daal deti hai.' },
-                                        { icon: <ShieldCheck className="size-4" />, tone: 'bg-[#F1EAFE] text-[#7C3AED]', text: 'KYC verified aur payout method zaroori hai — nahi to paisa jama hota rehta hai, kho nahi jaata.' },
-                                        { icon: <Banknote className="size-4" />, tone: 'bg-[#E1F6F3] text-[#0D9488]', text: 'Kisi bhi settlement pe click karke uski saari bookings aur commission dekh sakte hain.' },
+                                        { icon: <Hourglass className="size-4" />, tone: 'bg-[#FFF4DB] text-[#B46E00]', text: 'Each payment is held for a short period as a buffer for refunds.' },
+                                        { icon: <RefreshCw className="size-4" />, tone: 'bg-[#EEF2FF] text-[#4F46E5]', text: 'A daily cycle groups all bookings ready at that time into one settlement.' },
+                                        { icon: <ShieldCheck className="size-4" />, tone: 'bg-[#F1EAFE] text-[#7C3AED]', text: 'A verified KYC and a verified payout method are required — until then, your money stays safely on hold, never lost.' },
+                                        { icon: <Banknote className="size-4" />, tone: 'bg-[#E1F6F3] text-[#0D9488]', text: 'Click any settlement to see all its bookings and commission.' },
                                     ].map((item) => (
                                         <li key={item.text} className="flex items-start gap-3">
                                             <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-md', item.tone)}>{item.icon}</span>
@@ -424,7 +451,7 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
     );
 }
 
-function TableEmptyState({ holdDays }: { holdDays: number }) {
+function TableEmptyState() {
     return (
         <tr>
             <td colSpan={8} className="px-6 py-8">
@@ -432,9 +459,9 @@ function TableEmptyState({ holdDays }: { holdDays: number }) {
                     <span className="flex size-10 items-center justify-center rounded-full bg-[#ECEBE6] text-[#8A8A96]">
                         <Inbox className="size-5" />
                     </span>
-                    <p className="mt-1 text-sm font-semibold text-[#14141B]">Abhi koi settlement nahi</p>
+                    <p className="mt-1 text-sm font-semibold text-[#14141B]">No settlements yet</p>
                     <p className="max-w-sm px-4 text-xs text-[#8A8A96]">
-                        Pehli sale ke {holdDays} din baad aapka pehla settlement apne aap ban jayega — yahan uski saari bookings ka hisaab milega.
+                        Your first settlement will be created automatically.
                     </p>
                 </div>
             </td>

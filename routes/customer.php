@@ -17,16 +17,15 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware('auth:customer')->prefix('me')->group(function () {
     Route::get('courses', [MyCoursesController::class, 'index'])->name('me.courses');
-    Route::get('courses/{enrollmentId}/learn/{lessonId?}', [LessonPlayerController::class, 'show'])
-        ->whereNumber(['enrollmentId', 'lessonId'])->name('me.learn');
-    Route::post('lessons/{lessonId}/complete', [LessonPlayerController::class, 'markComplete'])->whereNumber('lessonId')->name('me.lesson.complete');
-    Route::get('lesson-files/{fileId}', [LessonPlayerController::class, 'noteFile'])->whereNumber('fileId')->name('me.lesson.file');
+    Route::get('courses/{enrollmentUuid}/learn/{lessonUuid?}', [LessonPlayerController::class, 'show'])->name('me.learn');
+    Route::post('lessons/{lessonUuid}/complete', [LessonPlayerController::class, 'markComplete'])->name('me.lesson.complete');
+    Route::get('lesson-files/{fileUuid}', [LessonPlayerController::class, 'noteFile'])->name('me.lesson.file');
 
-    Route::post('quiz/{quizId}/attempt', [QuizAttemptController::class, 'store'])->whereNumber('quizId')->name('me.quiz.attempt');
-    Route::post('assignments/{assignmentId}/submit', [AssignmentSubmissionController::class, 'store'])->whereNumber('assignmentId')->name('me.assignment.submit');
-    Route::get('certificates/{certificateId}', [CertificateController::class, 'download'])->whereNumber('certificateId')->name('me.certificate');
+    Route::post('quiz/{quizUuid}/attempt', [QuizAttemptController::class, 'store'])->name('me.quiz.attempt');
+    Route::post('assignments/{assignmentUuid}/submit', [AssignmentSubmissionController::class, 'store'])->name('me.assignment.submit');
+    Route::get('certificates/{certificateUuid}', [CertificateController::class, 'download'])->name('me.certificate');
 
     Route::get('bookings', [MyBookingsController::class, 'index'])->name('me.bookings');
     Route::get('purchases', [MyPurchasesController::class, 'index'])->name('me.purchases');
-    Route::get('books/{bookId}/download', [BookDownloadController::class, 'download'])->whereNumber('bookId')->name('me.book.download');
+    Route::get('books/{bookUuid}/download', [BookDownloadController::class, 'download'])->name('me.book.download');
 });

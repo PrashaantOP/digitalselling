@@ -3,6 +3,7 @@ import { RevenueChart } from '@/components/dashboard/revenue-chart';
 import { TopProducts } from '@/components/dashboard/top-products';
 import { TypeDonut } from '@/components/dashboard/type-donut';
 import { type Balance, type ChartPoint, type DashboardStats, type TopProduct, type TypeRevenue } from '@/components/dashboard/types';
+import { useCan } from '@/hooks/use-can';
 import AppLayout from '@/layouts/app-layout';
 import { cn, formatCurrency } from '@/lib/utils';
 import { type BreadcrumbItem, type SharedData } from '@/types';
@@ -52,6 +53,7 @@ interface ProfileCompletion {
 }
 interface DashboardProps {
     days: number;
+    canSeeSales: boolean;
     stats: DashboardStats;
     chart: ChartPoint[];
     revenueByType: TypeRevenue[];
@@ -128,6 +130,7 @@ function formatDate(value: string | null) {
 
 export default function DashboardIndex({
     days,
+    canSeeSales,
     stats,
     chart,
     revenueByType,
@@ -138,6 +141,7 @@ export default function DashboardIndex({
     recentOrders,
 }: DashboardProps) {
     const { auth } = usePage<SharedData>().props;
+    const { can, isOwner, storeOwner } = useCan();
     const [loading, setLoading] = useState(false);
 
     const firstName = auth.user.name.trim().split(/\s+/)[0] || 'there';
@@ -192,7 +196,7 @@ export default function DashboardIndex({
             series: chart.map((d) => (d.visits > 0 ? d.sales / d.visits : 0)),
             hint: 'Sales per unique visitor',
         },
-    ];
+    ].filter((k) => canSeeSales || k.label === 'Store visits');
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -216,16 +220,24 @@ export default function DashboardIndex({
                                 <h1 className="mt-1 text-2xl font-bold tracking-tight md:text-3xl">
                                     {greeting}, {firstName} <span aria-hidden="true">👋</span>
                                 </h1>
-                                <p className="mt-2 max-w-xl text-sm text-white/80">
-                                    You earned <strong className="text-white">{formatCurrency(stats.revenue.value)}</strong> from{' '}
-                                    <strong className="text-white">{stats.sales.value.toLocaleString('en-IN')}</strong>{' '}
-                                    {stats.sales.value === 1 ? 'sale' : 'sales'} in the last {days} days.
-                                </p>
+                                {canSeeSales ? (
+                                    <p className="mt-2 max-w-xl text-sm text-white/80">
+                                        You earned <strong className="text-white">{formatCurrency(stats.revenue.value)}</strong> from{' '}
+                                        <strong className="text-white">{stats.sales.value.toLocaleString('en-IN')}</strong>{' '}
+                                        {stats.sales.value === 1 ? 'sale' : 'sales'} in the last {days} days.
+                                    </p>
+                                ) : (
+                                    <p className="mt-2 max-w-xl text-sm text-white/80">
+                                        {storeOwner ? <>You're working in <strong className="text-white">{storeOwner}</strong>'s store.</> : 'Welcome back.'}
+                                    </p>
+                                )}
                                 <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 backdrop-blur">
-                                        <Users className="size-3.5" />
-                                        {totals.customers.toLocaleString('en-IN')} customers
-                                    </span>
+                                    {can('audience.view') && (
+                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 backdrop-blur">
+                                            <Users className="size-3.5" />
+                                            {totals.customers.toLocaleString('en-IN')} customers
+                                        </span>
+                                    )}
                                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 backdrop-blur">
                                         <Package className="size-3.5" />
                                         {totals.products.toLocaleString('en-IN')} products
@@ -272,14 +284,19 @@ export default function DashboardIndex({
 
                         <div className="grid items-start gap-6 xl:grid-cols-12">
                             <div className="min-w-0 space-y-6 xl:col-span-8">
-                                <RevenueChart data={chart} days={days} />
+                                {canSeeSales && (
+                                    <>
+                                        <RevenueChart data={chart} days={days} />
 
-                                <div className="grid gap-6 md:grid-cols-2">
-                                    <TopProducts products={topProducts} />
-                                    <TypeDonut data={revenueByType} />
-                                </div>
+                                        <div className="grid gap-6 md:grid-cols-2">
+                                            <TopProducts products={topProducts} />
+                                            <TypeDonut data={revenueByType} />
+                                        </div>
+                                    </>
+                                )}
 
-                                {profileCompletion.percent < 100 && <ProfileCard profileCompletion={profileCompletion} />}
+                                {/* payout / KYC checklist sirf store owner ke kaam ka */}
+                                {isOwner && profileCompletion.percent < 100 && <ProfileCard profileCompletion={profileCompletion} />}
 
                                 <section className="rounded-2xl border bg-card p-5 shadow-sm">
                                     <h2 className="font-semibold">Start selling</h2>
@@ -310,6 +327,7 @@ export default function DashboardIndex({
                             <aside className="min-w-0 space-y-6 xl:sticky xl:top-6 xl:col-span-4">
                                 {balance && <BalanceCard balance={balance} />}
 
+                                {canSeeSales && (
                                 <section className="rounded-2xl border bg-card p-5 shadow-sm">
                                     <div className="mb-4 flex items-center justify-between border-b pb-3">
                                         <h2 className="font-semibold">Recent activity</h2>
@@ -358,6 +376,7 @@ export default function DashboardIndex({
                                         </div>
                                     )}
                                 </section>
+                                )}
 
                                 <section className="rounded-2xl border bg-card p-5 shadow-sm">
                                     <h2 className="font-semibold">Quick links</h2>

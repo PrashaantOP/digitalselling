@@ -15,16 +15,6 @@ class EventController extends BaseProductController
     protected function detailModel(): ?string { return EventDetail::class; }
     protected function detailRelation(): ?string { return 'eventDetail'; }
 
-    protected function routeIdentifier(Product $product): int|string
-    {
-        return $product->uuid;
-    }
-
-    protected function routeIdentifierColumn(): string
-    {
-        return 'uuid';
-    }
-
     // event_details.starts_at NOT NULL hai
     protected function detailDefaults(): array
     {
@@ -37,7 +27,7 @@ class EventController extends BaseProductController
             'mode' => ['sometimes', Rule::in(['online', 'in_person'])],
             'starts_at' => ['sometimes', 'required', 'date'],
             'ends_at' => ['nullable', 'date', 'after:starts_at'],
-            'join_link' => ['nullable', 'url', 'max:500'],
+            'join_link' => ['nullable', 'url:http,https', 'max:500'],
             'venue_address' => ['nullable', 'string', 'max:255'],
         ];
     }

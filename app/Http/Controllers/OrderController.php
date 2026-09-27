@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * POST /checkout/{checkoutProduct}/order  (axios JSON)
@@ -20,12 +21,18 @@ class OrderController extends Controller
         // Payment pages ke creator "Full name" collect karna optional rakh sakte hain — baaki sab types me hamesha required hai.
         $nameOptedOut = $checkoutProduct->type === 'payment_page' && $checkoutProduct->paymentPageDetail?->collect_full_name === false;
 
+        // State sirf course checkout pe dikhta hai — creator ne Show + Required on kiya ho to server pe bhi maango
+        $stateQuestion = $checkoutProduct->type === 'course'
+            ? $checkoutProduct->checkoutQuestions()->where('is_enabled', true)->get()->first->isState()
+            : null;
+        $stateRequired = (bool) $stateQuestion?->is_required;
+
         $data = $request->validate([
             'name' => [$nameOptedOut ? 'nullable' : 'required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:150'],
             'phone' => ['required', 'string', 'regex:/^\+?[0-9]{8,15}$/'],
             'gstin' => ['nullable', 'string', 'max:20'],
-            'state' => ['nullable', 'string', 'max:60'],
+            'state' => [$stateRequired ? 'required' : 'nullable', 'string', 'max:60', ...($stateQuestion ? [Rule::in(BaseProductController::INDIAN_STATES)] : [])],
             'note' => ['nullable', 'string', 'max:500'],
             'coupon_code' => ['nullable', 'string', 'max:30'],
             'amount' => [$checkoutProduct->pricing_type === 'customer_decides' ? 'required' : 'nullable', 'numeric', 'min:1', 'max:1000000'],

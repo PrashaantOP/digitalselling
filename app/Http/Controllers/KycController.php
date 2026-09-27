@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HandlesUploads;
 use App\Http\Controllers\Concerns\RespondsFlexibly;
+use App\Mail\SecurityNoticeMail;
 use App\Models\KycVerification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -41,6 +42,7 @@ class KycController extends Controller
         abort_if(in_array($existing?->status, ['pending', 'verified'], true), 422, 'KYC is already ' . $existing?->status . '.');
 
         $data = $request->validate([
+            'current_password' => ['required', 'current_password'],
             'legal_name' => ['required', 'string', 'max:150'],
             'pan_number' => ['required', 'regex:/^[A-Z]{5}[0-9]{4}[A-Z]$/'],
             'gst_number' => ['nullable', 'regex:/^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z\d]Z[A-Z\d]$/'],
@@ -49,6 +51,8 @@ class KycController extends Controller
             'ifsc' => ['required', 'regex:/^[A-Z]{4}0[A-Z0-9]{6}$/'],
             'id_document' => [$existing?->id_document_path ? 'nullable' : 'required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
+
+        unset($data['current_password']);
 
         if ($request->hasFile('id_document')) {
             $this->deletePrivate($existing?->id_document_path);
@@ -61,6 +65,8 @@ class KycController extends Controller
             'rejection_reason' => null,
             'submitted_at' => now(),
         ]);
+
+        SecurityNoticeMail::deliver($request->user()->email, 'kyc_submitted', $request->user()->name, $request);
 
         return $this->done($request, 'KYC submitted for review.', ['status' => $kyc->status]);
     }

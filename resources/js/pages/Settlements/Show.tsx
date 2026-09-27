@@ -19,10 +19,12 @@ interface PayoutMethod {
     account_number: string | null;
     ifsc: string | null;
     is_default: boolean;
+    verified_at: string | null;
 }
 
 interface Settlement {
     id: number;
+    uuid: string;
     number: string;
     orders_count: number;
     gross_amount: string | number;
@@ -99,7 +101,7 @@ export default function SettlementShow({ settlement, orders }: Props) {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Settlements', href: '/dashboard/settlements' },
-        { title: settlement.number, href: `/dashboard/settlements/${settlement.number}` },
+        { title: settlement.number, href: `/dashboard/settlements/${settlement.uuid}` },
     ];
 
     function copyRef(ref: string) {
@@ -137,15 +139,15 @@ export default function SettlementShow({ settlement, orders }: Props) {
                         <div className="flex items-start gap-2.5 rounded-xl bg-[#FFEDE8] p-3.5 text-[13px] font-medium text-[#C2410C]">
                             <XCircle className="mt-0.5 size-[18px] shrink-0" />
                             <div>
-                                Ye settlement fail ho gaya tha{settlement.failure_reason ? ` — ${settlement.failure_reason}` : ''}. Iski saari bookings wapas queue me daal di gayi hain aur
-                                agle settlement me apne aap aa jayengi.
+                                This settlement failed{settlement.failure_reason ? ` — ${settlement.failure_reason}` : ''}. All of its bookings have been returned to the queue and will be
+                                included in the next settlement automatically.
                             </div>
                         </div>
                     )}
                     {settlement.status === 'pending' && (
                         <div className="flex items-start gap-2.5 rounded-xl bg-[#FFF4DB] p-3.5 text-[13px] font-medium text-[#B46E00]">
                             <Hourglass className="mt-0.5 size-[18px] shrink-0" />
-                            <div>Amount calculate ho chuka hai — bank transfer hote hi yahan UTR reference dikh jayega.</div>
+                            <div>The amount has been calculated — the UTR reference will appear here once the bank transfer is complete.</div>
                         </div>
                     )}
 
@@ -153,8 +155,8 @@ export default function SettlementShow({ settlement, orders }: Props) {
                         {/* Booking-wise breakdown */}
                         <div className="overflow-hidden rounded-xl bg-white shadow-sm">
                             <div className="border-b border-[#E4E2DA]/70 px-6 py-4">
-                                <h2 className="text-base font-semibold text-[#14141B]">In bookings ka settlement hai</h2>
-                                <p className="mt-0.5 text-xs text-[#8A8A96]">Har row pe uska apna commission deduction dikh raha hai.</p>
+                                <h2 className="text-base font-semibold text-[#14141B]">Bookings in this settlement</h2>
+                                <p className="mt-0.5 text-xs text-[#8A8A96]">Each row shows its own commission deduction.</p>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full border-collapse text-left text-sm">
@@ -194,7 +196,7 @@ export default function SettlementShow({ settlement, orders }: Props) {
                                         {orders.length === 0 && (
                                             <tr>
                                                 <td colSpan={6} className="px-6 py-8 text-center text-sm text-[#8A8A96]">
-                                                    Is settlement ki bookings release ho chuki hain (failed settlement).
+                                                    The bookings from this settlement have been released (failed settlement).
                                                 </td>
                                             </tr>
                                         )}
@@ -218,12 +220,12 @@ export default function SettlementShow({ settlement, orders }: Props) {
                         {/* Side: summary + meta + destination */}
                         <div className="flex flex-col gap-5">
                             <div className="rounded-xl bg-white p-5 shadow-sm">
-                                <h3 className="text-sm font-semibold text-[#14141B]">Hisaab</h3>
+                                <h3 className="text-sm font-semibold text-[#14141B]">Summary</h3>
                                 <div className="mt-4 flex flex-col gap-2.5">
                                     <SummaryTile
                                         label="Gross sales"
                                         value={money(settlement.gross_amount)}
-                                        hint={`${settlement.orders_count} ${settlement.orders_count === 1 ? 'booking' : 'bookings'} ka total`}
+                                        hint={`${settlement.orders_count} ${settlement.orders_count === 1 ? 'booking' : 'bookings'} total`}
                                     />
                                     <SummaryTile label="Platform commission" value={`− ${money(settlement.commission_amount)}`} tone="text-[#C2410C]" />
                                     <SummaryTile label="Net settled" value={money(settlement.net_amount)} tone="text-[#059669]" />

@@ -20,16 +20,6 @@ class BookController extends BaseProductController
     protected function detailRelation(): ?string { return 'bookDetail'; }
 
     /** Course/Event ki tarah dashboard URLs me id ki jagah uuid (secure, guess nahi hoga). */
-    protected function routeIdentifier(Product $product): int|string
-    {
-        return $product->uuid;
-    }
-
-    protected function routeIdentifierColumn(): string
-    {
-        return 'uuid';
-    }
-
     protected function productDefaults(): array
     {
         return ['button_text' => 'Buy & Download'];
@@ -42,7 +32,7 @@ class BookController extends BaseProductController
             'subtitle' => ['nullable', 'string', 'max:150'],
             'pages' => ['nullable', 'integer', 'min:1', 'max:20000'],
             'format' => ['sometimes', Rule::in(['pdf', 'epub', 'mobi', 'zip'])],
-            'external_link' => ['nullable', 'url', 'max:500'],
+            'external_link' => ['nullable', 'url:http,https', 'max:500'],
             'whats_inside' => ['nullable', 'array', 'max:20'],
             'whats_inside.*' => ['nullable', 'string', 'max:150'],
             'faqs' => ['nullable', 'array', 'max:20'],

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\DeviceTracker;
 use App\Support\PlanPricing;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -31,6 +32,11 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // honeypot: insaan ko ye field dikhta hi nahi — bot bhar deta hai. Chup-chaap wapas bhejo.
+        if (filled($request->input('website'))) {
+            return redirect()->route('register');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
@@ -38,16 +44,18 @@ class RegisteredUserController extends Controller
         ]);
 
         // Har naya creator 90 din Pro (10% commission) pe shuru hota hai
-        $user = User::create([
+        $user = (new User)->forceFill([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'username' => User::uniqueUsername($request->name),
         ] + PlanPricing::trialAttributes());
+        $user->save();
 
         event(new Registered($user));
 
         Auth::login($user);
+        DeviceTracker::recordLogin($user, $request, notify: false); // pehla device — "new sign-in" email ka matlab nahi
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

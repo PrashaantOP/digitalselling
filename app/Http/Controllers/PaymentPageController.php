@@ -17,16 +17,6 @@ class PaymentPageController extends BaseProductController
     protected function detailRelation(): ?string { return 'paymentPageDetail'; }
 
     /** Course/Event/Book/LockedContent ki tarah dashboard URLs me id ki jagah uuid (secure, guess nahi hoga). */
-    protected function routeIdentifier(Product $product): int|string
-    {
-        return $product->uuid;
-    }
-
-    protected function routeIdentifierColumn(): string
-    {
-        return 'uuid';
-    }
-
     protected function productDefaults(): array
     {
         return ['button_text' => 'Get it now', 'post_purchase_message' => 'Payment received. Thank you!'];

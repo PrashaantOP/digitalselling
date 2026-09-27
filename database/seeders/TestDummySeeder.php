@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
@@ -149,6 +150,7 @@ class TestDummySeeder extends Seeder
                 'account_number' => null,
                 'ifsc' => null,
                 'is_default' => true,
+                'verified_at' => now(),
             ]);
             $this->upsert('payout_methods', ['user_id' => $userId, 'type' => 'bank_transfer'], [
                 'upi_id' => null,
@@ -156,6 +158,7 @@ class TestDummySeeder extends Seeder
                 'account_number' => '50100212345678',
                 'ifsc' => 'HDFC0001234',
                 'is_default' => false,
+                'verified_at' => now(),
             ]);
             $this->upsert('kyc_verifications', ['user_id' => $userId], [
                 'legal_name' => 'Test Creator',
@@ -255,14 +258,14 @@ class TestDummySeeder extends Seeder
             }
 
             // ---------- 8. PRODUCTS (one of each type) ----------
-            // products.slug is globally unique; 'booking' products keep slug NULL (see slug migration)
+            // products.slug is globally unique; booking sessions ko bhi slug chahiye (public /book/{username}?service={slug})
             $productDefs = [
                 ['course', 'Design System Masterclass 2024', 'design-system-masterclass-2024', 14999],
                 ['event', 'Design Systems Architect Conf 2024', 'design-conf-2024', 4999],
                 ['book', 'Figma Auto-Layout & Tokens Guide', 'figma-tokens-guide', 799],
                 ['locked_content', 'Enterprise Token Repo & Multi-Brand', 'enterprise-tokens', 3499],
                 ['payment_page', 'Kiln Creator Community Pass', 'community-pass', 1999],
-                ['booking', '1:1 Portfolio & Career Mentorship', null, 2499],
+                ['booking', '1:1 Portfolio & Career Mentorship', '11-portfolio-career-mentorship', 2499],
             ];
             $productIds = [];
             $questionIds = [];
@@ -665,7 +668,7 @@ class TestDummySeeder extends Seeder
             $this->upsert('sub_admins', ['creator_id' => $userId, 'email' => 'helper@gmail.com'], [
                 'user_id' => $helperId,
                 'status' => 'active',
-                'invite_token' => null,
+                'invite_token_hash' => null,
                 'invited_at' => $now,
                 'accepted_at' => $now,
             ]);
@@ -684,10 +687,9 @@ class TestDummySeeder extends Seeder
         $existing = DB::table($table)->where($where)->first();
 
         if ($existing) {
-            // This seeder writes products directly, bypassing Product::creating.
-            // Keep an existing UUID stable across re-seeds; repair legacy rows
-            // that predate the UUID migration.
-            if ($table === 'products') {
+            // Seeder models ko bypass karta hai (HasUuid ka creating hook nahi chalta).
+            // Re-seed pe existing UUID stable rakho; purani rows me khaali ho to bhar do.
+            if ($this->hasUuid($table)) {
                 $data['uuid'] = $existing->uuid ?: (string) Str::uuid();
             }
             if ($timestamps) {
@@ -704,11 +706,19 @@ class TestDummySeeder extends Seeder
             $data['updated_at'] = now();
         }
 
-        // Direct DB inserts bypass the Product model's automatic UUID hook.
-        if ($table === 'products') {
+        // Direct DB inserts HasUuid ka hook bypass karte hain — routed tables me uuid NOT NULL hai
+        if ($this->hasUuid($table)) {
             $data['uuid'] ??= (string) Str::uuid();
         }
 
         return (int) DB::table($table)->insertGetId($where + $data);
+    }
+
+    /** @var array<string, bool> */
+    private array $uuidTables = [];
+
+    private function hasUuid(string $table): bool
+    {
+        return $this->uuidTables[$table] ??= Schema::hasColumn($table, 'uuid');
     }
 }

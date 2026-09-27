@@ -30,6 +30,7 @@ type OrderStatus = 'pending' | 'success' | 'failed' | 'refunded';
 
 interface TransactionRow {
     id: number;
+    uuid: string;
     order_number: string;
     created_at: string;
     paid_at: string | null;
@@ -298,15 +299,17 @@ export default function PaymentsIndex({ transactions, summary, filters }: Paymen
         );
     }
 
-    function exportCsv() {
-        const params = new URLSearchParams();
-        if (filters.type) params.set('type', filters.type);
-        if (filters.status) params.set('status', filters.status);
-        if (filters.search) params.set('search', filters.search);
-        if (filters.from) params.set('from', filters.from);
-        if (filters.to) params.set('to', filters.to);
-        window.location.href = `/dashboard/payments/export?${params.toString()}`;
-    }
+    // wahi filters jo table pe lage hain — CSV me bhi wahi rows aayengi
+    const exportParams = new URLSearchParams();
+    if (filters.type) exportParams.set('type', filters.type);
+    if (filters.status) exportParams.set('status', filters.status);
+    if (filters.search) exportParams.set('search', filters.search);
+    if (filters.from) exportParams.set('from', filters.from);
+    if (filters.to) exportParams.set('to', filters.to);
+    const exportUrl = `/dashboard/payments/export${exportParams.size ? `?${exportParams.toString()}` : ''}`;
+
+    const invoiceUrl = (tx: TransactionRow) => `/dashboard/payments/invoice/${tx.uuid}?print=1`;
+    const hasInvoice = (tx: TransactionRow) => tx.status === 'success' || tx.status === 'refunded';
 
     function copyOrderRef(ref: string) {
         navigator.clipboard?.writeText(ref);
@@ -459,8 +462,10 @@ export default function PaymentsIndex({ transactions, summary, filters }: Paymen
                                         </div>
                                     )}
                                 </div>
-                                <Button variant="outline" onClick={exportCsv} className="border-[#E4E2DA]">
-                                    <Download /> Export CSV
+                                <Button variant="outline" asChild className="border-[#E4E2DA]">
+                                    <a href={exportUrl} download>
+                                        <Download /> Export CSV
+                                    </a>
                                 </Button>
                             </div>
                         </div>
@@ -529,12 +534,18 @@ export default function PaymentsIndex({ transactions, summary, filters }: Paymen
                                                 <StatusPill status={tx.status} />
                                             </td>
                                             <td className="px-6 py-3.5 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                                                {tx.status === 'success' ? (
-                                                    <button onClick={exportCsv} title="Download Invoice" className="rounded-lg p-1.5 text-[#8A8A96] transition hover:bg-[#F0EFEA] hover:text-[#14141B]">
+                                                {hasInvoice(tx) ? (
+                                                    <a
+                                                        href={invoiceUrl(tx)}
+                                                        target="_blank"
+                                                        rel="noopener"
+                                                        title="Download invoice"
+                                                        className="inline-flex rounded-lg p-1.5 text-[#8A8A96] transition hover:bg-[#F0EFEA] hover:text-[#14141B]"
+                                                    >
                                                         <Download className="size-[18px]" />
-                                                    </button>
+                                                    </a>
                                                 ) : tx.status === 'pending' ? (
-                                                    <button disabled title="Invoice pending settlement" className="cursor-not-allowed rounded-lg p-1.5 text-[#8A8A96]/40">
+                                                    <button disabled title="Invoice available once payment completes" className="cursor-not-allowed rounded-lg p-1.5 text-[#8A8A96]/40">
                                                         <Hourglass className="size-[18px]" />
                                                     </button>
                                                 ) : (
@@ -602,7 +613,7 @@ export default function PaymentsIndex({ transactions, summary, filters }: Paymen
                                     {selected.status === 'success' ? <CheckCircle2 className="size-[18px]" /> : selected.status === 'pending' ? <Hourglass className="size-[18px]" /> : <Info className="size-[18px]" />}
                                     {selected.status === 'success' ? 'Payment Successful' : selected.status === 'pending' ? 'Payment Pending' : selected.status === 'failed' ? 'Payment Failed' : 'Payment Refunded'}
                                 </div>
-                                <span className="text-xs font-normal text-[#8A8A96]">Live settled</span>
+                                {/* <span className="text-xs font-normal text-[#8A8A96]">Live settled</span> */}
                             </div>
 
                             <div className="flex flex-col gap-2 rounded-xl bg-[#F6F5F2] p-4">
@@ -639,9 +650,13 @@ export default function PaymentsIndex({ transactions, summary, filters }: Paymen
                             </div>
                         </div>
                         <div className="flex flex-col gap-2 border-t border-[#E4E2DA] bg-white p-5">
-                            <Button onClick={exportCsv} className="w-full bg-[#4F46E5] hover:bg-[#4338CA]">
-                                <ReceiptText className="size-4" /> Download Tax Invoice
-                            </Button>
+                            {hasInvoice(selected) && (
+                                <Button asChild className="w-full bg-[#4F46E5] hover:bg-[#4338CA]">
+                                    <a href={invoiceUrl(selected)} target="_blank" rel="noopener">
+                                        <ReceiptText className="size-4" /> Download Invoice
+                                    </a>
+                                </Button>
+                            )}
                             <Button variant="outline" className="w-full border-[#E4E2DA]">
                                 <Send className="size-4" /> Resend Access Link
                             </Button>

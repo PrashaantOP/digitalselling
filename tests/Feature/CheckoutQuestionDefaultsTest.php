@@ -45,7 +45,7 @@ class CheckoutQuestionDefaultsTest extends TestCase
         foreach (['Email address' => 'email', 'Phone number' => 'phone'] as $label => $type) {
             $question = $this->question($product, $label);
 
-            $this->put("/dashboard/checkout-questions/{$question->id}", [
+            $this->put("/dashboard/checkout-questions/{$question->uuid}", [
                 'label' => $label,
                 'field_type' => $type,
                 'is_required' => false,
@@ -62,7 +62,7 @@ class CheckoutQuestionDefaultsTest extends TestCase
         $product = $this->course();
         $question = $this->question($product, 'Email address');
 
-        $this->delete("/dashboard/checkout-questions/{$question->id}")->assertStatus(422);
+        $this->delete("/dashboard/checkout-questions/{$question->uuid}")->assertStatus(422);
 
         $this->assertNotNull($question->fresh());
     }
@@ -72,7 +72,7 @@ class CheckoutQuestionDefaultsTest extends TestCase
         $product = $this->course();
 
         $gstin = $this->question($product, 'GSTIN');
-        $this->put("/dashboard/checkout-questions/{$gstin->id}", [
+        $this->put("/dashboard/checkout-questions/{$gstin->uuid}", [
             'label' => 'GSTIN',
             'field_type' => 'text',
             'is_required' => false,
@@ -83,7 +83,7 @@ class CheckoutQuestionDefaultsTest extends TestCase
         // Editor poori seeded list wapas bhejta hai (36 states + UTs), isliye test bhi wahi bheje —
         // chhoti list bhejne se options ka max limit wala bug chhup jaata hai.
         $state = $this->question($product, 'State');
-        $this->put("/dashboard/checkout-questions/{$state->id}", [
+        $this->put("/dashboard/checkout-questions/{$state->uuid}", [
             'label' => 'State',
             'field_type' => 'dropdown',
             'options' => $state->options,
@@ -91,6 +91,33 @@ class CheckoutQuestionDefaultsTest extends TestCase
             'is_enabled' => false,
         ])->assertSessionHasNoErrors();
         $this->assertFalse($state->fresh()->is_enabled);
+    }
+
+    public function test_state_required_is_changeable_but_label_type_and_options_are_fixed(): void
+    {
+        $product = $this->course();
+        $state = $this->question($product, 'State');
+        $original = $state->options;
+
+        $this->put("/dashboard/checkout-questions/{$state->uuid}", [
+            'label' => 'Region',
+            'field_type' => 'dropdown',
+            'options' => ['Only one'],
+            'is_required' => true,
+            'is_enabled' => true,
+        ])->assertSessionHasNoErrors();
+
+        $state->refresh();
+        $this->assertTrue($state->is_required);
+        $this->assertTrue($state->is_enabled);
+        $this->assertSame('State', $state->label);
+        $this->assertSame('dropdown', $state->field_type);
+        $this->assertSame($original, $state->options);
+
+        $this->put("/dashboard/checkout-questions/{$state->uuid}", [
+            'label' => 'State', 'field_type' => 'dropdown', 'options' => $original, 'is_required' => false, 'is_enabled' => true,
+        ])->assertSessionHasNoErrors();
+        $this->assertFalse($state->fresh()->is_required);
     }
 
     public function test_new_course_button_text_defaults_to_enroll_now(): void

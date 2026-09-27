@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class StoreHeaderButton extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuid;
 
     protected $table = 'store_header_buttons';
 

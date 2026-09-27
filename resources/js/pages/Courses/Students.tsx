@@ -15,6 +15,7 @@ interface Customer {
 
 interface EnrollmentRow {
     id: number;
+    uuid: string;
     progress_percent: number | string | null;
     access_expires_at: string | null;
     completed_at: string | null;
@@ -161,7 +162,7 @@ export default function CourseStudents({ course, enrollments, filters }: Student
                         </div>
                         <div className="flex items-center gap-2">
                             <Button variant="outline" asChild className="border-[#E4E2DA]">
-                                <Link href={`/dashboard/assignments/submissions?course=${course.id}`}>
+                                <Link href={`/dashboard/assignments/submissions?course=${course.uuid}`}>
                                     <ClipboardCheck className="size-4" /> Assignments
                                 </Link>
                             </Button>
@@ -247,7 +248,7 @@ export default function CourseStudents({ course, enrollments, filters }: Student
                                         const access = accessLabel(row);
                                         const name = row.customer?.name ?? null;
                                         return (
-                                            <tr key={row.id} onClick={() => router.visit(`/dashboard/enrollments/${row.id}`)} className="group cursor-pointer transition hover:bg-[#F6F5F2]/60">
+                                            <tr key={row.id} onClick={() => router.visit(`/dashboard/enrollments/${row.uuid}`)} className="group cursor-pointer transition hover:bg-[#F6F5F2]/60">
                                                 <td className="px-6 py-3.5">
                                                     <div className="flex min-w-[220px] items-center gap-2.5">
                                                         <div className={cn('flex size-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold', avatarTone(name))}>{initials(name)}</div>

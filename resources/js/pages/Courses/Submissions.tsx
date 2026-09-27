@@ -15,6 +15,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface SubmissionRow {
     id: number;
+    uuid: string;
     lesson_assignment_id: number;
     enrollment_id: number;
     submission_file_path: string | null;
@@ -24,8 +25,9 @@ interface SubmissionRow {
     submitted_at: string | null;
     enrollment: {
         id: number;
+        uuid: string;
         customer: { id: number; name: string | null; email: string | null } | null;
-        course: { id: number; product: { id: number; title: string } | null } | null;
+        course: { id: number; product: { id: number; uuid: string; title: string } | null } | null;
     } | null;
     assignment: {
         id: number;
@@ -174,7 +176,7 @@ function ReviewDrawer({ submission, open, onClose }: { submission: SubmissionRow
                                 )}
                                 {submission.submission_file_path && (
                                     <a
-                                        href={submissionFileUrl(submission.id)}
+                                        href={submissionFileUrl(submission.uuid)}
                                         className="flex items-center gap-3 rounded-xl border border-[#E4E2DA] p-3 transition hover:bg-[#F6F5F2]"
                                     >
                                         <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#4F46E5]">
@@ -193,7 +195,7 @@ function ReviewDrawer({ submission, open, onClose }: { submission: SubmissionRow
                         </div>
                         <div className="flex flex-col gap-2 border-t border-[#E4E2DA] bg-white p-5">
                             <Button variant="outline" asChild className="w-full border-[#E4E2DA]">
-                                <Link href={`/dashboard/enrollments/${submission.enrollment_id}`}>
+                                <Link href={`/dashboard/enrollments/${submission.enrollment?.uuid}`}>
                                     <UserRound className="size-4" /> View student progress
                                 </Link>
                             </Button>

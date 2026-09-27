@@ -20,7 +20,7 @@ class StoreSocialLinkController extends Controller
         $data = $request->validate([
             'links' => ['present', 'array', 'max:15'],
             'links.*.platform' => ['required', Rule::in(['instagram', 'youtube', 'x', 'website', 'whatsapp', 'telegram'])],
-            'links.*.url' => ['nullable', 'url', 'max:500'],
+            'links.*.url' => ['nullable', 'url:http,https', 'max:500'],
         ]);
 
         $store = StoreController::storeFor($this->tid());

@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CheckoutQuestion extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuid;
 
     protected $table = 'checkout_questions';
 
@@ -29,6 +30,15 @@ class CheckoutQuestion extends Model
         'is_enabled' => 'boolean',
     ];
 
+
+    /**
+     * Seeded State dropdown — label/type/options fixed hain (states ki list),
+     * creator sirf Show aur Required badal sakta hai.
+     */
+    public function isState(): bool
+    {
+        return $this->field_type === 'dropdown' && $this->label === 'State';
+    }
 
     public function product()
     {

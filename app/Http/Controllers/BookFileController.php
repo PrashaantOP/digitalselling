@@ -20,7 +20,7 @@ class BookFileController extends Controller
             // `mimes:` content sniff karta hai — asli .mobi files aksar octet-stream detect hoti hain aur reject ho jaati.
             // File private disk pe rehti hai aur sirf download (attachment) ki tarah milti hai, isliye extension check kaafi hai.
             'file' => ['nullable', 'file', 'extensions:pdf,epub,mobi,zip', 'max:102400'],
-            'external_link' => ['nullable', 'url', 'max:500'],
+            'external_link' => ['nullable', 'url:http,https', 'max:500'],
             'remove_file' => ['sometimes', 'boolean'],
         ]);
 

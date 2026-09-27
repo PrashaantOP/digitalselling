@@ -21,6 +21,7 @@ class MyCoursesController extends Controller
             ->latest('created_at')->get()
             ->map(fn (Enrollment $e) => [
                 'id' => $e->id,
+                'uuid' => $e->uuid,
                 'title' => $e->course->product->title,
                 'creator' => $e->course->product->creator->only(['name', 'username']),
                 'cover' => $e->course->product->coverImages->sortBy('sort_order')->first()?->image_path,

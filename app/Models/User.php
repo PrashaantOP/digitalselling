@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuid;
 use App\Support\PlanPricing;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -10,10 +12,19 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+/**
+ * MustVerifyEmail: signup pe verification link jaata hai. Dashboard bina verify ke khulta hai, lekin
+ * paise/public se jude kaam (publish, KYC, payout account) `verified` middleware ke peeche hain.
+ */
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable, SoftDeletes, HasRoles;
+    use HasFactory, Notifiable, SoftDeletes, HasRoles, HasUuid;
 
+    /**
+     * role / status / plan / parent_creator_id jaan-bujh ke yahan NAHI hain — koi bhi request
+     * `update($request->all())` se khud ko admin/pro/active na bana sake. Inhe sirf server
+     * `forceFill()` se set karta hai.
+     */
     protected $fillable = [
         'name',
         'email',
@@ -22,11 +33,6 @@ class User extends Authenticatable
         'country_code',
         'username',
         'avatar',
-        'role',
-        'parent_creator_id',
-        'plan',
-        'plan_expires_at',
-        'status',
     ];
 
     protected $hidden = [
@@ -39,6 +45,7 @@ class User extends Authenticatable
         'phone_verified_at' => 'datetime',
         'plan_expires_at' => 'datetime',
         'password' => 'hashed',
+        'two_factor_enabled' => 'boolean',
     ];
 
     // ---- account-type helpers (coarse-level, see role column notes) ----
@@ -57,11 +64,6 @@ class User extends Authenticatable
         return $this->role === 'customer';
     }
 
-    public function isSuperAdmin(): bool
-    {
-        return $this->role === 'super_admin';
-    }
-
     /** Trial expiry ko dhyan me rakh ke — seedha `plan === 'pro'` mat check karo. */
     public function onPro(): bool
     {
@@ -72,7 +74,8 @@ class User extends Authenticatable
     {
         $base = Str::lower(Str::slug($name)) ?: 'creator';
         $base = Str::limit($base, 24, '');
-        if (in_array($base, ['dashboard', 'login', 'register', 'logout', 'settings', 'checkout', 'admin', 'api', 'storage'], true)) {
+        // wahi list jo profile validator + storefront catch-all use karte hain
+        if (in_array($base, \App\Http\Controllers\Settings\CreatorProfileController::RESERVED_USERNAMES, true)) {
             $base .= '-creator';
         }
         $username = $base;

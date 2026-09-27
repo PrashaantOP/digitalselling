@@ -35,6 +35,8 @@ export default function Register() {
             >
                 {({ processing, errors }) => (
                     <>
+                        {/* honeypot — insaan ko nahi dikhta, bot bhar deta hai (server chup-chaap reject karta hai) */}
+                        <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 opacity-0" />
                         <div className="grid gap-5">
                             <div className="grid gap-2">
                                 <Label htmlFor="name">Full name</Label>

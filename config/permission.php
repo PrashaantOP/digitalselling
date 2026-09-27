@@ -2,7 +2,7 @@
 
 use Spatie\Permission\DefaultTeamResolver;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
+use App\Models\Role;
 
 return [
 
@@ -135,7 +135,8 @@ return [
      * (view the latest version of this package's migration file)
      */
 
-    'teams' => false,
+    // har creator (tenant) ke roles alag — team_id = creator ka user id (SetTeamContext middleware set karta hai)
+    'teams' => true,
 
     /*
      * The class to use to resolve the permissions team id

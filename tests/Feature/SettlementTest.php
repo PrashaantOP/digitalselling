@@ -24,8 +24,8 @@ class SettlementTest extends TestCase
         $this->settlements = app(SettlementService::class);
     }
 
-    /** Payout ke liye tayyar creator: KYC verified + ek payout method. */
-    private function creator(string $kycStatus = 'verified', bool $withMethod = true): User
+    /** Payout ke liye tayyar creator: KYC verified + ek verified payout method. */
+    private function creator(string $kycStatus = 'verified', bool $withMethod = true, bool $methodVerified = true): User
     {
         /** @var User $creator */
         $creator = User::factory()->createOne(['role' => 'creator', 'username' => 'maker' . User::count()]);
@@ -38,7 +38,11 @@ class SettlementTest extends TestCase
         ]);
 
         if ($withMethod) {
-            PayoutMethod::create(['user_id' => $creator->id, 'type' => 'upi', 'upi_id' => 'test@okhdfcbank', 'is_default' => true]);
+            $method = PayoutMethod::create(['user_id' => $creator->id, 'type' => 'upi', 'upi_id' => 'test@okhdfcbank', 'is_default' => true, 'current_password' => 'password']);
+
+            if ($methodVerified) {
+                $method->markVerified();
+            }
         }
 
         return $creator;
@@ -134,6 +138,54 @@ class SettlementTest extends TestCase
         $this->assertNull($this->settlements->settleCreator($creator));
     }
 
+    public function test_unverified_payout_method_blocks_settlement_until_verified(): void
+    {
+        $creator = $this->creator('verified', methodVerified: false);
+        $order = $this->order($creator, 3);
+
+        $this->assertSame('payout_unverified', $this->settlements->blockedReason($creator));
+        $this->assertNull($this->settlements->settleCreator($creator));
+        $this->assertNull($order->fresh()->settlement_id);
+
+        $creator->payoutMethods()->first()->markVerified();
+
+        $this->assertNull($this->settlements->blockedReason($creator));
+        $this->assertSame(1, $this->settlements->settleCreator($creator)->orders_count);
+    }
+
+    public function test_unverified_default_does_not_fall_back_to_another_verified_method(): void
+    {
+        $creator = $this->creator('verified');
+        PayoutMethod::where('user_id', $creator->id)->update(['is_default' => false]);
+        PayoutMethod::create([
+            'user_id' => $creator->id, 'type' => 'bank_transfer', 'account_holder_name' => 'Test Creator',
+            'account_number' => '50100212345678', 'ifsc' => 'HDFC0001234', 'is_default' => true,
+        ]);
+        $this->order($creator, 3);
+
+        $this->assertSame('payout_unverified', $this->settlements->blockedReason($creator));
+        $this->assertNull($this->settlements->settleCreator($creator));
+    }
+
+    public function test_changing_payout_destination_resets_verification(): void
+    {
+        $creator = $this->creator('verified');
+        $method = $creator->payoutMethods()->first();
+
+        // same details dobara save — verification bani rehti hai
+        $this->actingAs($creator)
+            ->put('/dashboard/payments/account/payout-method', ['id' => $method->id, 'type' => 'upi', 'upi_id' => 'test@okhdfcbank', 'is_default' => true, 'current_password' => 'password'])
+            ->assertSessionHasNoErrors();
+        $this->assertTrue($method->fresh()->isVerified());
+
+        // UPI badla — dobara verify hona padega
+        $this->actingAs($creator)
+            ->put('/dashboard/payments/account/payout-method', ['id' => $method->id, 'type' => 'upi', 'upi_id' => 'someone@okaxis', 'is_default' => true, 'current_password' => 'password'])
+            ->assertSessionHasNoErrors();
+        $this->assertFalse($method->fresh()->isVerified());
+        $this->assertSame('payout_unverified', $this->settlements->blockedReason($creator));
+    }
+
     public function test_running_the_cycle_twice_does_not_double_settle(): void
     {
         $creator = $this->creator();
@@ -203,12 +255,12 @@ class SettlementTest extends TestCase
         $settlement = $this->settlements->settleCreator($creator);
 
         $this->actingAs($creator)
-            ->get("/dashboard/settlements/{$settlement->number}")
+            ->get("/dashboard/settlements/{$settlement->uuid}")
             ->assertOk();
 
         // dusre creator ko 404 — binding tenant ke andar hi dhoondhti hai
         $this->actingAs($this->creator())
-            ->get("/dashboard/settlements/{$settlement->number}")
+            ->get("/dashboard/settlements/{$settlement->uuid}")
             ->assertNotFound();
     }
 }

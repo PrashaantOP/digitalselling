@@ -18,31 +18,31 @@ class LessonPlayerController extends Controller
 {
     use ResolvesCustomer;
 
-    /** GET /me/courses/{enrollmentId}/learn/{lessonId?} */
-    public function show(Request $request, int $enrollmentId, ?int $lessonId = null)
+    /** GET /me/courses/{enrollmentUuid}/learn/{lessonUuid?} */
+    public function show(Request $request, string $enrollmentUuid, ?string $lessonUuid = null)
     {
         $enrollment = Enrollment::with('course.product:id,title,slug')
-            ->whereIn('customer_id', $this->customerIds())->findOrFail($enrollmentId);
+            ->whereIn('customer_id', $this->customerIds())->where('uuid', $enrollmentUuid)->firstOrFail();
 
         abort_if($enrollment->access_expires_at && $enrollment->access_expires_at->isPast(), 403, 'Your access to this course has expired.');
 
         $modules = $enrollment->course->modules()->orderBy('sort_order')
-            ->with(['lessons' => fn ($q) => $q->where('is_published', true)->orderBy('sort_order')->select('id', 'module_id', 'title', 'type', 'is_free_preview', 'sort_order')])
+            ->with(['lessons' => fn ($q) => $q->where('is_published', true)->orderBy('sort_order')->select('id', 'uuid', 'module_id', 'title', 'type', 'is_free_preview', 'sort_order')])
             ->get();
 
         $allLessons = $modules->flatMap->lessons;
         $completed = LessonProgress::where('enrollment_id', $enrollment->id)->where('is_completed', true)->pluck('lesson_id');
 
-        $current = $lessonId
-            ? $allLessons->firstWhere('id', $lessonId)
+        $current = $lessonUuid
+            ? $allLessons->firstWhere('uuid', $lessonUuid)
             : ($allLessons->first(fn ($l) => ! $completed->contains($l->id)) ?? $allLessons->first());
 
-        abort_if($lessonId && ! $current, 404);
+        abort_if($lessonUuid && ! $current, 404);
 
         return Inertia::render('Customer/LessonPlayer', [
-            'enrollment' => $enrollment->only(['id', 'progress_percent', 'completed_at', 'certificate_issued_at']) + [
+            'enrollment' => $enrollment->only(['id', 'uuid', 'progress_percent', 'completed_at', 'certificate_issued_at']) + [
                 'course' => $enrollment->course->product->only(['title', 'slug']),
-                'certificate_id' => Certificate::where('enrollment_id', $enrollment->id)->value('id'),
+                'certificate_uuid' => Certificate::where('enrollment_id', $enrollment->id)->value('uuid'),
             ],
             'modules' => $modules,
             'completedLessonIds' => $completed,
@@ -50,10 +50,10 @@ class LessonPlayerController extends Controller
         ]);
     }
 
-    /** POST /me/lessons/{lessonId}/complete */
-    public function markComplete(Request $request, int $lessonId)
+    /** POST /me/lessons/{lessonUuid}/complete */
+    public function markComplete(Request $request, string $lessonUuid)
     {
-        $lesson = CourseLesson::with('module')->where('is_published', true)->findOrFail($lessonId);
+        $lesson = CourseLesson::with('module')->where('is_published', true)->where('uuid', $lessonUuid)->firstOrFail();
         $enrollment = $this->enrollmentForCourse($lesson->module->course_id);
 
         LessonProgress::updateOrCreate(
@@ -87,14 +87,14 @@ class LessonPlayerController extends Controller
         return response()->json([
             'progress_percent' => $percent,
             'course_completed' => $percent === 100,
-            'certificate_id' => Certificate::where('enrollment_id', $enrollment->id)->value('id'),
+            'certificate_uuid' => Certificate::where('enrollment_id', $enrollment->id)->value('uuid'),
         ]);
     }
 
-    /** GET /me/lesson-files/{fileId} — notes/PDF download (sirf jab creator ne allow_download on kiya ho) */
-    public function noteFile(int $fileId)
+    /** GET /me/lesson-files/{fileUuid} — notes/PDF download (sirf jab creator ne allow_download on kiya ho) */
+    public function noteFile(string $fileUuid)
     {
-        $file = LessonNoteFile::with('note.lesson.module')->findOrFail($fileId);
+        $file = LessonNoteFile::with('note.lesson.module')->where('uuid', $fileUuid)->firstOrFail();
 
         $this->enrollmentForCourse($file->note->lesson->module->course_id);
         abort_unless($file->note->allow_download, 403, 'Downloads are disabled for these notes.');
@@ -107,7 +107,7 @@ class LessonPlayerController extends Controller
     {
         $lesson = CourseLesson::with(['video', 'textContent.images', 'audio', 'notes.files', 'assignment', 'quiz.questions.options'])->findOrFail($lessonId);
 
-        $payload = $lesson->only(['id', 'title', 'type', 'is_free_preview']) + ['content' => null, 'extra' => []];
+        $payload = $lesson->only(['id', 'uuid', 'title', 'type', 'is_free_preview']) + ['content' => null, 'extra' => []];
 
         switch ($lesson->type) {
             case 'video':
@@ -125,12 +125,12 @@ class LessonPlayerController extends Controller
                     'description' => $note->description,
                     'allow_download' => $note->allow_download,
                     'files' => $note->allow_download ? $note->files->map(fn ($f) => [
-                        'name' => $f->original_name, 'url' => url("/me/lesson-files/{$f->id}"),
+                        'name' => $f->original_name, 'url' => url("/me/lesson-files/{$f->uuid}"),
                     ]) : [],
                 ] : null;
                 break;
             case 'assignment':
-                $payload['content'] = $lesson->assignment?->only(['assignment_prompt', 'allow_file_upload']);
+                $payload['content'] = $lesson->assignment?->only(['uuid', 'assignment_prompt', 'allow_file_upload']);
                 $payload['extra']['submission'] = $lesson->assignment
                     ? \App\Models\AssignmentSubmission::where('lesson_assignment_id', $lesson->assignment->id)
                         ->where('enrollment_id', $enrollment->id)->first(['id', 'submission_text', 'status', 'grade_feedback', 'submitted_at'])
@@ -140,6 +140,7 @@ class LessonPlayerController extends Controller
                 // sahi jawab kabhi frontend ko nahi bhejte (submit ke baad result me aate hain)
                 $payload['content'] = $lesson->quiz ? [
                     'id' => $lesson->quiz->id,
+                    'uuid' => $lesson->quiz->uuid,
                     'title' => $lesson->quiz->title,
                     'questions' => $lesson->quiz->questions->sortBy('sort_order')->values()->map(fn ($q) => [
                         'id' => $q->id, 'question_text' => $q->question_text, 'question_image_path' => $q->question_image_path, 'type' => $q->type,

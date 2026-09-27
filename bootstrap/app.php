@@ -1,16 +1,21 @@
 <?php
 
+use App\Http\Middleware\AdminIdleTimeout;
 use App\Http\Middleware\CheckPermission;
+use App\Http\Middleware\EnsureAccountActive;
+use App\Http\Middleware\EnsureAdminActive;
 use App\Http\Middleware\EnsureOwnerCreator;
 use App\Http\Middleware\EnsureProductTypePermission;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetTeamContext;
 use App\Http\Middleware\TrackVisit;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -31,6 +36,8 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            SecurityHeaders::class,
+            EnsureAccountActive::class,
         ]);
 
         // Custom route-middleware aliases used across routes/web.php + routes/public.php.
@@ -40,7 +47,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'perm' => CheckPermission::class,
             'perm.product' => EnsureProductTypePermission::class,
             'track.visit' => TrackVisit::class,
+            'admin.active' => EnsureAdminActive::class,
+            'admin.idle' => AdminIdleTimeout::class,
         ]);
+
+        // /admin/* ka login page alag hai — creator login pe mat bhejo (aur ulta bhi)
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('admin', 'admin/*') ? '/admin/login' : route('login'));
+        $middleware->redirectUsersTo(fn (Request $request) => $request->is('admin', 'admin/*') ? '/admin' : route('dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

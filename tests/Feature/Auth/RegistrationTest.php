@@ -22,8 +22,8 @@ class RegistrationTest extends TestCase
         $response = $this->post('/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Str0ngPassword!',
+            'password_confirmation' => 'Str0ngPassword!',
         ]);
 
         $this->assertAuthenticated();
@@ -35,8 +35,8 @@ class RegistrationTest extends TestCase
         $this->post('/register', [
             'name' => 'Trial User',
             'email' => 'trial@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Str0ngPassword!',
+            'password_confirmation' => 'Str0ngPassword!',
         ]);
 
         $user = User::where('email', 'trial@example.com')->firstOrFail();

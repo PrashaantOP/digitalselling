@@ -38,6 +38,8 @@ abstract class BaseProductCheckoutController extends Controller
             'addons.addonProduct:id,title,type,pricing_type,price,has_discount,discounted_price,status',
         ], $this->relations()))
             ->where('slug', $slug)->where('type', $this->type())->where('status', 'published')
+            // admin ne creator suspend kiya ho to uske product pages bhi band
+            ->whereHas('creator', fn ($q) => $q->where('status', 'active'))
             ->firstOrFail();
 
         $product->increment('views_count');
@@ -70,7 +72,7 @@ abstract class BaseProductCheckoutController extends Controller
                     ->map->only(['id', 'title', 'type', 'pricing_type', 'price', 'has_discount', 'discounted_price']),
             ] + $this->extra($product),
             'creator' => $product->creator->only(['name', 'username', 'avatar']),
-            'checkoutUrl' => url("/checkout/{$product->id}/order"),
+            'checkoutUrl' => url("/checkout/{$product->uuid}/order"),
         ]);
     }
 }

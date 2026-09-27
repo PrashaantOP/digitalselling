@@ -29,8 +29,10 @@ class CheckoutQuestionController extends Controller
     public function store(Request $request, Product $product)
     {
         $data = $request->validate($this->rules());
-        if ($data['field_type'] === 'dropdown' && ($data['label'] ?? '') === 'State') {
-            $data['is_required'] = false;
+        // State ek hi hota hai (seeded) — dusra "State" dropdown banega to wo bhi locked ban jayega
+        if ($data['field_type'] === 'dropdown' && $data['label'] === 'State') {
+            abort_if($product->checkoutQuestions()->get()->contains->isState(), 422, 'State is already a checkout question.');
+            $data['options'] = BaseProductController::INDIAN_STATES;
         }
         $data['options'] = $data['field_type'] === 'dropdown' ? array_values($data['options']) : null;
 
@@ -44,8 +46,11 @@ class CheckoutQuestionController extends Controller
     public function update(Request $request, CheckoutQuestion $checkoutQuestion)
     {
         $data = $request->validate($this->rules());
-        if ($checkoutQuestion->field_type === 'dropdown' && $checkoutQuestion->label === 'State') {
-            $data['is_required'] = false;
+        // State: label, type aur states ki list fixed — sirf Show / Required creator ke haath me
+        if ($checkoutQuestion->isState()) {
+            $data['label'] = $checkoutQuestion->label;
+            $data['field_type'] = 'dropdown';
+            $data['options'] = BaseProductController::INDIAN_STATES;
         }
         // email/phone checkout pe hamesha collect hote hain — type badalna ya off karna allowed nahi
         if (in_array($checkoutQuestion->field_type, BaseProductController::LOCKED_FIELD_TYPES, true)) {
@@ -62,7 +67,7 @@ class CheckoutQuestionController extends Controller
 
     public function destroy(Request $request, CheckoutQuestion $checkoutQuestion)
     {
-        abort_if($checkoutQuestion->field_type === 'dropdown' && $checkoutQuestion->label === 'State', 422, 'State cannot be deleted. Turn it off instead.');
+        abort_if($checkoutQuestion->isState(), 422, 'State cannot be deleted. Turn it off instead.');
         abort_if(in_array($checkoutQuestion->field_type, BaseProductController::LOCKED_FIELD_TYPES, true), 422, 'Email and phone are always collected at checkout.');
         $checkoutQuestion->delete();
 

@@ -23,4 +23,12 @@ abstract class TestCase extends BaseTestCase
 
         return parent::setUpTraits();
     }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Tests Vite dev server / purane build manifest pe depend na karein — naye pages manifest me na hon to bhi render ho
+        $this->withoutVite();
+    }
 }

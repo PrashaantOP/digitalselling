@@ -29,7 +29,7 @@ const INPUT =
 /** Default seeded GSTIN / State checkout questions — in pages pe ye nahi maange jaate. */
 const isGstOrState = (q: { label: string; field_type: string }) => /gstin/i.test(q.label) || (q.field_type === 'dropdown' && /state/i.test(q.label));
 
-const cookie = (key: string) => decodeURIComponent(document.cookie.match(new RegExp(`(?:^|; )${key}=([^;]*)`))?.[1] ?? '');
+export const cookie = (key: string) => decodeURIComponent(document.cookie.match(new RegExp(`(?:^|; )${key}=([^;]*)`))?.[1] ?? '');
 
 export function CheckoutCard({
     accent,

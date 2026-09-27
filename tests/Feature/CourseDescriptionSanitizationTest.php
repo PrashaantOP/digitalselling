@@ -87,7 +87,7 @@ class CourseDescriptionSanitizationTest extends TestCase
     {
         $product = $this->course();
 
-        $this->post("/dashboard/products/{$product->id}/coupons", [
+        $this->post("/dashboard/products/{$product->uuid}/coupons", [
             'code' => 'LAUNCH50',
             'discount_percent' => 50,
         ])->assertSessionHasNoErrors();

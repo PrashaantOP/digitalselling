@@ -95,7 +95,7 @@ $productCrud = function (string $prefix, string $controller, string $param, stri
         Route::put("{$base}/{$seg}", [$controller, 'update'])->name("{$name}.update")->middleware("perm:{$perm}.edit");
     }
     if (in_array('publish', $only)) {
-        Route::post("{$base}/{$seg}/publish", [$controller, 'publish'])->name("{$name}.publish")->middleware("perm:{$perm}.edit");
+        Route::post("{$base}/{$seg}/publish", [$controller, 'publish'])->name("{$name}.publish")->middleware(["perm:{$perm}.edit", 'verified']);
     }
     if (in_array('duplicate', $only)) {
         Route::post("{$base}/{$seg}/duplicate", [$controller, 'duplicate'])->name("{$name}.duplicate")->middleware("perm:{$perm}.edit");
@@ -136,11 +136,13 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
     Route::prefix('dashboard/payments')->group(function () {
         Route::get('/', [PaymentTransactionController::class, 'index'])->name('payments.index')->middleware('perm:payments.view');
         Route::get('export', [PaymentTransactionController::class, 'export'])->name('payments.export')->middleware('perm:payments.view');
+        Route::get('invoice/{order}', [PaymentTransactionController::class, 'invoice'])->name('payments.invoice')->middleware('perm:payments.view');
         Route::get('account', [PaymentAccountController::class, 'edit'])->name('payments.account')->middleware('perm:payments.view');
-        Route::put('account/profile', [PaymentAccountController::class, 'updateProfile'])->name('payments.account.profile')->middleware('perm:payments.edit');
-        Route::put('account/payout-method', [PaymentAccountController::class, 'updatePayoutMethod'])->name('payments.account.payout-method')->middleware('perm:payments.edit');
+        // paisa kahan jaayega — sirf owner creator (sub-admin nahi), verified email ke saath
+        Route::put('account/profile', [PaymentAccountController::class, 'updateProfile'])->name('payments.account.profile')->middleware(['owner', 'verified']);
+        Route::put('account/payout-method', [PaymentAccountController::class, 'updatePayoutMethod'])->name('payments.account.payout-method')->middleware(['owner', 'verified']);
         Route::get('account/kyc', [KycController::class, 'edit'])->name('kyc.edit')->middleware('perm:payments.view');
-        Route::post('account/kyc', [KycController::class, 'submit'])->name('kyc.submit')->middleware('perm:payments.edit');
+        Route::post('account/kyc', [KycController::class, 'submit'])->name('kyc.submit')->middleware(['owner', 'verified']);
     });
 
     // ---- 6. Payouts ----
@@ -152,19 +154,22 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
     Route::get('/dashboard/audience', [AudienceController::class, 'index'])->name('audience.index')->middleware('perm:audience.view');
     Route::get('/dashboard/audience/visitors', [AudienceController::class, 'visitors'])->name('audience.visitors')->middleware('perm:audience.view');
     Route::get('/dashboard/audience/export', [AudienceController::class, 'export'])->name('audience.export')->middleware('perm:audience.view');
-    Route::get('/dashboard/refer-earn', [ReferralController::class, 'index'])->name('referral.index');
+    Route::get('/dashboard/refer-earn', [ReferralController::class, 'index'])->name('referral.index')->middleware('owner');
 
     // ---- 8. Sub-admins & roles (sirf owner creator) ----
     Route::middleware('owner')->prefix('dashboard')->group(function () {
         Route::get('sub-admins', [SubAdminController::class, 'index'])->name('sub-admins.index');
-        Route::post('sub-admins', [SubAdminController::class, 'store'])->name('sub-admins.store');
-        Route::post('sub-admins/{subAdmin}/resend', [SubAdminController::class, 'resend'])->name('sub-admins.resend');
+        // invites: verified email + ghante me 10 (mail spam / abuse)
+        Route::post('sub-admins', [SubAdminController::class, 'store'])->name('sub-admins.store')->middleware(['verified', 'throttle:10,60']);
+        Route::post('sub-admins/{subAdmin}/resend', [SubAdminController::class, 'resend'])->name('sub-admins.resend')->middleware('throttle:10,60');
         Route::put('sub-admins/{subAdmin}/role', [SubAdminController::class, 'updateRole'])->name('sub-admins.role');
         Route::delete('sub-admins/{subAdmin}', [SubAdminController::class, 'revoke'])->name('sub-admins.revoke');
+        Route::get('sub-admins/activity', [SubAdminController::class, 'activity'])->name('sub-admins.activity');
 
         Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
         Route::post('roles', [RoleController::class, 'store'])->name('roles.store');
         Route::put('roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+        Route::delete('roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
     });
 
     // ---- 9. Courses ----
@@ -189,7 +194,7 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
         Route::post('lessons/{lesson}/quiz/questions', [QuizQuestionController::class, 'store'])->name('quiz.questions.store');
         Route::put('quiz-questions/{quizQuestion}', [QuizQuestionController::class, 'update'])->name('quiz.questions.update');
         Route::delete('quiz-questions/{quizQuestion}', [QuizQuestionController::class, 'destroy'])->name('quiz.questions.destroy');
-        Route::post('lessons/{lesson}/quiz/import', [QuizImportController::class, 'import'])->name('quiz.import');
+        Route::post('lessons/{lesson}/quiz/import', [QuizImportController::class, 'import'])->name('quiz.import')->middleware('throttle:10,1');
         Route::post('lessons/{lesson}/quiz/ai-generate', [QuizAiGenerateController::class, 'generate'])->name('quiz.ai-generate')->middleware('throttle:10,1');
 
         // live classes
@@ -260,7 +265,8 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
         Route::put('settings/availability', [BookingAvailabilityController::class, 'update'])->name('availability.update')->middleware('perm:bookings.edit');
         Route::post('settings/exceptions', [AvailabilityExceptionController::class, 'store'])->name('availability.exceptions.store')->middleware('perm:bookings.edit');
         Route::delete('exceptions/{exception}', [AvailabilityExceptionController::class, 'destroy'])->name('availability.exceptions.destroy')->middleware('perm:bookings.edit');
-        Route::put('{booking}/status', [BookingController::class, 'updateStatus'])->name('bookings.status')->middleware('perm:bookings.edit')->whereNumber('booking');
+        Route::put('{booking}/status', [BookingController::class, 'updateStatus'])->name('bookings.status')->middleware('perm:bookings.edit');
+        Route::put('{booking}/meeting-link', [BookingController::class, 'updateMeetingLink'])->name('bookings.meeting-link')->middleware('perm:bookings.edit');
     });
     // Sessions tab (products of type=booking) => /dashboard/bookings/sessions...
     $productCrud(
@@ -269,7 +275,7 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
         'service',
         'booking-services',
         'bookings',
-        ['index', 'store', 'update', 'duplicate', 'destroy']
+        ['index', 'store', 'update', 'publish', 'duplicate', 'destroy']
     );
 
     // ---- 12. AutoDM ----
@@ -294,5 +300,6 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
 });
 
 // ---- Customer portal (auth:customer) & Public storefront (guest) ----
+require __DIR__ . '/admin.php';    // platform admin — alag guard, public catch-all se pehle
 require __DIR__ . '/customer.php';
 require __DIR__ . '/public.php';   // <-- hamesha sabse last (catch-all /{username})

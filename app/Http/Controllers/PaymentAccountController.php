@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\RespondsFlexibly;
+use App\Mail\SecurityNoticeMail;
 use App\Models\PayoutMethod;
 use App\Models\PayoutProfile;
 use Illuminate\Http\Request;
@@ -50,9 +51,13 @@ class PaymentAccountController extends Controller
             'account_number' => ['required_if:type,bank_transfer', 'nullable', 'string', 'max:30'],
             'ifsc' => ['required_if:type,bank_transfer', 'nullable', 'regex:/^[A-Z]{4}0[A-Z0-9]{6}$/'],
             'is_default' => ['sometimes', 'boolean'],
+            // paisa kahan jayega — chori hua session akele isse badal na sake
+            'current_password' => ['required', 'current_password'],
         ]);
 
-        $method = DB::transaction(function () use ($data) {
+        $destinationChanged = false;
+
+        $method = DB::transaction(function () use ($data, &$destinationChanged) {
             $uid = $this->tid();
 
             $method = ! empty($data['id'])
@@ -68,7 +73,15 @@ class PaymentAccountController extends Controller
                 'account_number' => $data['type'] === 'bank_transfer' ? $data['account_number'] : null,
                 'ifsc' => $data['type'] === 'bank_transfer' ? $data['ifsc'] : null,
                 'is_default' => ! empty($data['is_default']) || $isFirst,
-            ])->save();
+            ]);
+
+            // Verify ke baad UPI/account badal ke paisa kahin aur na bheja ja sake
+            if ($method->isDirty(PayoutMethod::DESTINATION_FIELDS)) {
+                $method->verified_at = null;
+                $destinationChanged = true;
+            }
+
+            $method->save();
 
             if ($method->is_default) {
                 PayoutMethod::where('user_id', $uid)->where('id', '!=', $method->id)->update(['is_default' => false]);
@@ -76,6 +89,11 @@ class PaymentAccountController extends Controller
 
             return $method;
         });
+
+        if ($destinationChanged) {
+            $masked = $method->type === 'upi' ? $method->upi_id : 'bank account ending ' . substr((string) $method->account_number, -4);
+            SecurityNoticeMail::deliver($request->user()->email, 'payout_method_changed', $request->user()->name, $request, $masked);
+        }
 
         return $this->done($request, 'Payout method saved.', ['method' => $method]);
     }

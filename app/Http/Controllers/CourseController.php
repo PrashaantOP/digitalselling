@@ -43,16 +43,6 @@ class CourseController extends BaseProductController
     }
 
     /** Events ki tarah dashboard URLs me id ki jagah uuid (secure, guess nahi hoga). */
-    protected function routeIdentifier(Product $product): int|string
-    {
-        return $product->uuid;
-    }
-
-    protected function routeIdentifierColumn(): string
-    {
-        return 'uuid';
-    }
-
     protected function detailRules(Product $product): array
     {
         return [

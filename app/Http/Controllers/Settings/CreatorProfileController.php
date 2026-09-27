@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Concerns\HandlesUploads;
 use App\Http\Controllers\Concerns\RespondsFlexibly;
 use App\Http\Controllers\Controller;
+use App\Mail\SecurityNoticeMail;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -64,6 +65,12 @@ class CreatorProfileController extends Controller
             'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id)],
             'avatar' => ['nullable', 'image', 'max:3072'],
+            // email badle to password dobara (account takeover se bachav)
+            'current_password' => [
+                Rule::requiredIf(fn () => strtolower((string) $request->input('email')) !== strtolower((string) $user->email)),
+                'nullable',
+                'current_password',
+            ],
         ];
 
         // username sirf owner creator ka hota hai (public URL). Phone yahan change nahi hota — OTP re-verify chahiye (Auth module).
@@ -77,6 +84,8 @@ class CreatorProfileController extends Controller
         }
 
         $data = $request->validate($rules);
+        unset($data['current_password']);
+        $oldEmail = $user->email;
 
         if ($request->hasFile('avatar')) {
             $this->deletePublic($user->avatar);
@@ -90,6 +99,11 @@ class CreatorProfileController extends Controller
         }
 
         $user->fill($data)->save();
+
+        if ($user->email !== $oldEmail) {
+            SecurityNoticeMail::deliver($oldEmail, 'email_changed', $user->name, $request, $user->email);
+            $user->sendEmailVerificationNotification();
+        }
 
         return $this->done($request, 'Profile updated.', ['profile' => $user->fresh()]);
     }

@@ -2,20 +2,34 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Http\Controllers\BaseProductController;
 use App\Http\Controllers\Controller;
+use App\Mail\BookingConfirmedMail;
+use App\Mail\NewBookingMail;
+use App\Models\AvailabilityException;
 use App\Models\Booking;
 use App\Models\BookingResponse;
+use App\Models\CheckoutQuestion;
+use App\Models\CreatorAvailability;
+use App\Models\Customer;
 use App\Models\Product;
 use App\Models\User;
-use App\Services\OrderService;
 use App\Services\SlotService;
-use Carbon\Carbon;
+use App\Support\CalendarLink;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
-/** Public booking page: /book/{username} */
+/**
+ * Public booking page: /book/{username}
+ * Abhi sirf free sessions book hote hain — paid sessions dikhte hain par payment pipeline
+ * (OrderService / Razorpay) banne tak unka button band hai.
+ */
 class BookingPageController extends Controller
 {
     private function creator(string $username): User
@@ -34,6 +48,26 @@ class BookingPageController extends Controller
         return $product;
     }
 
+    /**
+     * Customer se poochne wale extra sawaal. Email/phone upar ke fixed fields hain aur
+     * GSTIN/State booking pe nahi maangte — isliye ye list me nahi aate.
+     */
+    private function customQuestions(Product $product): Collection
+    {
+        return $product->checkoutQuestions
+            ->where('is_enabled', true)
+            ->reject(fn (CheckoutQuestion $q) => in_array($q->field_type, BaseProductController::LOCKED_FIELD_TYPES, true)
+                || $q->isState()
+                || preg_match('/gstin/i', $q->label))
+            ->sortBy('sort_order')
+            ->values();
+    }
+
+    private static function isFree(Product $product): bool
+    {
+        return $product->pricing_type === 'free';
+    }
+
     public function show(string $username)
     {
         $creator = $this->creator($username);
@@ -41,21 +75,33 @@ class BookingPageController extends Controller
         $services = Product::with(['bookingServiceDetail', 'checkoutQuestions'])
             ->where('creator_id', $creator->id)->where('type', 'booking')->where('status', 'published')
             ->whereHas('bookingServiceDetail', fn ($q) => $q->where('is_active', true))
+            ->oldest()
             ->get()
-            ->map(fn (Product $p) => $p->only(['id', 'title', 'slug', 'description', 'pricing_type', 'price', 'has_discount', 'discounted_price', 'button_text'])
-                + ['duration_minutes' => $p->bookingServiceDetail->duration_minutes]
-                + ['checkout_questions' => $p->checkoutQuestions->sortBy('sort_order')->values()->map->only(['id', 'label', 'field_type', 'options', 'is_required'])]);
+            ->map(fn (Product $p) => $p->only(['id', 'title', 'slug', 'pricing_type', 'price', 'has_discount', 'discounted_price', 'button_text'])
+                + [
+                    'description' => str($p->description)->stripTags()->squish()->limit(220)->toString(),
+                    'duration_minutes' => $p->bookingServiceDetail->duration_minutes,
+                    'bookable' => self::isFree($p),
+                    'questions' => $this->customQuestions($p)->map->only(['id', 'label', 'field_type', 'options', 'is_required'])->values(),
+                ]);
 
         abort_if($services->isEmpty(), 404);
+
+        $timezone = SlotService::timezoneFor($creator->id);
 
         return Inertia::render('Public/BookingPage', [
             'creator' => $creator->only(['name', 'username', 'avatar']),
             'services' => $services,
-            'timezone' => $creator->availabilities()->value('timezone') ?? 'Asia/Kolkata',
+            'timezone' => $timezone,
+            // date strip pe band din pehle se grey dikhen — har din ke liye slots API call na karni pade
+            'availableWeekdays' => CreatorAvailability::where('user_id', $creator->id)->where('is_enabled', true)->pluck('weekday')->map(fn ($d) => (int) $d)->values(),
+            'blockedDates' => AvailabilityException::where('user_id', $creator->id)->where('is_blocked', true)
+                ->whereBetween('date', [now($timezone)->toDateString(), now($timezone)->addDays(60)->toDateString()])
+                ->pluck('date')->map(fn ($d) => $d->toDateString())->values(),
         ]);
     }
 
-    /** GET /book/{username}/slots?service={slug}&date=YYYY-MM-DD  (axios) */
+    /** GET /book/{username}/slots?service={slug}&date=YYYY-MM-DD */
     public function availableSlots(Request $request, string $username, SlotService $slots)
     {
         $data = $request->validate([
@@ -72,25 +118,37 @@ class BookingPageController extends Controller
         ]);
     }
 
-    /** POST /book/{username}/{serviceSlug} — slot hold + pending order + Razorpay payload */
-    public function store(Request $request, string $username, string $serviceSlug, SlotService $slots, OrderService $orders)
+    /** POST /book/{username}/{serviceSlug} — free session ki booking turant confirm. */
+    public function store(Request $request, string $username, string $serviceSlug, SlotService $slots)
     {
         $creator = $this->creator($username);
-        $product = $this->service($creator, $serviceSlug)->setRelation('creator', $creator);
+        $product = $this->service($creator, $serviceSlug)->load('checkoutQuestions');
         $service = $product->bookingServiceDetail;
+
+        abort_unless(self::isFree($product), 422, 'Online payment for sessions is coming soon.');
+
+        $questions = $this->customQuestions($product);
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:150'],
             'phone' => ['required', 'string', 'regex:/^\+?[0-9]{8,15}$/'],
             'slot' => ['required', 'date'],
-            'coupon_code' => ['nullable', 'string', 'max:30'],
             'answers' => ['nullable', 'array'],
-        ]);
+            // answers.{question_id} — required sawaal server pe bhi zaroori, dropdown me sirf diye gaye options
+            ...$questions->mapWithKeys(fn (CheckoutQuestion $q) => ["answers.{$q->id}" => array_filter([
+                $q->is_required ? 'required' : 'nullable',
+                'string',
+                'max:255',
+                $q->field_type === 'dropdown' ? Rule::in($q->options ?? []) : null,
+                $q->field_type === 'email' ? 'email' : null,
+                $q->field_type === 'number' ? 'numeric' : null,
+            ])])->all(),
+        ], [], $questions->mapWithKeys(fn (CheckoutQuestion $q) => ["answers.{$q->id}" => $q->label])->all());
 
         // TODO (Auth module): phone OTP verification check
 
-        $order = DB::transaction(function () use ($creator, $product, $service, $data, $slots, $orders) {
+        $booking = DB::transaction(function () use ($creator, $service, $data, $slots, $questions) {
             // isi creator ki dusri simultaneous booking ko wait karao — double booking se bachne ke liye
             User::whereKey($creator->id)->lockForUpdate()->first();
 
@@ -98,31 +156,69 @@ class BookingPageController extends Controller
                 throw ValidationException::withMessages(['slot' => 'Sorry, this slot was just taken. Please pick another.']);
             }
 
-            $order = $orders->createPending($product, [
-                'name' => $data['name'], 'email' => $data['email'], 'phone' => $data['phone'],
-            ], ['coupon_code' => $data['coupon_code'] ?? null, 'answers' => $data['answers'] ?? []]);
+            $customer = Customer::updateOrCreate(
+                ['creator_id' => $creator->id, 'phone' => $data['phone']],
+                ['name' => $data['name'], 'email' => $data['email']],
+            );
 
             $booking = Booking::create([
                 'booking_service_id' => $service->id,
                 'creator_id' => $creator->id,
-                'customer_id' => $order->customer_id,
-                'order_id' => $order->id,
-                'scheduled_at' => Carbon::parse($data['slot'])->utc(),
+                'customer_id' => $customer->id,
+                'order_id' => null, // free — SlotService::confirmed() isse turant pakki booking maanta hai
+                'scheduled_at' => CarbonImmutable::parse($data['slot'])->utc(),
                 'duration_minutes' => $service->duration_minutes,
+                'meeting_link' => $service->default_meeting_link,
                 'status' => 'upcoming',
             ]);
 
-            foreach ($order->checkoutAnswers()->with('question:id,label')->get() as $answer) {
-                BookingResponse::create([
-                    'booking_id' => $booking->id,
-                    'question_label' => $answer->question?->label ?? 'Question',
-                    'answer' => $answer->answer,
-                ]);
+            foreach ($questions as $question) {
+                $answer = trim((string) ($data['answers'][$question->id] ?? ''));
+                if ($answer !== '') {
+                    BookingResponse::create(['booking_id' => $booking->id, 'question_label' => $question->label, 'answer' => $answer]);
+                }
             }
 
-            return $order;
+            return $booking;
         });
 
-        return response()->json($orders->initiatePayment($order), 201);
+        $booking->load(['customer', 'responses']);
+        $timezone = SlotService::timezoneFor($creator->id);
+        $calendarUrl = CalendarLink::google(
+            "{$product->title} with {$creator->name}",
+            $booking->scheduled_at,
+            $booking->duration_minutes,
+            $booking->meeting_link ? "Join: {$booking->meeting_link}" : null,
+            $booking->meeting_link,
+        );
+
+        $this->sendEmails($booking, $product, $creator, $timezone, $calendarUrl);
+
+        return response()->json([
+            'booking' => [
+                'scheduled_at' => $booking->scheduled_at->toIso8601String(),
+                'duration_minutes' => $booking->duration_minutes,
+                'session' => $product->title,
+                'meeting_link' => $booking->meeting_link,
+                'calendar_url' => $calendarUrl,
+                'email' => $booking->customer->email,
+            ],
+        ], 201);
+    }
+
+    /** Mail fail ho to booking fail nahi honi chahiye — sirf report karo. */
+    private function sendEmails(Booking $booking, Product $product, User $creator, string $timezone, string $calendarUrl): void
+    {
+        try {
+            Mail::to($booking->customer->email)->send(new BookingConfirmedMail($booking, $product->title, $creator->name, $timezone, $calendarUrl));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        try {
+            Mail::to($creator->email)->send(new NewBookingMail($booking, $product->title, $timezone));
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 }

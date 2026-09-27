@@ -13,6 +13,7 @@ export interface QuizOption {
 
 export interface QuizQuestion {
     id: number;
+    uuid: string;
     question_text: string;
     type: 'single_choice' | 'multiple_choice';
     options: QuizOption[];
@@ -20,6 +21,7 @@ export interface QuizQuestion {
 
 export interface Lesson {
     id: number;
+    uuid: string;
     module_id: number;
     title: string;
     type: LessonType;
@@ -48,6 +50,7 @@ export function normalizeModules(modules: Module[] | undefined | null): Module[]
 
 export interface Module {
     id: number;
+    uuid: string;
     course_id: number;
     title: string;
     sort_order: number;
@@ -80,6 +83,7 @@ export interface GalleryRow {
 
 export interface LiveClass {
     id: number;
+    uuid: string;
     title: string;
     description: string | null;
     scheduled_at: string;
@@ -89,6 +93,7 @@ export interface LiveClass {
 
 export interface Coupon {
     id: number;
+    uuid: string;
     code: string;
     discount_percent: string | number;
     usage_limit: number | null;
@@ -99,6 +104,7 @@ export interface Coupon {
 
 export interface CheckoutQuestion {
     id: number;
+    uuid: string;
     label: string;
     field_type: 'text' | 'phone' | 'email' | 'number' | 'dropdown';
     options: string[] | null;
@@ -148,8 +154,8 @@ export interface CourseItem {
     ga_tracking_id: string | null;
     course_detail: CourseDetail | null;
     courseDetail?: CourseDetail | null;
-    cover_images: { id: number; image_path: string }[];
-    coverImages?: { id: number; image_path: string }[];
+    cover_images: { id: number; uuid: string; image_path: string }[];
+    coverImages?: { id: number; uuid: string; image_path: string }[];
     coupons: Coupon[];
     checkout_questions: CheckoutQuestion[];
     checkoutQuestions?: CheckoutQuestion[];

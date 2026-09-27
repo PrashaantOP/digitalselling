@@ -72,6 +72,20 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                     <InputError className="mt-2" message={errors.email} />
                                 </div>
 
+                                {/* email badalna = password dobara (server pe current_password rule) */}
+                                <div className="grid gap-2">
+                                    <Label htmlFor="current_password">Current password</Label>
+                                    <Input
+                                        id="current_password"
+                                        type="password"
+                                        className="mt-1 block w-full"
+                                        name="current_password"
+                                        autoComplete="current-password"
+                                        placeholder="Only needed if you change your email"
+                                    />
+                                    <InputError className="mt-2" message={errors.current_password} />
+                                </div>
+
                                 {mustVerifyEmail && auth.user.email_verified_at === null && (
                                     <div>
                                         <p className="-mt-4 text-sm text-muted-foreground">

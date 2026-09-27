@@ -27,6 +27,13 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+
+            // email badalna account takeover ka pehla kadam hota hai — isliye password dobara
+            'current_password' => [
+                Rule::requiredIf(fn () => strtolower((string) $this->input('email')) !== strtolower((string) $this->user()->email)),
+                'nullable',
+                'current_password',
+            ],
         ];
     }
 }

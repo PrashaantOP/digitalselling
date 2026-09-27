@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,15 +13,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Settlement extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuid;
 
     protected $table = 'settlements';
-
-    /** URL me id ki jagah number (STL-…) — guess karke dusre ka settlement nahi khula ja sakta. */
-    public function getRouteKeyName(): string
-    {
-        return 'number';
-    }
 
     protected $fillable = [
         'number',

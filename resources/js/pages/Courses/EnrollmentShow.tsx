@@ -35,6 +35,7 @@ interface QuizAttemptRow {
 
 interface SubmissionRow {
     id: number;
+    uuid: string;
     lesson_assignment_id: number;
     status: string;
     submission_text: string | null;
@@ -46,6 +47,7 @@ interface SubmissionRow {
 
 interface EnrollmentDetail {
     id: number;
+    uuid: string;
     course_id: number;
     progress_percent: number | string | null;
     access_expires_at: string | null;
@@ -192,7 +194,7 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
         { title: 'Courses', href: '/dashboard/courses' },
         { title: courseTitle, href: `/dashboard/courses/${courseUuid}/edit` },
         { title: 'Students', href: studentsUrl },
-        { title: name ?? 'Student', href: `/dashboard/enrollments/${enrollment.id}` },
+        { title: name ?? 'Student', href: `/dashboard/enrollments/${enrollment.uuid}` },
     ];
 
     // ---- derive everything from what the controller loaded ----
@@ -408,7 +410,7 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
                                                 </div>
                                                 {s.submission_text && <p className="max-h-40 overflow-y-auto rounded-lg bg-[#F6F5F2] p-3 text-[13px] break-words whitespace-pre-wrap text-[#4B4B57]">{s.submission_text}</p>}
                                                 {s.submission_file_path && (
-                                                    <a href={submissionFileUrl(s.id)} className="flex w-fit items-center gap-2 rounded-lg border border-[#E4E2DA] px-3 py-2 text-xs font-medium text-[#4B4B57] transition hover:bg-[#F6F5F2]">
+                                                    <a href={submissionFileUrl(s.uuid)} className="flex w-fit items-center gap-2 rounded-lg border border-[#E4E2DA] px-3 py-2 text-xs font-medium text-[#4B4B57] transition hover:bg-[#F6F5F2]">
                                                         <Download className="size-3.5 text-[#8A8A96]" /> Download attachment
                                                     </a>
                                                 )}
@@ -472,5 +474,5 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
 
 /** `course.product.id` is the id the assignments review queue filters on (?course=<product id>). */
 function courseIdOf(course: EnrollmentDetail['course']) {
-    return course?.product?.id ?? '';
+    return course?.product?.uuid ?? '';
 }

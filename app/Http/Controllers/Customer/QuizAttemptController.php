@@ -12,10 +12,10 @@ class QuizAttemptController extends Controller
 {
     use ResolvesCustomer;
 
-    /** POST /me/quiz/{quizId}/attempt   body: answers: { "<questionId>": [optionId, ...], ... } */
-    public function store(Request $request, int $quizId)
+    /** POST /me/quiz/{quizUuid}/attempt   body: answers: { "<questionId>": [optionId, ...], ... } */
+    public function store(Request $request, string $quizUuid)
     {
-        $quiz = Quiz::with(['questions.options', 'lesson.module'])->findOrFail($quizId);
+        $quiz = Quiz::with(['questions.options', 'lesson.module'])->where('uuid', $quizUuid)->firstOrFail();
         $enrollment = $this->enrollmentForCourse($quiz->lesson->module->course_id);
 
         abort_unless($quiz->lesson->is_published, 404);

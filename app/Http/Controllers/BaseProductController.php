@@ -144,15 +144,15 @@ abstract class BaseProductController extends Controller
         return route($this->routeName() . '.edit', $this->routeIdentifier($product));
     }
 
-    /** Dashboard route identifier. Product types can opt into UUID URLs. */
-    protected function routeIdentifier(Product $product): int|string
+    /** Dashboard URL me product ka uuid jaata hai — numeric id kabhi nahi. */
+    protected function routeIdentifier(Product $product): string
     {
-        return $product->id;
+        return $product->uuid;
     }
 
     protected function routeIdentifierColumn(): string
     {
-        return 'id';
+        return 'uuid';
     }
 
     protected function item(Request $request): Product

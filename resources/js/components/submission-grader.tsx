@@ -5,8 +5,8 @@ import { Check, Loader2, MessageSquareText } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 /** Creator-side routes (routes/web.php → perm:courses.edit) */
-export const submissionGradeUrl = (id: number) => `/dashboard/assignments/submissions/${id}/grade`;
-export const submissionFileUrl = (id: number) => `/dashboard/assignments/submissions/${id}/file`;
+export const submissionGradeUrl = (uuid: string) => `/dashboard/assignments/submissions/${uuid}/grade`;
+export const submissionFileUrl = (uuid: string) => `/dashboard/assignments/submissions/${uuid}/file`;
 
 const STATUS_META: Record<string, { label: string; chip: string; dot: string }> = {
     submitted: { label: 'Needs review', chip: 'bg-[#FFF4DB] text-[#B46E00]', dot: 'bg-amber-500 animate-pulse' },
@@ -30,9 +30,9 @@ const MAX_LENGTH = 5000;
 
 /**
  * Feedback box for one assignment submission.
- * PUT /dashboard/assignments/submissions/{id}/grade  { grade_feedback }  → status becomes "graded".
+ * PUT /dashboard/assignments/submissions/{uuid}/grade  { grade_feedback }  → status becomes "graded".
  */
-export function GradeForm({ submission, onSaved }: { submission: { id: number; status: string; grade_feedback: string | null }; onSaved?: () => void }) {
+export function GradeForm({ submission, onSaved }: { submission: { id: number; uuid: string; status: string; grade_feedback: string | null }; onSaved?: () => void }) {
     const [value, setValue] = useState(submission.grade_feedback ?? '');
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -60,7 +60,7 @@ export function GradeForm({ submission, onSaved }: { submission: { id: number; s
         setSaved(false);
         setError(null);
         router.put(
-            submissionGradeUrl(submission.id),
+            submissionGradeUrl(submission.uuid),
             { grade_feedback: trimmed },
             {
                 preserveScroll: true,

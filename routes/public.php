@@ -25,7 +25,7 @@ Route::get('/l/{slug}', [LockedContentCheckoutController::class, 'show'])->middl
 Route::get('/p/{slug}', [PaymentPageCheckoutController::class, 'show'])->middleware($pages)->name('payment-page.show');
 
 Route::post('/checkout/{checkoutProduct}/order', [OrderController::class, 'store'])
-    ->whereNumber('checkoutProduct')->middleware('throttle:10,1')->name('checkout.order');
+    ->middleware('throttle:10,1')->name('checkout.order');
 
 // ---- Public booking page ----
 Route::get('/book/{username}', [BookingPageController::class, 'show'])->middleware($pages)->name('booking-page.show');

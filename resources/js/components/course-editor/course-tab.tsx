@@ -13,7 +13,7 @@ const LESSON_ICONS: Record<LessonType, LucideIcon> = { video: Video, text_image:
 /*  Syllabus                                                           */
 /* ------------------------------------------------------------------ */
 
-type Doomed = { kind: 'module' | 'lesson'; id: number; title: string };
+type Doomed = { kind: 'module' | 'lesson'; id: number; uuid: string; title: string };
 
 function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules: Module[] }) {
     const modules = normalizeModules(rawModules);
@@ -49,9 +49,9 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
         const ok = await run(() => send('post', `/dashboard/courses/${courseId}/modules`, { title: `Module ${modules.length + 1}` }), 'Could not add the module.');
         if (ok) router.reload({ only: ['item'] });
     };
-    const renameModule = (m: Module, title: string) => title.trim() && title.trim() !== m.title && run(() => send('put', `/dashboard/modules/${m.id}`, { title: title.trim() }), 'Could not rename the module.');
-    const renameLesson = (l: Lesson, title: string) => title.trim() && title.trim() !== l.title && run(() => send('put', `/dashboard/lessons/${l.id}`, { title: title.trim() }), 'Could not rename the lesson.');
-    const patchLesson = (l: Lesson, patch: Partial<Pick<Lesson, 'is_published' | 'is_free_preview'>>) => run(() => send('put', `/dashboard/lessons/${l.id}`, patch), 'Could not update the lesson.');
+    const renameModule = (m: Module, title: string) => title.trim() && title.trim() !== m.title && run(() => send('put', `/dashboard/modules/${m.uuid}`, { title: title.trim() }), 'Could not rename the module.');
+    const renameLesson = (l: Lesson, title: string) => title.trim() && title.trim() !== l.title && run(() => send('put', `/dashboard/lessons/${l.uuid}`, { title: title.trim() }), 'Could not rename the lesson.');
+    const patchLesson = (l: Lesson, patch: Partial<Pick<Lesson, 'is_published' | 'is_free_preview'>>) => run(() => send('put', `/dashboard/lessons/${l.uuid}`, patch), 'Could not update the lesson.');
 
     function moveModule(index: number, dir: -1 | 1) {
         const order = modules.map((m) => m.id);
@@ -69,13 +69,13 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
         const meta = LESSON_TYPES.find((t) => t.key === type)!;
         pending.current = { moduleId, known: modules.find((m) => m.id === moduleId)?.lessons.map((l) => l.id) ?? [] };
         setPickerFor(null);
-        const ok = await run(() => send('post', `/dashboard/modules/${moduleId}/lessons`, { title: `New ${meta.label.toLowerCase()} lesson`, type }), 'Could not add the lesson.');
+        const ok = await run(() => send('post', `/dashboard/modules/${modules.find((m) => m.id === moduleId)?.uuid}/lessons`, { title: `New ${meta.label.toLowerCase()} lesson`, type }), 'Could not add the lesson.');
         if (!ok) pending.current = null;
     }
 
     async function confirmDelete() {
         if (!doomed) return;
-        const ok = await run(() => send('delete', doomed.kind === 'module' ? `/dashboard/modules/${doomed.id}` : `/dashboard/lessons/${doomed.id}`), `Could not delete the ${doomed.kind}.`);
+        const ok = await run(() => send('delete', doomed.kind === 'module' ? `/dashboard/modules/${doomed.uuid}` : `/dashboard/lessons/${doomed.uuid}`), `Could not delete the ${doomed.kind}.`);
         if (ok) {
             if (doomed.kind === 'lesson' && expanded === doomed.id) setExpanded(null);
             setDoomed(null);
@@ -105,7 +105,7 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
                         <IconBtn label={`Move module ${mi + 1} down`} disabled={busy || mi === modules.length - 1} onClick={() => moveModule(mi, 1)}>
                             <ArrowDown className="size-4" />
                         </IconBtn>
-                        <IconBtn label={`Delete module ${mi + 1}`} danger disabled={busy} onClick={() => setDoomed({ kind: 'module', id: m.id, title: m.title })}>
+                        <IconBtn label={`Delete module ${mi + 1}`} danger disabled={busy} onClick={() => setDoomed({ kind: 'module', id: m.id, uuid: m.uuid, title: m.title })}>
                             <X className="size-4" />
                         </IconBtn>
                     </div>
@@ -138,7 +138,7 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
                                         <IconBtn label={`Move ${l.title} down`} disabled={busy || li === m.lessons.length - 1} onClick={() => moveLesson(m, li, 1)}>
                                             <ArrowDown className="size-3.5" />
                                         </IconBtn>
-                                        <IconBtn label={`Delete ${l.title}`} danger disabled={busy} onClick={() => setDoomed({ kind: 'lesson', id: l.id, title: l.title })}>
+                                        <IconBtn label={`Delete ${l.title}`} danger disabled={busy} onClick={() => setDoomed({ kind: 'lesson', id: l.id, uuid: l.uuid, title: l.title })}>
                                             <X className="size-3.5" />
                                         </IconBtn>
                                     </div>
@@ -240,7 +240,7 @@ function LiveClassForm({ courseId, editing, onClose }: { courseId: string; editi
         setBusy(true);
         setErrors({});
         const payload = { title: title.trim(), description: description.trim() || null, scheduled_at: when, duration_minutes: Number(minutes), join_link: link.trim() || null };
-        const res = editing ? await send('put', `/dashboard/live-classes/${editing.id}`, payload) : await send('post', `/dashboard/courses/${courseId}/live-classes`, payload);
+        const res = editing ? await send('put', `/dashboard/live-classes/${editing.uuid}`, payload) : await send('post', `/dashboard/courses/${courseId}/live-classes`, payload);
         setBusy(false);
         if (res.ok) onClose();
         else setErrors(res.errors);
@@ -283,7 +283,7 @@ function LiveClasses({ courseId, classes }: { courseId: string; classes: LiveCla
 
     async function remove(c: LiveClass) {
         setError(null);
-        const res = await send('delete', `/dashboard/live-classes/${c.id}`);
+        const res = await send('delete', `/dashboard/live-classes/${c.uuid}`);
         if (!res.ok) setError(firstError(res.errors, 'Could not delete the live class.'));
     }
 

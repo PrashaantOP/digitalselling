@@ -13,10 +13,10 @@ class AssignmentSubmissionController extends Controller
 {
     use ResolvesCustomer;
 
-    /** POST /me/assignments/{assignmentId}/submit  (multipart) — dobara submit karne pe purani submission replace hoti hai */
-    public function store(Request $request, int $assignmentId)
+    /** POST /me/assignments/{assignmentUuid}/submit  (multipart) — dobara submit karne pe purani submission replace hoti hai */
+    public function store(Request $request, string $assignmentUuid)
     {
-        $assignment = LessonAssignment::with('lesson.module')->findOrFail($assignmentId);
+        $assignment = LessonAssignment::with('lesson.module')->where('uuid', $assignmentUuid)->firstOrFail();
         $enrollment = $this->enrollmentForCourse($assignment->lesson->module->course_id);
 
         abort_unless($assignment->lesson->is_published, 404);

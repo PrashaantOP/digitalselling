@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductCoverImage extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuid;
 
     protected $table = 'product_cover_images';
 

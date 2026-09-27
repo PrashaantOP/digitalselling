@@ -33,6 +33,7 @@ interface PayoutMethod {
     account_number: string | null;
     ifsc: string | null;
     is_default: boolean;
+    verified_at: string | null;
 }
 
 interface AccountProps {
@@ -242,12 +243,13 @@ function PayoutSection({ methods }: { methods: PayoutMethod[] }) {
         bank_transfer: bankMethod?.is_default ?? methods.length === 0,
     });
 
+    const [password, setPassword] = useState('');
     const defaultMethod = methods.find((m) => m.is_default) ?? methods[0];
-    const canSave = type === 'upi' ? upiId.trim().length > 0 : Boolean(bank.account_holder_name.trim() && bank.account_number.trim() && bank.ifsc.trim());
+    const canSave = (type === 'upi' ? upiId.trim().length > 0 : Boolean(bank.account_holder_name.trim() && bank.account_number.trim() && bank.ifsc.trim())) && password.length > 0;
 
     function save() {
         if (!canSave) return;
-        const base = { ...(existing ? { id: existing.id } : {}), is_default: existing?.is_default ? true : makeDefault[type] || methods.length === 0 };
+        const base = { ...(existing ? { id: existing.id } : {}), is_default: existing?.is_default ? true : makeDefault[type] || methods.length === 0, current_password: password };
         const payload =
             type === 'upi'
                 ? { ...base, type: 'upi', upi_id: upiId.trim() }
@@ -263,7 +265,10 @@ function PayoutSection({ methods }: { methods: PayoutMethod[] }) {
         router.put('/dashboard/payments/account/payout-method', payload, {
             preserveScroll: true,
             preserveState: true,
-            onFinish: () => setSaving(false),
+            onFinish: () => {
+                setSaving(false);
+                setPassword('');
+            },
         });
     }
 
@@ -272,7 +277,7 @@ function PayoutSection({ methods }: { methods: PayoutMethod[] }) {
             icon={<Wallet className="size-5" />}
             tone="bg-[#E1F6F3] text-[#0D9488]"
             title="Payout method"
-            description="Where we send your earnings when you request a payout."
+            description="Where your settlements are sent automatically."
             action={
                 defaultMethod && (
                     <span className="hidden max-w-[220px] truncate rounded-full bg-[#E6F6EC] px-2.5 py-1 text-[11px] font-semibold text-[#059669] sm:block">
@@ -342,6 +347,23 @@ function PayoutSection({ methods }: { methods: PayoutMethod[] }) {
                 </div>
             )}
 
+            {/* Verification status — settlement sirf verified method pe jaata hai */}
+            {existing && (
+                <div
+                    className={cn(
+                        'mt-5 flex items-start gap-2 rounded-lg px-3 py-2.5 text-xs font-medium',
+                        existing.verified_at ? 'bg-[#E6F6EC] text-[#059669]' : 'bg-[#FFF4DB] text-[#B46E00]',
+                    )}
+                >
+                    {existing.verified_at ? <BadgeCheck className="mt-px size-4 shrink-0" /> : <Clock className="mt-px size-4 shrink-0" />}
+                    <span>
+                        {existing.verified_at
+                            ? 'Verified. Changing these details will require verification again.'
+                            : "Pending verification. Settlements to this method will start once it's verified."}
+                    </span>
+                </div>
+            )}
+
             {/* Default toggle — only when this type is not already the default */}
             {!existing?.is_default && methods.length > 0 && (
                 <label className="mt-5 flex items-center gap-3">
@@ -349,6 +371,16 @@ function PayoutSection({ methods }: { methods: PayoutMethod[] }) {
                     <span className="text-sm font-medium text-[#14141B]">Use this as my default payout method</span>
                 </label>
             )}
+
+            {/* paisa kahan jayega — chori hua session akele ise badal na sake */}
+            <div className="mt-5 flex max-w-sm flex-col gap-1.5">
+                <Label htmlFor="payout_password" className={LABEL_CLASS}>
+                    Your account password
+                </Label>
+                <Input id="payout_password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Confirm it's you" className={INPUT_CLASS} />
+                <FieldError message={errors.current_password} />
+                <span className="text-[11px] text-[#8A8A96]">We'll email you whenever your payout account changes.</span>
+            </div>
 
             <Button onClick={save} disabled={!canSave || saving} className="mt-6 bg-[#4F46E5] hover:bg-[#4338CA]">
                 {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
@@ -407,6 +439,8 @@ function KycSection({ kycStatus }: { kycStatus: KycStatus }) {
 
 export default function PaymentsAccount({ profile, methods, kycStatus }: AccountProps) {
     const [section, setSection] = useState<Section>('payout');
+    // payout / KYC / profile sirf store owner badal sakta hai (server pe `owner` middleware)
+    const isOwner = (usePage().props as unknown as { auth: { user: { role?: string } } }).auth.user.role === 'creator';
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -439,7 +473,12 @@ export default function PaymentsAccount({ profile, methods, kycStatus }: Account
                     <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
                         <SideNav active={section} onChange={setSection} kycStatus={kycStatus} hasMethod={methods.length > 0} />
 
-                        <div className="w-full max-w-3xl">
+                        <fieldset disabled={!isOwner} className="w-full max-w-3xl min-w-0">
+                            {!isOwner && (
+                                <p className="mb-4 rounded-xl bg-[#FFF4DB] px-4 py-3 text-sm font-medium text-[#B46E00]">
+                                    Only the store owner can change payout details, KYC or the payout profile. You can view them here.
+                                </p>
+                            )}
                             {/* kept mounted (just hidden) so half-typed values survive tab switches */}
                             <div className={section === 'profile' ? 'block' : 'hidden'}>
                                 <ProfileSection profile={profile} />
@@ -450,7 +489,7 @@ export default function PaymentsAccount({ profile, methods, kycStatus }: Account
                             <div className={section === 'kyc' ? 'block' : 'hidden'}>
                                 <KycSection kycStatus={kycStatus} />
                             </div>
-                        </div>
+                        </fieldset>
                     </div>
                 </div>
             </div>

@@ -45,7 +45,7 @@ class LessonContentController extends Controller
     private function video(Request $request, CourseLesson $lesson): void
     {
         $data = $request->validate([
-            'video_url' => ['required', 'url', 'max:500'],
+            'video_url' => ['required', 'url:http,https', 'max:500'],
             'video_source' => ['nullable', Rule::in(['youtube', 'vimeo', 'mp4'])],
             'notes' => ['nullable', 'string', 'max:20000'],
             'duration_seconds' => ['nullable', 'integer', 'min:0'],
@@ -91,7 +91,7 @@ class LessonContentController extends Controller
     private function audio(Request $request, CourseLesson $lesson): void
     {
         $data = $request->validate([
-            'audio_url' => ['nullable', 'url', 'max:500'],
+            'audio_url' => ['nullable', 'url:http,https', 'max:500'],
             'audio_file' => ['nullable', 'file', 'mimes:mp3,wav,m4a,aac,ogg', 'max:51200'],
             'notes' => ['nullable', 'string', 'max:20000'],
             'duration_seconds' => ['nullable', 'integer', 'min:0'],

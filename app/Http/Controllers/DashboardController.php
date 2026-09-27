@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Store;
 use App\Models\StorePageView;
 use App\Services\SettlementService;
+use App\Support\TeamAccess;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -36,9 +37,16 @@ class DashboardController extends Controller
         $current = $this->periodStats($tid, $store?->id, $from, $to);
         $previous = $this->periodStats($tid, $store?->id, $prevFrom, $prevTo);
 
+        // sub-admin ko paise / orders sirf payments.view pe — warna numbers zero (data kabhi browser tak nahi jaata)
+        $canSeeSales = TeamAccess::can($creator, 'payments.view');
+        $moneyKeys = ['revenue', 'sales', 'conversion', 'aov'];
+
         $stats = [];
         foreach ($current as $key => $value) {
-            $stats[$key] = ['value' => $value, 'previous' => $previous[$key], 'change' => $this->change($value, $previous[$key])];
+            $hidden = ! $canSeeSales && in_array($key, $moneyKeys, true);
+            $stats[$key] = $hidden
+                ? ['value' => 0, 'previous' => 0, 'change' => null]
+                : ['value' => $value, 'previous' => $previous[$key], 'change' => $this->change($value, $previous[$key])];
         }
 
         $owner = $creator->isSubAdmin() ? $creator->parentCreator : $creator;
@@ -49,33 +57,39 @@ class DashboardController extends Controller
             'kyc' => $owner->kycVerification?->status === 'verified',
         ];
 
-        // sub-admin ko balance tabhi dikhe jab payouts.view mila ho (CheckPermission jaisa hi rule)
-        $canSeePayouts = ! $creator->isSubAdmin() || $creator->getAllPermissions()->pluck('name')->contains('payouts.view');
+        // sub-admin ko balance tabhi dikhe jab payouts.view mila ho
+        $canSeePayouts = TeamAccess::can($creator, 'payouts.view');
 
         $paid = fn () => Order::where('orders.creator_id', $tid)->where('orders.status', 'success')->whereBetween('orders.paid_at', [$from, $to]);
 
+        $chart = $this->dailySeries($paid(), $store?->id, $from, $to);
+        if (! $canSeeSales) {
+            $chart = array_map(fn ($row) => array_merge($row, array_intersect_key(['revenue' => 0, 'sales' => 0], $row)), $chart);
+        }
+
         return Inertia::render('Dashboard/Index', [
             'days' => $days,
+            'canSeeSales' => $canSeeSales,
             'stats' => $stats,
-            'chart' => $this->dailySeries($paid(), $store?->id, $from, $to),
-            'revenueByType' => $paid()->join('products', 'products.id', '=', 'orders.product_id')
+            'chart' => $chart,
+            'revenueByType' => ! $canSeeSales ? [] : $paid()->join('products', 'products.id', '=', 'orders.product_id')
                 ->select('products.type', DB::raw('SUM(orders.net_payout_amount) as revenue'), DB::raw('COUNT(*) as sales'))
                 ->groupBy('products.type')->orderByDesc('revenue')->get()
                 ->map(fn ($r) => ['type' => $r->type, 'revenue' => (float) $r->revenue, 'sales' => (int) $r->sales]),
-            'topProducts' => $paid()->join('products', 'products.id', '=', 'orders.product_id')
+            'topProducts' => ! $canSeeSales ? [] : $paid()->join('products', 'products.id', '=', 'orders.product_id')
                 ->select('products.id', 'products.title', 'products.type', DB::raw('SUM(orders.net_payout_amount) as revenue'), DB::raw('COUNT(*) as sales'))
                 ->groupBy('products.id', 'products.title', 'products.type')->orderByDesc('revenue')->limit(5)->get()
                 ->map(fn ($r) => ['id' => $r->id, 'title' => $r->title, 'type' => $r->type, 'revenue' => (float) $r->revenue, 'sales' => (int) $r->sales]),
             'balance' => $canSeePayouts ? app(SettlementService::class)->balanceFor($owner) : null,
             'totals' => [
-                'customers' => Customer::where('creator_id', $tid)->count(),
+                'customers' => TeamAccess::can($creator, 'audience.view') ? Customer::where('creator_id', $tid)->count() : 0,
                 'products' => Product::where('creator_id', $tid)->count(),
             ],
             'profileCompletion' => [
                 'percent' => (int) round(count(array_filter($checklist)) / count($checklist) * 100),
                 'items' => $checklist,
             ],
-            'recentOrders' => Order::with('product:id,title,type')
+            'recentOrders' => ! $canSeeSales ? [] : Order::with('product:id,title,type')
                 ->where('creator_id', $tid)->where('status', 'success')
                 ->latest('paid_at')->limit(8)
                 ->get(['id', 'order_number', 'product_id', 'buyer_name', 'total_amount', 'paid_at']),

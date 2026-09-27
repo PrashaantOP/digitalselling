@@ -36,8 +36,9 @@ interface ProductRow {
     coverImage: string | null;
     price: number;
     pricingType: 'fixed' | 'customer_decides' | 'free';
-    salesCount: number;
-    revenueTotal: number;
+    // null = is team member ko bikri ke numbers dikhane ki permission nahi
+    salesCount: number | null;
+    revenueTotal: number | null;
     status: 'draft' | 'unpublished' | 'published';
     createdAt: string;
     editUrl: string;
@@ -214,8 +215,14 @@ export default function ProductsIndex({ products, counts, filters }: ProductsInd
                                               : formatCurrency(product.price)}
                                     </TableCell>
                                     <TableCell>
-                                        <p className="font-semibold">{formatCurrency(product.revenueTotal)}</p>
-                                        <p className="text-muted-foreground text-xs">{product.salesCount} sales</p>
+                                        {product.revenueTotal === null ? (
+                                            <p className="text-muted-foreground text-xs">Hidden</p>
+                                        ) : (
+                                            <>
+                                                <p className="font-semibold">{formatCurrency(product.revenueTotal)}</p>
+                                                <p className="text-muted-foreground text-xs">{product.salesCount} sales</p>
+                                            </>
+                                        )}
                                     </TableCell>
                                     <TableCell>
                                         <ProductStatusBadge status={product.status} />

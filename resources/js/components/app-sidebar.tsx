@@ -12,7 +12,6 @@ import {
     LayoutGrid,
     Lock,
     MessageCircle,
-    Package,
     Settings,
     ShieldCheck,
     Sparkles,
@@ -21,28 +20,30 @@ import {
     Wallet,
     Zap,
 } from 'lucide-react';
+import { useCan } from '@/hooks/use-can';
 import { useState } from 'react';
 
-type NavLink = { title: string; href: string; icon: typeof LayoutGrid; tone?: string };
+// requires: sub-admin ke paas ye permission ho tabhi link dikhe; 'owner' = sirf store owner. (Asli rok server pe.)
+type NavLink = { title: string; href: string; icon: typeof LayoutGrid; tone?: string; requires?: string };
 
 const mainLinks: NavLink[] = [
     { title: 'Getting Started', href: '/dashboard', icon: Sparkles },
-    { title: 'Store', href: '/dashboard/store', icon: Store },
-    { title: 'Payments', href: '/dashboard/payments', icon: CircleDollarSign },
-    { title: 'Settlements', href: '/dashboard/settlements', icon: Wallet },
-    { title: 'Audience', href: '/dashboard/audience', icon: Users },
-    { title: 'Refer & Earn', href: '/dashboard/refer-earn', icon: Sparkles },
-    { title: 'Sub-admins', href: '/dashboard/sub-admins', icon: ShieldCheck },
+    { title: 'Store', href: '/dashboard/store', icon: Store, requires: 'store.view' },
+    { title: 'Payments', href: '/dashboard/payments', icon: CircleDollarSign, requires: 'payments.view' },
+    { title: 'Settlements', href: '/dashboard/settlements', icon: Wallet, requires: 'payouts.view' },
+    { title: 'Audience', href: '/dashboard/audience', icon: Users, requires: 'audience.view' },
+    { title: 'Refer & Earn', href: '/dashboard/refer-earn', icon: Sparkles, requires: 'owner' },
+    { title: 'Team', href: '/dashboard/sub-admins', icon: ShieldCheck, requires: 'owner' },
 ];
 
 const appLinks: NavLink[] = [
-    { title: 'Courses', href: '/dashboard/courses', icon: GraduationCap, tone: 'bg-[#EEF0FF] text-[#4F46E5]' },
-    { title: 'Bookings', href: '/dashboard/bookings', icon: CalendarDays, tone: 'bg-[#E6F2FF] text-[#0284C7]' },
-    { title: 'Events', href: '/dashboard/events', icon: CalendarDays, tone: 'bg-[#FFEDE8] text-[#FF6B4A]' },
-    { title: 'Payment Pages', href: '/dashboard/payment-pages', icon: CreditCard, tone: 'bg-[#E1F6F3] text-[#0D9488]' },
-    { title: 'Books', href: '/dashboard/books', icon: BookOpen, tone: 'bg-[#FFF4DB] text-[#B46E00]' },
-    { title: 'Locked Content', href: '/dashboard/locked-content', icon: Lock, tone: 'bg-[#F1EAFE] text-[#7C3AED]' },
-    { title: 'AutoDM', href: '/dashboard/autodm', icon: MessageCircle, tone: 'bg-[#FDE8F1] text-[#DB2777]' },
+    { title: 'Courses', href: '/dashboard/courses', icon: GraduationCap, tone: 'bg-[#EEF0FF] text-[#4F46E5]', requires: 'courses.view' },
+    { title: 'Bookings', href: '/dashboard/bookings', icon: CalendarDays, tone: 'bg-[#E6F2FF] text-[#0284C7]', requires: 'bookings.view' },
+    { title: 'Events', href: '/dashboard/events', icon: CalendarDays, tone: 'bg-[#FFEDE8] text-[#FF6B4A]', requires: 'events.view' },
+    { title: 'Payment Pages', href: '/dashboard/payment-pages', icon: CreditCard, tone: 'bg-[#E1F6F3] text-[#0D9488]', requires: 'payment-pages.view' },
+    { title: 'Books', href: '/dashboard/books', icon: BookOpen, tone: 'bg-[#FFF4DB] text-[#B46E00]', requires: 'books.view' },
+    { title: 'Locked Content', href: '/dashboard/locked-content', icon: Lock, tone: 'bg-[#F1EAFE] text-[#7C3AED]', requires: 'locked-content.view' },
+    { title: 'AutoDM', href: '/dashboard/autodm', icon: MessageCircle, tone: 'bg-[#FDE8F1] text-[#DB2777]', requires: 'autodm.view' },
 ];
 
 function isActive(currentUrl: string, href: string) {
@@ -55,6 +56,8 @@ function initials(name: string) {
 
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
+    const { can, isOwner, storeOwner } = useCan();
+    const visible = (item: NavLink) => !item.requires || (item.requires === 'owner' ? isOwner : can(item.requires));
     const page = usePage();
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const username = typeof auth.user.username === 'string' ? auth.user.username : '';
@@ -74,16 +77,21 @@ export function AppSidebar() {
     return <aside className="sticky top-0 hidden h-screen w-[288px] shrink-0 flex-col border-r border-[#E4E2DA] bg-white lg:flex">
         <div className="border-b border-[#E4E2DA] p-4">
             <Link href="/dashboard" className="flex items-center gap-2.5"><span className="flex size-7 items-center justify-center rounded-[7px] bg-[#4F46E5] text-sm font-extrabold text-white shadow-sm">K</span><span className="text-base font-extrabold tracking-tight text-[#14141B]">Kiln</span></Link>
+            {!isOwner ? (
+                // team member: kis store me kaam kar raha hai — apna koi storefront nahi
+                <div className="mt-3 rounded-lg border border-[#E4E2DA] bg-[#EEF0FF] p-2"><p className="truncate text-xs font-bold text-[#4F46E5]">Team member</p><p className="truncate text-[11px] text-[#4B4B57]">Working in {storeOwner ?? 'the owner'}'s store</p></div>
+            ) : (<>
             <a href={storeUrl} target="_blank" rel="noreferrer" title="Open storefront in a new tab" className="group mt-3 flex items-center justify-between rounded-lg border border-[#E4E2DA] bg-[#F0EFEA] p-2 transition hover:border-[#C9C6BC] hover:bg-white">
                 <div className="min-w-0"><p className="truncate text-xs font-bold text-[#14141B]">{auth.user.name}'s Store</p><p className="truncate text-[11px] text-[#8A8A96]">{username ? storeUrl : 'Set up your store'}</p></div>
                 <ExternalLink className="size-4 shrink-0 text-[#8A8A96] transition group-hover:text-[#4F46E5]" />
             </a>
             {username && <a href={`${baseUrl}/w/${username}`} target="_blank" rel="noreferrer" title="Open your website in a new tab" className="mt-1.5 flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium text-[#8A8A96] transition hover:bg-[#F0EFEA] hover:text-[#4F46E5]"><span className="truncate">Website · /w/{username}</span><ExternalLink className="size-3 shrink-0" /></a>}
+            </>)}
         </div>
 
         <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div><p className="mb-1.5 px-2 text-[11px] font-bold uppercase tracking-wider text-[#8A8A96]">Main</p><div className="space-y-0.5">{mainLinks.map((item) => renderNavLink(item))}</div></div>
-            <div><p className="mb-1.5 px-2 text-[11px] font-bold uppercase tracking-wider text-[#8A8A96]">Apps & Tools</p><div className="space-y-1">{appLinks.map((item) => renderNavLink(item, true))}</div><Link href="/dashboard/products" className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-[#E4E2DA] bg-[#F0EFEA] px-2.5 py-2 text-sm font-medium text-[#4B4B57] transition hover:bg-white hover:text-[#14141B]"><LayoutGrid className="size-4 text-[#8A8A96]" />Explore all apps</Link></div>
+            <div><p className="mb-1.5 px-2 text-[11px] font-bold uppercase tracking-wider text-[#8A8A96]">Main</p><div className="space-y-0.5">{mainLinks.filter(visible).map((item) => renderNavLink(item))}</div></div>
+            <div><p className="mb-1.5 px-2 text-[11px] font-bold uppercase tracking-wider text-[#8A8A96]">Apps & Tools</p><div className="space-y-1">{appLinks.filter(visible).map((item) => renderNavLink(item, true))}</div><Link href="/dashboard/products" className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-[#E4E2DA] bg-[#F0EFEA] px-2.5 py-2 text-sm font-medium text-[#4B4B57] transition hover:bg-white hover:text-[#14141B]"><LayoutGrid className="size-4 text-[#8A8A96]" />Explore all apps</Link></div>
         </nav>
 
         <div className="relative space-y-3 border-t border-[#E4E2DA] p-3">

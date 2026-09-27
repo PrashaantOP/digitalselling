@@ -13,7 +13,7 @@ const MAX_BYTES = 5 * 1024 * 1024;
 /*  Cover images / video                                               */
 /* ------------------------------------------------------------------ */
 
-function CoverUploader({ productId, images, videoUrl, onVideoChange, videoError }: { productId: number; images: CourseItem['cover_images']; videoUrl: string; onVideoChange: (v: string) => void; videoError?: string }) {
+function CoverUploader({ productUuid, images, videoUrl, onVideoChange, videoError }: { productUuid: string; images: CourseItem['cover_images']; videoUrl: string; onVideoChange: (v: string) => void; videoError?: string }) {
     const [busy, setBusy] = useState<number | 'upload' | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [dragging, setDragging] = useState(false);
@@ -28,16 +28,16 @@ function CoverUploader({ productId, images, videoUrl, onVideoChange, videoError 
 
         setError(null);
         setBusy('upload');
-        const res = await send('post', `/dashboard/products/${productId}/cover-images`, { images: files }, true);
+        const res = await send('post', `/dashboard/products/${productUuid}/cover-images`, { images: files }, true);
         setBusy(null);
         if (!res.ok) setError(firstError(res.errors, 'Upload failed. Please try again.'));
         if (input.current) input.current.value = '';
     }
 
-    async function remove(id: number) {
-        setBusy(id);
+    async function remove(img: CourseItem['cover_images'][number]) {
+        setBusy(img.id);
         setError(null);
-        const res = await send('delete', `/dashboard/cover-images/${id}`);
+        const res = await send('delete', `/dashboard/cover-images/${img.uuid}`);
         setBusy(null);
         if (!res.ok) setError(firstError(res.errors, 'Could not remove the image.'));
     }
@@ -53,7 +53,7 @@ function CoverUploader({ productId, images, videoUrl, onVideoChange, videoError 
                                 type="button"
                                 aria-label={`Remove cover image ${i + 1}`}
                                 disabled={busy !== null}
-                                onClick={() => remove(img.id)}
+                                onClick={() => remove(img)}
                                 className="absolute top-1 right-1 rounded-full bg-white/90 p-1 text-[#D93838] shadow hover:bg-white disabled:opacity-50"
                             >
                                 {busy === img.id ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
@@ -130,7 +130,7 @@ export function PageTab({
 
             <div className="flex flex-col gap-1.5">
                 <span className="text-xs font-semibold tracking-wider text-[#14141B] uppercase">Cover images</span>
-                <CoverUploader productId={item.id} images={item.cover_images} videoUrl={form.cover_video_url} onVideoChange={(v) => setField('cover_video_url', v)} videoError={errors.cover_video_url} />
+                <CoverUploader productUuid={item.uuid} images={item.cover_images} videoUrl={form.cover_video_url} onVideoChange={(v) => setField('cover_video_url', v)} videoError={errors.cover_video_url} />
             </div>
 
             <Field label="Description" htmlFor="course_description" counter={`${form.description.length}/20000`} error={errors.description}>

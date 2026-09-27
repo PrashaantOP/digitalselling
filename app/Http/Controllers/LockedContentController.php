@@ -22,16 +22,6 @@ class LockedContentController extends BaseProductController
     protected function detailRelation(): ?string { return 'lockedContentDetail'; }
 
     /** Course/Event/Book ki tarah dashboard URLs me id ki jagah uuid (secure, guess nahi hoga). */
-    protected function routeIdentifier(Product $product): int|string
-    {
-        return $product->uuid;
-    }
-
-    protected function routeIdentifierColumn(): string
-    {
-        return 'uuid';
-    }
-
     protected function productDefaults(): array
     {
         return ['button_text' => 'Unlock now'];

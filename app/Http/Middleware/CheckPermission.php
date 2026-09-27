@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\TeamAccess;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -20,15 +21,10 @@ class CheckPermission
 
         abort_unless($user, 401);
 
-        if ($user->isCreator() || $user->isSuperAdmin()) {
-            return $next($request);
-        }
+        // owner sab kuch; sub-admin ke paas inme se koi ek permission ho (TeamAccess ek hi jagah ka rule)
+        $allowed = collect($permissions)->contains(fn (string $p) => TeamAccess::can($user, $p));
 
-        abort_unless($user->isSubAdmin(), 403);
-
-        $granted = $user->getAllPermissions()->pluck('name');
-
-        abort_unless($granted->intersect($permissions)->isNotEmpty(), 403, 'You do not have permission to do this.');
+        abort_unless($allowed, 403, 'You do not have permission to do this.');
 
         return $next($request);
     }

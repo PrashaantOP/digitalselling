@@ -18,7 +18,7 @@ class LiveClassController extends Controller
             'description' => ['nullable', 'string', 'max:5000'],
             'scheduled_at' => ['required', 'date'],
             'duration_minutes' => ['required', 'integer', 'min:5', 'max:720'],
-            'join_link' => ['nullable', 'url', 'max:500'],
+            'join_link' => ['nullable', 'url:http,https', 'max:500'],
         ];
     }
 

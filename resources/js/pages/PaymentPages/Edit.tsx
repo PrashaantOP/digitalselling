@@ -37,6 +37,7 @@ type Status = 'draft' | 'unpublished' | 'published';
 
 interface CoverImage {
     id: number;
+    uuid: string;
     image_path: string;
     sort_order?: number;
 }
@@ -238,7 +239,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
         setCoverBusy(true);
         setCoverError(null);
         router.post(
-            `/dashboard/products/${item.id}/cover-images`,
+            `/dashboard/products/${item.uuid}/cover-images`,
             { images: files },
             {
                 forceFormData: true,
@@ -251,9 +252,10 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
         );
     }
 
-    function removeCover(id: number) {
+    function removeCover(image: CoverImage) {
+        const id = image.id;
         setCoverBusy(true);
-        router.delete(`/dashboard/cover-images/${id}`, {
+        router.delete(`/dashboard/cover-images/${image.uuid}`, {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => setCoverImages((current) => current.filter((image) => image.id !== id)),
@@ -396,7 +398,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
                             key={image.id}
                             src={assetUrl(image.image_path)}
                             alt={`cover image ${index + 1}`}
-                            onRemove={() => removeCover(image.id)}
+                            onRemove={() => removeCover(image)}
                             busy={coverBusy}
                         />
                     ))}
@@ -561,7 +563,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
                 </>
             )}
 
-            <CouponsField productId={item.id} initial={item.coupons ?? []} />
+            <CouponsField productUuid={item.uuid} initial={item.coupons ?? []} />
 
             {/* What to collect from the buyer */}
             <div className="flex flex-col gap-2">

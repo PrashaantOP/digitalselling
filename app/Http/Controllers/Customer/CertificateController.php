@@ -11,14 +11,14 @@ class CertificateController extends Controller
     use ResolvesCustomer;
 
     /**
-     * GET /me/certificates/{certificateId}
+     * GET /me/certificates/{certificateUuid}
      * PDF pehli baar generate hoke storage me save hota hai. Iske liye:  composer require barryvdh/laravel-dompdf
      */
-    public function download(int $certificateId)
+    public function download(string $certificateUuid)
     {
         $certificate = Certificate::with(['enrollment.customer', 'enrollment.course.product:id,title,creator_id', 'enrollment.course.product.creator:id,name'])
             ->whereHas('enrollment', fn ($q) => $q->whereIn('customer_id', $this->customerIds()))
-            ->findOrFail($certificateId);
+            ->where('uuid', $certificateUuid)->firstOrFail();
 
         if (! $certificate->file_path || ! Storage::disk('local')->exists($certificate->file_path)) {
             abort_unless(class_exists(\Barryvdh\DomPDF\Facade\Pdf::class), 501, 'Certificate PDF generation is not installed (barryvdh/laravel-dompdf).');

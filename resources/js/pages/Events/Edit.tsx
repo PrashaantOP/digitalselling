@@ -30,6 +30,7 @@ type Status = 'draft' | 'unpublished' | 'published';
 
 interface CoverImage {
     id: number;
+    uuid: string;
     image_path: string;
     sort_order?: number;
 }
@@ -68,6 +69,7 @@ interface EventItem {
 
 interface Coupon {
     id: number;
+    uuid: string;
     code: string;
     discount_percent: string | number;
     usage_limit: number | null;
@@ -417,7 +419,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
 
         setCoverBusy(true);
         setCoverError(null);
-        router.post(`/dashboard/products/${item.id}/cover-images`, { images: files }, {
+        router.post(`/dashboard/products/${item.uuid}/cover-images`, { images: files }, {
             forceFormData: true,
             preserveScroll: true,
             preserveState: true,
@@ -427,9 +429,10 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
         });
     }
 
-    function removeCover(id: number) {
+    function removeCover(image: CoverImage) {
+        const id = image.id;
         setCoverBusy(true);
-        router.delete(`/dashboard/cover-images/${id}`, {
+        router.delete(`/dashboard/cover-images/${image.uuid}`, {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => setCoverImages((current) => current.filter((image) => image.id !== id)),
@@ -499,7 +502,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
         if (!code || discount < 1 || discount > 100 || addingCoupon) return;
         setAddingCoupon(true);
         router.post(
-            `/dashboard/products/${item.id}/coupons`,
+            `/dashboard/products/${item.uuid}/coupons`,
             { code, discount_percent: discount, is_active: true },
             {
                 preserveScroll: true,
@@ -516,10 +519,11 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
         );
     }
 
-    function removeCoupon(couponId: number) {
+    function removeCoupon(coupon: Coupon) {
+        const couponId = coupon.id;
         if (removingCouponId !== null) return;
         setRemovingCouponId(couponId);
-        router.delete(`/dashboard/coupons/${couponId}`, {
+        router.delete(`/dashboard/coupons/${coupon.uuid}`, {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => setCoupons((current) => current.filter((coupon) => coupon.id !== couponId)),
@@ -722,7 +726,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                         <span className={cn('ml-auto', coupon.is_active ? 'text-[#059669]' : 'text-[#8A8A96]')}>{coupon.is_active ? 'Active' : 'Inactive'}</span>
                                         <button
                                             type="button"
-                                            onClick={() => removeCoupon(coupon.id)}
+                                            onClick={() => removeCoupon(coupon)}
                                             disabled={removingCouponId === coupon.id}
                                             aria-label={`Remove ${coupon.code} coupon`}
                                             className="rounded p-0.5 text-[#D93838] transition hover:bg-[#FFEDE8] disabled:opacity-40"
@@ -781,7 +785,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                     {coverImages.map((image, index) => (
                                         <div key={image.id} className="group relative aspect-video overflow-hidden rounded-lg bg-[#F6F5F2]">
                                             <img src={assetUrl(image.image_path)} alt={`Cover ${index + 1}`} className="size-full object-cover" />
-                                            <button type="button" onClick={() => removeCover(image.id)} disabled={coverBusy} aria-label={`Remove cover image ${index + 1}`} className="absolute top-1 right-1 rounded-full bg-white/90 p-1 text-[#D93838] shadow hover:bg-white disabled:opacity-50">
+                                            <button type="button" onClick={() => removeCover(image)} disabled={coverBusy} aria-label={`Remove cover image ${index + 1}`} className="absolute top-1 right-1 rounded-full bg-white/90 p-1 text-[#D93838] shadow hover:bg-white disabled:opacity-50">
                                                 <X className="size-3.5" />
                                             </button>
                                         </div>

@@ -262,7 +262,7 @@ export default function CourseEdit({ item: rawItem, publicUrl }: { item: CourseI
                             )}
                         </div>
                         <div role="tabpanel" hidden={tab !== 'settings'}>
-                            <SettingsTab productId={item.id} form={form} setField={setField} errors={errors} questions={item.checkout_questions} coupons={item.coupons} />
+                            <SettingsTab productUuid={item.uuid} form={form} setField={setField} errors={errors} questions={item.checkout_questions} coupons={item.coupons} />
                         </div>
                     </div>
 

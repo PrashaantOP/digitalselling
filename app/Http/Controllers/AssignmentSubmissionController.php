@@ -18,11 +18,11 @@ class AssignmentSubmissionController extends Controller
         $submissions = AssignmentSubmission::query()
             ->with([
                 'enrollment.customer:id,name,email',
-                'enrollment.course.product:id,title',
+                'enrollment.course.product:id,uuid,title',
                 'assignment.lesson:id,title',
             ])
             ->whereHas('enrollment.course.product', fn ($q) => $q->where('creator_id', $this->tid())
-                ->when($request->query('course'), fn ($c, $id) => $c->whereKey($id)))
+                ->when($request->query('course'), fn ($c, $uuid) => $c->where('uuid', $uuid)))
             ->when($request->query('status'), fn ($q, $v) => $q->where('status', $v))
             ->latest('submitted_at')->paginate(20)->withQueryString();
 

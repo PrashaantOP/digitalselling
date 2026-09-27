@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
  * Hold period calendar-based hai (rolling ghante nahi), taaki rule bolne me simple rahe:
  * "Monday ki saari bookings Wednesday ko settle hongi" — chahe order raat 11 baje aaya ho.
  *
- * Agar kuch din settlement na bane (KYC pending, payout method nahi), orders jama hote rehte
+ * Agar kuch din settlement na bane (KYC pending, payout method nahi ya unverified), orders jama hote rehte
  * hain aur jis din cycle chalti hai us din sab ek hi settlement me chale jaate hain.
  */
 class SettlementService
@@ -73,7 +73,24 @@ class SettlementService
             return 'kyc';
         }
 
-        return PayoutMethod::where('user_id', $creator->id)->exists() ? null : 'payout_method';
+        $method = $this->payoutMethodFor($creator);
+
+        if (! $method) {
+            return 'payout_method';
+        }
+
+        return $method->isVerified() ? null : 'payout_unverified';
+    }
+
+    /**
+     * Settlement isi method pe jaata hai — default, warna sabse naya.
+     * Default unverified ho to dusre verified method pe fallback nahi karte;
+     * creator ne jo chuna hai paisa wahi jaana chahiye.
+     */
+    public function payoutMethodFor(User $creator): ?PayoutMethod
+    {
+        return PayoutMethod::where('user_id', $creator->id)
+            ->orderByDesc('is_default')->orderByDesc('id')->first();
     }
 
     /**
@@ -86,10 +103,9 @@ class SettlementService
             return null;
         }
 
-        $method = PayoutMethod::where('user_id', $creator->id)
-            ->orderByDesc('is_default')->orderByDesc('id')->first();
+        $method = $this->payoutMethodFor($creator);
 
-        if (! $method) {
+        if (! $method?->isVerified()) {
             return null;
         }
 
@@ -169,7 +185,7 @@ class SettlementService
      * Creator ka paisa kahan khada hai — dashboard aur settlements page dono isi ko dikhate hain.
      *
      * clearing   = paid orders jo abhi T+2 hold me hain
-     * ready      = hold paar kar chuke, par KYC/payout method ki wajah se ruke hain
+     * ready      = hold paar kar chuke, par KYC/payout method (missing ya unverified) ki wajah se ruke hain
      * in_transit = settlement ban gaya, bank transfer hona baaki
      * settled    = transfer ho chuka
      */

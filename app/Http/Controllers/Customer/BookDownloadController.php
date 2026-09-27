@@ -14,10 +14,10 @@ class BookDownloadController extends Controller
 {
     use ResolvesCustomer;
 
-    /** GET /me/books/{bookId}/download — bookId = products.id (type=book). Sirf buyer (ya add-on buyer). */
-    public function download(int $bookId)
+    /** GET /me/books/{bookUuid}/download — bookUuid = products.uuid (type=book). Sirf buyer (ya add-on buyer). */
+    public function download(string $bookUuid)
     {
-        $product = Product::where('type', 'book')->findOrFail($bookId);
+        $product = Product::where('type', 'book')->where('uuid', $bookUuid)->firstOrFail();
 
         $order = Order::whereIn('customer_id', $this->customerIds())->where('status', 'success')
             ->where(fn ($q) => $q->where('product_id', $product->id)

@@ -15,6 +15,7 @@ class BookingServiceDetail extends Model
     protected $fillable = [
         'product_id',
         'duration_minutes',
+        'default_meeting_link',
         'is_active',
     ];
 

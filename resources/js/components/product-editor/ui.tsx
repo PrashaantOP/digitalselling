@@ -21,6 +21,7 @@ export type Device = 'desktop' | 'mobile';
 
 export interface Coupon {
     id: number;
+    uuid: string;
     code: string;
     discount_percent: string | number;
     usage_limit: number | null;
@@ -107,8 +108,8 @@ export function ThumbTile({ src, alt, onRemove, busy }: { src: string; alt: stri
     );
 }
 
-/** Coupon list + add row. Coupon endpoints product id pe chalte hain (tenant-scoped XHR). */
-export function CouponsField({ productId, initial }: { productId: number; initial: Coupon[] }) {
+/** Coupon list + add row. Coupon endpoints product ke uuid pe chalte hain (tenant-scoped XHR). */
+export function CouponsField({ productUuid, initial }: { productUuid: string; initial: Coupon[] }) {
     const [coupons, setCoupons] = useState<Coupon[]>(initial);
     const [code, setCode] = useState('');
     const [percent, setPercent] = useState('10');
@@ -121,7 +122,7 @@ export function CouponsField({ productId, initial }: { productId: number; initia
         if (!clean || discount < 1 || discount > 100 || adding) return;
         setAdding(true);
         router.post(
-            `/dashboard/products/${productId}/coupons`,
+            `/dashboard/products/${productUuid}/coupons`,
             { code: clean, discount_percent: discount, is_active: true },
             {
                 preserveScroll: true,
@@ -138,10 +139,11 @@ export function CouponsField({ productId, initial }: { productId: number; initia
         );
     }
 
-    function remove(id: number) {
+    function remove(coupon: Coupon) {
+        const id = coupon.id;
         if (removingId !== null) return;
         setRemovingId(id);
-        router.delete(`/dashboard/coupons/${id}`, {
+        router.delete(`/dashboard/coupons/${coupon.uuid}`, {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => setCoupons((current) => current.filter((c) => c.id !== id)),
@@ -161,7 +163,7 @@ export function CouponsField({ productId, initial }: { productId: number; initia
                     </span>
                     <button
                         type="button"
-                        onClick={() => remove(coupon.id)}
+                        onClick={() => remove(coupon)}
                         disabled={removingId === coupon.id}
                         aria-label={`Remove ${coupon.code} coupon`}
                         className="rounded p-0.5 text-[#D93838] transition hover:bg-[#FFEDE8] disabled:opacity-40"

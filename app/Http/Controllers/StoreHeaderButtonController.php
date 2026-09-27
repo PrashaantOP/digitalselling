@@ -14,7 +14,7 @@ class StoreHeaderButtonController extends Controller
     {
         $data = $request->validate([
             'label' => ['required', 'string', 'max:50'],
-            'url' => ['required', 'url', 'max:500'],
+            'url' => ['required', 'url:http,https', 'max:500'],
             'icon' => ['nullable', 'string', 'max:50'],
         ]);
 

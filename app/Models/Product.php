@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasUuid;
 
     protected $table = 'products';
 
@@ -52,12 +52,6 @@ class Product extends Model
         'published_at' => 'datetime',
     ];
 
-    protected static function booted(): void
-    {
-        static::creating(function (self $product): void {
-            $product->uuid ??= (string) Str::uuid();
-        });
-    }
 
 
     public function creator()
@@ -130,6 +124,19 @@ class Product extends Model
     public function bookingServiceDetail()
     {
         return $this->hasOne(BookingServiceDetail::class, 'product_id');
+    }
+
+    /** Booking session (type=booking) ki saari bookings — Sessions list ke upcoming count ke liye. */
+    public function bookings()
+    {
+        return $this->hasManyThrough(
+            Booking::class,
+            BookingServiceDetail::class,
+            'product_id',         // booking_service_details.product_id -> products.id
+            'booking_service_id', // bookings.booking_service_id -> booking_service_details.id
+            'id',
+            'id',
+        );
     }
 
     public function paymentPageDetail()

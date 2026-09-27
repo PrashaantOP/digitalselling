@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\TeamAccess;
+use App\Support\TeamPermissions;
 use App\Models\Product;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
@@ -19,14 +21,6 @@ use Illuminate\Http\Request;
  */
 class EnsureProductTypePermission
 {
-    private const MODULES = [
-        'course' => 'courses',
-        'event' => 'events',
-        'book' => 'books',
-        'locked_content' => 'locked-content',
-        'payment_page' => 'payment-pages',
-        'booking' => 'bookings',
-    ];
 
     public function handle(Request $request, Closure $next, string $ability = 'edit')
     {
@@ -34,20 +28,18 @@ class EnsureProductTypePermission
 
         abort_unless($user, 401);
 
-        if ($user->isCreator() || $user->isSuperAdmin()) {
+        if ($user->isCreator()) {
             return $next($request);
         }
 
         abort_unless($user->isSubAdmin(), 403);
 
         $product = $this->resolveProduct($request);
-        $module = $product ? (self::MODULES[$product->type] ?? null) : null;
+        $module = $product ? (TeamPermissions::PRODUCT_TYPES[$product->type] ?? null) : null;
 
         abort_unless($module, 403);
 
-        $granted = $user->getAllPermissions()->pluck('name');
-
-        abort_unless($granted->contains("{$module}.{$ability}"), 403, 'You do not have permission to do this.');
+        abort_unless(TeamAccess::can($user, "{$module}.{$ability}"), 403, 'You do not have permission to do this.');
 
         return $next($request);
     }

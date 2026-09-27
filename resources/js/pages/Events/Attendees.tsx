@@ -44,6 +44,7 @@ interface AttendeeCustomer {
 
 interface Registration {
     id: number;
+    uuid: string;
     event_id: number;
     customer_id: number;
     order_id: number;
@@ -216,7 +217,7 @@ export default function Attendees({ event, registrations, totals, filters }: Att
         const name = reg.customer?.name ?? 'Attendee';
         setBusyId(reg.id);
         router.put(
-            `/dashboard/event-registrations/${reg.id}`,
+            `/dashboard/event-registrations/${reg.uuid}`,
             { attended: !reg.attended },
             {
                 preserveScroll: true,

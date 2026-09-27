@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\LoginOtpService;
+use App\Support\DeviceTracker;
+use App\Support\PendingLogin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,11 +30,22 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request, LoginOtpService $otp): RedirectResponse
     {
         $request->authenticate();
+        $user = Auth::guard('web')->user();
+
+        // 2FA on hai (sub-admin ke liye hamesha) — password sahi hone pe bhi abhi login nahi, pehle email code
+        if ($user->two_factor_enabled || $user->isSubAdmin()) {
+            Auth::guard('web')->logout();
+            PendingLogin::start($request, 'web', $user, $request->boolean('remember'));
+            $otp->send($user, TwoFactorLoginController::PURPOSE, $request);
+
+            return redirect()->route('login.verify');
+        }
 
         $request->session()->regenerate();
+        DeviceTracker::recordLogin($user, $request);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

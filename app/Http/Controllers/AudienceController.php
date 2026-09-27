@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\RespondsFlexibly;
 use App\Models\Customer;
 use App\Models\Visitor;
+use App\Support\Csv;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -62,7 +63,7 @@ class AudienceController extends Controller
                 fputcsv($out, ['Name', 'Email', 'Phone', 'Orders', 'Total spent', 'First purchase', 'Joined']);
                 $this->customers($request)->orderBy('id')->chunk(500, function ($rows) use ($out) {
                     foreach ($rows as $c) {
-                        fputcsv($out, [$c->name, $c->email, $c->phone, $c->total_orders, $c->total_spent, $c->first_purchase_at, $c->joined_at]);
+                        fputcsv($out, Csv::row([$c->name, $c->email, $c->phone, $c->total_orders, $c->total_spent, $c->first_purchase_at, $c->joined_at]));
                     }
                 });
             } else {
@@ -70,7 +71,7 @@ class AudienceController extends Controller
                 fputcsv($out, ['Name', 'Phone', 'Customer', 'Visits', 'Pages', 'Country', 'City', 'Device', 'Browser', 'First seen', 'Last seen']);
                 $this->visitorQuery($request, $store->id)->orderBy('id')->chunk(500, function ($rows) use ($out) {
                     foreach ($rows as $v) {
-                        fputcsv($out, [$v->name, $v->phone, $v->is_customer ? 'yes' : 'no', $v->visits_count, $v->pages_count, $v->country, $v->city, $v->device, $v->browser, $v->first_seen_at, $v->last_seen_at]);
+                        fputcsv($out, Csv::row([$v->name, $v->phone, $v->is_customer ? 'yes' : 'no', $v->visits_count, $v->pages_count, $v->country, $v->city, $v->device, $v->browser, $v->first_seen_at, $v->last_seen_at]));
                     }
                 });
             }

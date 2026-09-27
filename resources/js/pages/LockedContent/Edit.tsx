@@ -42,12 +42,14 @@ type Status = 'draft' | 'unpublished' | 'published';
 
 interface HiddenImage {
     id: number;
+    uuid: string;
     image_path: string;
     sort_order?: number;
 }
 
 interface HiddenFile {
     id: number;
+    uuid: string;
     file_path: string;
     original_name: string | null;
 }
@@ -89,7 +91,7 @@ const MAX_FILES = 20;
 const BASE = '/dashboard/locked-content';
 
 /** Hidden images private disk pe hain — editor thumbnails creator-only route se aate hain. */
-const hiddenImageUrl = (id: number) => `/dashboard/locked-content-images/${id}`;
+const hiddenImageUrl = (uuid: string) => `/dashboard/locked-content-images/${uuid}`;
 
 /* ------------------------------------------------------------------ */
 /*  PREVIEW PANE                                                       */
@@ -240,9 +242,10 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
         );
     }
 
-    function removeImage(id: number) {
+    function removeImage(image: HiddenImage) {
+        const id = image.id;
         setImageBusy(true);
-        router.delete(`/dashboard/locked-content-images/${id}`, {
+        router.delete(`/dashboard/locked-content-images/${image.uuid}`, {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => setImages((current) => current.filter((image) => image.id !== id)),
@@ -271,10 +274,11 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
         );
     }
 
-    function removeFile(id: number) {
+    function removeFile(file: HiddenFile) {
+        const id = file.id;
         if (removingFileId !== null) return;
         setRemovingFileId(id);
-        router.delete(`/dashboard/locked-content-files/${id}`, {
+        router.delete(`/dashboard/locked-content-files/${file.uuid}`, {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => setFiles((current) => current.filter((file) => file.id !== id)),
@@ -415,9 +419,9 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
                     {images.map((image, index) => (
                         <ThumbTile
                             key={image.id}
-                            src={hiddenImageUrl(image.id)}
+                            src={hiddenImageUrl(image.uuid)}
                             alt={`hidden image ${index + 1}`}
-                            onRemove={() => removeImage(image.id)}
+                            onRemove={() => removeImage(image)}
                             busy={imageBusy}
                         />
                     ))}
@@ -462,7 +466,7 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
                         </p>
                         <RemoveButton
                             label={`Remove ${file.original_name ?? 'file'}`}
-                            onClick={() => removeFile(file.id)}
+                            onClick={() => removeFile(file)}
                             busy={removingFileId === file.id}
                         />
                     </div>
@@ -529,7 +533,7 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
                 </div>
             )}
 
-            <CouponsField productId={item.id} initial={item.coupons ?? []} />
+            <CouponsField productUuid={item.uuid} initial={item.coupons ?? []} />
 
             <SlugField prefix="/l/" value={form.slug} onChange={(slug) => patch({ slug })} placeholder="your-content" error={errorFor('slug')} />
         </EditorShell>

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\RespondsFlexibly;
 use App\Models\Product;
+use App\Support\TeamAccess;
+use App\Support\TeamPermissions;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -26,9 +28,13 @@ class ProductsOverviewController extends Controller
         'booking' => 'bookings/sessions',
     ];
 
+    /** Sub-admin ko sirf wahi product types jinka {module}.view mila hai. */
     private function baseQuery()
     {
-        return Product::where('creator_id', $this->tid());
+        $user = auth()->user();
+        $types = collect(TeamPermissions::PRODUCT_TYPES)->filter(fn (string $module) => TeamAccess::can($user, "{$module}.view"))->keys();
+
+        return Product::where('creator_id', $this->tid())->whereIn('type', $types);
     }
 
     public function index(Request $request)
@@ -36,16 +42,17 @@ class ProductsOverviewController extends Controller
         $type = $request->query('type');
         $search = $request->query('search');
 
+        $canSeeSales = TeamAccess::can(auth()->user(), 'payments.view');
+
         $products = $this->baseQuery()
             ->when($type, fn ($q, $v) => $q->where('type', $v))
             ->when($search, fn ($q, $v) => $q->where('title', 'like', "%{$v}%"))
             ->latest()
             ->paginate(15)
             ->withQueryString()
-            ->through(function (Product $p) {
-                // course/event/book/locked_content ki dashboard routes uuid pe bind hoti hain (bindings.php), id pe 404 aata hai
-                $key = in_array($p->type, ['course', 'event', 'book', 'locked_content'], true) ? $p->uuid : $p->id;
-                $editUrl = '/dashboard/' . self::EDIT_BASE[$p->type] . "/{$key}/edit";
+            ->through(function (Product $p) use ($canSeeSales) {
+                // URL me hamesha uuid — numeric id kabhi nahi
+                $editUrl = '/dashboard/' . self::EDIT_BASE[$p->type] . "/{$p->uuid}/edit";
 
                 return [
                     'id' => $p->id,
@@ -54,8 +61,9 @@ class ProductsOverviewController extends Controller
                     'coverImage' => $p->coverImages()->orderBy('sort_order')->value('image_path'),
                     'price' => (float) $p->price,
                     'pricingType' => $p->pricing_type,
-                    'salesCount' => $p->sales_count,
-                    'revenueTotal' => (float) $p->revenue_total,
+                    // bikri ke numbers sirf payments.view wale ko
+                    'salesCount' => $canSeeSales ? $p->sales_count : null,
+                    'revenueTotal' => $canSeeSales ? (float) $p->revenue_total : null,
                     'status' => $p->status,
                     'createdAt' => $p->created_at->format('M j, Y'),
                     'editUrl' => $editUrl,
