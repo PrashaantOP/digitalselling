@@ -21,11 +21,11 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
 
-        Admin::factory()->create([
-            'uuid' => 'admin-1',
-            'name' => 'Admin User',
-            'email' => 'pk1093524@gmail.com',
-            'password' => bcrypt('sachin@12345'),
-        ]);
+        // Admin::factory()->create([
+        //     'uuid' => 'admin-1',
+        //     'name' => 'Admin User',
+        //     'email' => 'pk1093524@gmail.com',
+        //     'password' => bcrypt('sachin@12345'),
+        // ]);
     }
 }

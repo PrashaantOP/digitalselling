@@ -45,6 +45,7 @@ use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\StoreAnalyticsController;
 use App\Http\Controllers\StoreAppearanceController;
 use App\Http\Controllers\StoreController;
+use App\Http\Controllers\WebappController;
 use App\Http\Controllers\StoreHeaderButtonController;
 use App\Http\Controllers\StoreSettingsController;
 use App\Http\Controllers\StoreSocialLinkController;
@@ -113,7 +114,11 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
     // ---- 2b. Unified Products catalog (cross-type browse/filter view) ----
     Route::get('dashboard/products', [ProductsOverviewController::class, 'index'])->name('products.index');
 
-    // ---- 3. Store ----
+    // ---- 3. Web App (theme picker — branding store se aati hai) ----
+    Route::get('dashboard/web-app', [WebappController::class, 'edit'])->name('webapp.edit')->middleware('perm:store.view');
+    Route::put('dashboard/web-app', [WebappController::class, 'update'])->name('webapp.update')->middleware('perm:store.edit');
+
+    // ---- 3b. Store ----
     Route::prefix('dashboard/store')->group(function () {
         Route::get('/', [StoreController::class, 'edit'])->name('store.edit')->middleware('perm:store.view');
         Route::put('/', [StoreController::class, 'update'])->name('store.update')->middleware('perm:store.edit');

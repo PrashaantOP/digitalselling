@@ -14,6 +14,7 @@ import {
     MessageCircle,
     Settings,
     ShieldCheck,
+    Smartphone,
     Sparkles,
     Store,
     Users,
@@ -28,6 +29,7 @@ type NavLink = { title: string; href: string; icon: typeof LayoutGrid; tone?: st
 
 const mainLinks: NavLink[] = [
     { title: 'Getting Started', href: '/dashboard', icon: Sparkles },
+    { title: 'Web App', href: '/dashboard/web-app', icon: Smartphone, requires: 'store.view' },
     { title: 'Store', href: '/dashboard/store', icon: Store, requires: 'store.view' },
     { title: 'Payments', href: '/dashboard/payments', icon: CircleDollarSign, requires: 'payments.view' },
     { title: 'Settlements', href: '/dashboard/settlements', icon: Wallet, requires: 'payouts.view' },

@@ -39,6 +39,20 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 
+        {{-- PWA: sirf creator webapp (/w/{username}) pe. Manifest ek PHP route hai aur sw.js/sw-register.js
+             plain static files — isliye shared hosting pe koi server config nahi chahiye. --}}
+        @if (($page['component'] ?? null) === 'Public/Webapp')
+            @php($webappUsername = $page['props']['creator']['username'] ?? null)
+            @if ($webappUsername)
+                <link rel="manifest" href="/w/{{ $webappUsername }}/manifest.webmanifest">
+            @endif
+            <meta name="mobile-web-app-capable" content="yes">
+            <meta name="apple-mobile-web-app-capable" content="yes">
+            <meta name="apple-mobile-web-app-status-bar-style" content="default">
+            <link rel="apple-touch-icon" href="/pwa/icon-192.png">
+            <script src="/sw-register.js" defer></script>
+        @endif
+
         @routes(nonce: Vite::cspNonce())
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])

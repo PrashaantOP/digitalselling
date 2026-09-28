@@ -66,7 +66,7 @@ class StorefrontPagesTest extends TestCase
         $this->product(['title' => 'Notion Kit']);
 
         $this->get('/w/riya')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Public/Storefront')
+            ->component('Public/Webapp')
             ->has('products', 1)
             ->where('products.0.title', 'Notion Kit')
         );
@@ -87,7 +87,7 @@ class StorefrontPagesTest extends TestCase
         $this->actingAs($this->creator);
 
         $this->get('/riya')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Public/Store')->where('ownerPreview', true));
-        $this->get('/w/riya')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Public/Storefront')->where('ownerPreview', true));
+        $this->get('/w/riya')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Public/Webapp')->where('ownerPreview', true));
     }
 
     public function test_unknown_or_non_creator_usernames_404()

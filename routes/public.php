@@ -41,6 +41,12 @@ Route::get('/w/{username}', [StorefrontController::class, 'webapp'])
     ->middleware($pages)
     ->name('webapp.show');
 
+// PWA manifest — per creator (install karne pe uska naam/icon/colour dikhe)
+Route::get('/w/{username}/manifest.webmanifest', [StorefrontController::class, 'manifest'])
+    ->where('username', '[A-Za-z0-9_.\-]+')
+    ->middleware('throttle:120,1')
+    ->name('webapp.manifest');
+
 // ---- Storefront: catch-all, ABSOLUTE LAST ----
 $reserved = implode('|', array_map('preg_quote', CreatorProfileController::RESERVED_USERNAMES));
 

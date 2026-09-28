@@ -15,6 +15,7 @@ class StoreAppearance extends Model
     protected $fillable = [
         'store_id',
         'theme',
+        'webapp_theme',
         'brand_color',
         'font_family',
         'custom_background_path',
