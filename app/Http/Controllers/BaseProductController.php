@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\RespondsFlexibly;
 use App\Models\Product;
+use App\Services\OrderService;
 use App\Support\Html;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -257,6 +258,11 @@ abstract class BaseProductController extends Controller
         return Inertia::render($this->view() . '/Edit', [
             'item' => $product,
             'publicUrl' => $this->publicUrl($product),
+            // Add-ons section (AddonsField): jude hue add-ons + jin products ko joda ja sakta hai
+            'addons' => $product->addons()->with('addonProduct')->orderBy('sort_order')->orderBy('id')->get()
+                ->map->toEditorArray()->values(),
+            'addonOptions' => ProductAddonController::eligible($product)->orderBy('title')->get()
+                ->map(fn (Product $p) => ['uuid' => $p->uuid, 'title' => $p->title, 'type' => $p->type, 'unit_price' => OrderService::unitPrice($p)])->values(),
         ]);
     }
 

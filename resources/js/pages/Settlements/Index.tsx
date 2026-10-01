@@ -68,6 +68,7 @@ interface SettlementBalance {
     in_transit: number;
     clearing: number;
     ready: number;
+    adjustments: number;
     blocked_reason: 'kyc' | 'payout_method' | 'payout_unverified' | null;
 }
 
@@ -206,7 +207,22 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                                 Your sales are automatically batched and sent to your bank — no need to request a payout.
                             </p>
                         </div>
+                        <a
+                            href="/dashboard/settlements/export"
+                            className="inline-flex h-9 w-fit items-center gap-1.5 rounded-lg border border-[#E4E2DA] bg-white px-3.5 text-sm font-medium text-[#4B4B57] transition hover:bg-[#F6F5F2]"
+                        >
+                            Export CSV
+                        </a>
                     </div>
+
+                    {balance.adjustments !== 0 && (
+                        <div className="rounded-xl bg-white p-4 text-sm text-[#4B4B57] shadow-sm">
+                            <span className="font-semibold text-[#14141B]">
+                                {money(Math.abs(balance.adjustments))} will be {balance.adjustments < 0 ? 'deducted from' : 'added to'} your next settlement.
+                            </span>{' '}
+                            The reason is shown on that settlement once it is created.
+                        </div>
+                    )}
 
                     {/* Auto-settlement explainer */}
                     <div className="flex flex-col justify-between gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">

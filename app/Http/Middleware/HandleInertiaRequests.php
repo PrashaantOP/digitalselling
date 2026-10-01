@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\PlanPricing;
 use App\Support\TeamAccess;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
@@ -51,6 +52,18 @@ class HandleInertiaRequests extends Middleware
             ];
         }
 
+        // Customer portal + pay ke baad wala page: sirf buyer ki pehchaan — creator ka `auth` (same browser me login ho to) kabhi nahi
+        if ($request->is('me', 'me/*', 'checkout/done/*')) {
+            $buyer = Auth::guard('customer')->user();
+
+            return [
+                ...parent::share($request),
+                'name' => config('app.name'),
+                'buyer' => $buyer?->only(['name', 'email']),
+                'flash' => ['status' => fn () => $request->session()->get('status')],
+            ];
+        }
+
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
         return [
@@ -65,6 +78,8 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => fn () => $request->user('web') ? TeamAccess::permissions($request->user('web')) : [],
                 // sub-admin kis store me kaam kar raha hai — sirf naam
                 'storeOwner' => fn () => $request->user('web')?->isSubAdmin() ? $request->user('web')->parentCreator?->name : null,
+                // store ka plan (sub-admin ke liye owner ka) — sidebar ka plan card isi se chalta hai
+                'plan' => fn () => $this->plan($request),
             ],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
@@ -73,6 +88,25 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             // RespondsFlexibly::done() ka "…saved" message
             'flash' => ['success' => fn () => $request->session()->get('success')],
+        ];
+    }
+
+    /** @return array{effective: string, commission_rate: float, expires_at: ?string}|null */
+    private function plan(Request $request): ?array
+    {
+        $user = $request->user('web');
+        $creator = $user?->isSubAdmin() ? $user->parentCreator : $user;
+
+        if (! $creator?->isCreator()) {
+            return null;
+        }
+
+        $effective = PlanPricing::effectivePlan($creator);
+
+        return [
+            'effective' => $effective,
+            'commission_rate' => PlanPricing::commissionRate($creator),
+            'expires_at' => $effective === 'pro' ? $creator->plan_expires_at?->toIso8601String() : null,
         ];
     }
 }

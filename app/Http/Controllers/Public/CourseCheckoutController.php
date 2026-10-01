@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Models\CourseLesson;
 use App\Models\Product;
+use Illuminate\Support\Facades\Storage;
 
 class CourseCheckoutController extends BaseProductCheckoutController
 {
@@ -38,7 +40,8 @@ class CourseCheckoutController extends BaseProductCheckoutController
                 'modules' => $d->modules->map(fn ($m) => [
                     'id' => $m->id,
                     'title' => $m->title,
-                    'lessons' => $m->lessons->map->only(['id', 'title', 'type', 'is_free_preview'])->values(),
+                    // uuid sirf free-preview lessons ka — wahi bina kharide khul sakte hain
+                    'lessons' => $m->lessons->map(fn ($l) => $l->only(['id', 'title', 'type', 'is_free_preview']) + ['uuid' => $l->is_free_preview ? $l->uuid : null])->values(),
                 ])->values(),
                 'instructions' => $d->instructions->pluck('text'),
                 'benefits' => $d->benefits->pluck('text'),
@@ -49,5 +52,66 @@ class CourseCheckoutController extends BaseProductCheckoutController
                 'live_classes' => $d->liveClasses->map->only(['title', 'description', 'scheduled_at', 'duration_minutes']),
             ],
         ];
+    }
+
+    /**
+     * GET /c/{slug}/preview/{lessonUuid} — creator ne jis lesson pe "Free preview" on kiya hai, wo bina kharide
+     * khulta hai. Sirf published course ka published + free-preview lesson; baaki sab 404.
+     * Quiz / assignment ka content nahi jaata (unke liye enrollment chahiye) — sirf ek sandesh.
+     */
+    public function preview(string $slug, string $lessonUuid)
+    {
+        $lesson = $this->previewLesson($slug, $lessonUuid)->load(['video', 'textContent.images', 'audio', 'notes.files']);
+        $payload = $lesson->only(['uuid', 'title', 'type']) + ['content' => null];
+
+        switch ($lesson->type) {
+            case 'video':
+                $payload['content'] = $lesson->video?->only(['video_url', 'notes']);
+                break;
+            case 'text_image':
+                $payload['content'] = $lesson->textContent ? ['content' => $lesson->textContent->content, 'images' => $lesson->textContent->images->pluck('image_path')] : null;
+                break;
+            case 'audio':
+                $payload['content'] = $lesson->audio?->only(['audio_url', 'audio_path', 'notes']);
+                break;
+            case 'notes_pdf':
+                $note = $lesson->notes;
+                $payload['content'] = $note ? [
+                    'description' => $note->description,
+                    'files' => $note->allow_download ? $note->files->map(fn ($file) => [
+                        'name' => $file->original_name,
+                        'url' => url("/c/{$slug}/preview/{$lesson->uuid}/files/{$file->uuid}"),
+                    ])->values() : [],
+                ] : null;
+                break;
+        }
+
+        return response()->json(['lesson' => $payload]);
+    }
+
+    /** Free-preview notes lesson ki file — sirf jab creator ne downloads on rakhe hon. */
+    public function previewFile(string $slug, string $lessonUuid, string $fileUuid)
+    {
+        $lesson = $this->previewLesson($slug, $lessonUuid)->load('notes.files');
+        $file = $lesson->notes?->files->firstWhere('uuid', $fileUuid);
+
+        abort_unless($lesson->type === 'notes_pdf' && $file && $lesson->notes->allow_download, 404);
+        abort_unless(Storage::disk('local')->exists($file->file_path), 404);
+
+        return Storage::disk('local')->download($file->file_path, $file->original_name ?: basename($file->file_path));
+    }
+
+    private function previewLesson(string $slug, string $lessonUuid): CourseLesson
+    {
+        $product = Product::with('courseDetail:id,product_id')
+            ->where('slug', $slug)->where('type', 'course')->where('status', 'published')
+            ->whereHas('creator', fn ($q) => $q->where('status', 'active'))
+            ->firstOrFail();
+
+        return CourseLesson::where('uuid', $lessonUuid)
+            ->where('is_published', true)
+            ->where('is_free_preview', true) // yahi asli darwaza hai — flag band to 404
+            ->whereHas('module', fn ($q) => $q->where('course_id', $product->courseDetail?->id))
+            ->firstOrFail();
     }
 }

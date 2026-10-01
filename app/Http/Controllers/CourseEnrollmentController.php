@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Enrollment;
 use App\Models\Product;
+use App\Services\CertificateService;
 use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -49,5 +50,44 @@ class CourseEnrollmentController extends Controller
         ]);
 
         return Inertia::render('Courses/EnrollmentShow', ['enrollment' => $enrollment]);
+    }
+
+    /** Creator apne student ka certificate dekhe — wahi printable page jo student ko milta hai. */
+    public function certificate(Enrollment $enrollment, CertificateService $certificates)
+    {
+        abort_unless($enrollment->certificate, 404);
+
+        return response()->view('certificates.show', $certificates->viewData($enrollment->certificate));
+    }
+
+    /** Naam ki spelling sudhaarna — certificate ka snapshot hai, isliye student ke Account se nahi badalta. */
+    public function renameCertificate(Request $request, Enrollment $enrollment, CertificateService $certificates)
+    {
+        abort_unless($enrollment->certificate, 404);
+        $data = $request->validate(['student_name' => ['required', 'string', 'max:150']]);
+
+        $certificates->rename($enrollment->certificate, $data['student_name']);
+
+        return back()->with('success', 'Name on the certificate updated.');
+    }
+
+    /** Radd (jaise refund ke baad) — public verify page pe "revoked" dikhta hai. Wapas bhi laya ja sakta hai. */
+    public function revokeCertificate(Request $request, Enrollment $enrollment, CertificateService $certificates)
+    {
+        abort_unless($enrollment->certificate, 404);
+        $data = $request->validate(['reason' => ['required', 'string', 'max:255']]);
+
+        $certificates->revoke($enrollment->certificate, $data['reason']);
+
+        return back()->with('success', 'Certificate revoked.');
+    }
+
+    public function restoreCertificate(Enrollment $enrollment, CertificateService $certificates)
+    {
+        abort_unless($enrollment->certificate, 404);
+
+        $certificates->restore($enrollment->certificate);
+
+        return back()->with('success', 'Certificate restored.');
     }
 }

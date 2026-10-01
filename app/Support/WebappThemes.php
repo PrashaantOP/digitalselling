@@ -18,10 +18,9 @@ class WebappThemes
 
     public const ALL = [
         'studio' => ['name' => 'Studio', 'tagline' => 'Full website — hero, sections aur footer', 'pro' => false],
-        'aurora' => ['name' => 'Aurora', 'tagline' => 'Soft gradient hero with stacked cards', 'pro' => true],
-        'grid' => ['name' => 'Grid', 'tagline' => 'Sticky header with a two-column catalogue', 'pro' => true],
-        'press' => ['name' => 'Press', 'tagline' => 'Editorial look — big type, quiet layout', 'pro' => true],
-        'pocket' => ['name' => 'Pocket', 'tagline' => 'App-style with a bottom tab bar', 'pro' => true],
+        'bold' => ['name' => 'Bold', 'tagline' => 'Neo-brutalist website — thick borders, hard shadows', 'pro' => true],
+        'azure' => ['name' => 'Azure', 'tagline' => 'Clean corporate website with a diagonal hero', 'pro' => true],
+        'notebook' => ['name' => 'Notebook', 'tagline' => 'Classroom feel — graph paper, filters, clickable steps', 'pro' => true],
     ];
 
     /** @return string[] */

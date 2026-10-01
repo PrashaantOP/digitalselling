@@ -2,13 +2,17 @@
 
 namespace App\Services;
 
+use App\Mail\SettlementStatusMail;
+use App\Models\Admin;
 use App\Models\Order;
 use App\Models\PayoutMethod;
 use App\Models\Settlement;
+use App\Models\SettlementAdjustment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Auto-settlement engine. Creator kuch request nahi karta — `settlements:run` roz chalta hai
@@ -118,12 +122,17 @@ class SettlementService
                 ->lockForUpdate()
                 ->get(['id', 'paid_at', 'total_amount', 'platform_fee', 'net_payout_amount']);
 
-            if ($orders->isEmpty()) {
+            // adjustments (refund wapas lena, manual debit/credit) isi settlement me lag jaate hain
+            $adjustments = $this->pendingAdjustments($creator->id)->lockForUpdate()->get(['id', 'amount']);
+            $adjustment = round((float) $adjustments->sum('amount'), 2);
+
+            if ($orders->isEmpty() && $adjustments->isEmpty()) {
                 return null;
             }
 
-            $net = round((float) $orders->sum('net_payout_amount'), 2);
+            $net = round((float) $orders->sum('net_payout_amount') + $adjustment, 2);
 
+            // debit orders se zyada ho to kuch mat banao — adjustment aur orders dono agli cycle tak rukte hain
             if ($net <= 0) {
                 return null;
             }
@@ -135,6 +144,7 @@ class SettlementService
                 'orders_count' => $orders->count(),
                 'gross_amount' => round((float) $orders->sum('total_amount'), 2),
                 'commission_amount' => round((float) $orders->sum('platform_fee'), 2),
+                'adjustment_amount' => $adjustment,
                 'net_amount' => $net,
                 'period_start' => $orders->min('paid_at'),
                 'period_end' => $orders->max('paid_at'),
@@ -142,6 +152,7 @@ class SettlementService
             ]);
 
             Order::whereIn('id', $orders->pluck('id'))->update(['settlement_id' => $settlement->id]);
+            SettlementAdjustment::whereIn('id', $adjustments->pluck('id'))->update(['settlement_id' => $settlement->id]);
 
             return $settlement;
         });
@@ -163,7 +174,10 @@ class SettlementService
             ->whereNotNull('paid_at')
             ->whereDate('paid_at', '<=', self::cutoffDate()->toDateString())
             ->distinct()
-            ->pluck('creator_id');
+            ->pluck('creator_id')
+            // sirf credit adjustment pada ho (koi naya order nahi) tab bhi wo nikalna chahiye
+            ->merge(SettlementAdjustment::whereNull('settlement_id')->distinct()->pluck('creator_id'))
+            ->unique();
 
         foreach (User::whereIn('id', $creatorIds)->with('kycVerification')->cursor() as $creator) {
             if ($this->blockedReason($creator) !== null) {
@@ -200,11 +214,50 @@ class SettlementService
             'in_transit' => $settlementSum(['pending', 'processing']),
             'clearing' => (float) $this->clearingOrders($creator->id)->sum('net_payout_amount'),
             'ready' => (float) $this->eligibleOrders($creator->id)->sum('net_payout_amount'),
+            // agle settlement me judne/katne wala (refund recovery, manual correction) — negative ho sakta hai
+            'adjustments' => (float) $this->pendingAdjustments($creator->id)->sum('amount'),
             'blocked_reason' => $this->blockedReason($creator),
         ];
     }
 
-    /** Bank transfer ho gaya — UTR ke saath close karo. */
+    /** Adjustments jo abhi kisi settlement me nahi lage. */
+    public function pendingAdjustments(int $creatorId): Builder
+    {
+        return SettlementAdjustment::query()->where('creator_id', $creatorId)->whereNull('settlement_id');
+    }
+
+    /**
+     * Creator ke agle settlement me ek +/− line jodo. $amount hamesha positive do — direction type se aata hai.
+     * `refund_reversal`: order settle hone ke baad refund hua, to wo net wapas lena hai (checkout/refund module yahin call karega).
+     */
+    public function addAdjustment(User $creator, string $type, float $amount, string $reason, ?Order $order = null, ?Admin $admin = null): SettlementAdjustment
+    {
+        $amount = round(abs($amount), 2);
+
+        return SettlementAdjustment::create([
+            'creator_id' => $creator->id,
+            'order_id' => $order?->id,
+            'type' => $type,
+            'amount' => $type === 'manual_credit' ? $amount : -$amount,
+            'reason' => $reason,
+            'admin_id' => $admin?->id,
+        ]);
+    }
+
+    /** Bank file nikal gayi, transfer chal raha hai — UTR aane tak `processing`. */
+    public function markProcessing(Settlement $settlement): Settlement
+    {
+        if ($settlement->status === 'pending') {
+            $settlement->update(['status' => 'processing']);
+        }
+
+        return $settlement;
+    }
+
+    /**
+     * Bank transfer ho gaya — UTR ke saath close karo.
+     * (Aage RazorpayX ka payout webhook bhi isi ko call karega.)
+     */
     public function markPaid(Settlement $settlement, string $reference, ?string $notes = null): Settlement
     {
         $settlement->update([
@@ -214,6 +267,8 @@ class SettlementService
             'notes' => $notes ?? $settlement->notes,
             'processed_at' => now(),
         ]);
+
+        $this->notify($settlement);
 
         return $settlement;
     }
@@ -226,6 +281,7 @@ class SettlementService
     {
         DB::transaction(function () use ($settlement, $reason) {
             $settlement->orders()->update(['settlement_id' => null]);
+            SettlementAdjustment::where('settlement_id', $settlement->id)->update(['settlement_id' => null]);
 
             // orders_count/amounts waise hi rehte hain — history me dikhna chahiye ki kitna attempt hua tha
             $settlement->update([
@@ -235,7 +291,25 @@ class SettlementService
             ]);
         });
 
-        return $settlement->refresh();
+        $this->notify($settlement->refresh());
+
+        return $settlement;
+    }
+
+    /** Creator ko mail — "payment received" notification band ho to nahi. Mail fail hone se status nahi rukta. */
+    private function notify(Settlement $settlement): void
+    {
+        try {
+            $creator = $settlement->creator;
+
+            if (! $creator || $creator->notificationPreference?->payment_received === false) {
+                return;
+            }
+
+            Mail::to($creator->email)->send(new SettlementStatusMail($settlement->loadMissing('payoutMethod')));
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /** STL-20260927-0001 — din ke andar sequential. */
@@ -247,7 +321,4 @@ class SettlementService
 
         return $prefix . str_pad((string) $next, 4, '0', STR_PAD_LEFT);
     }
-
-    // TODO (refund flow ke saath): order settle hone ke baad refund hua to agle settlement me
-    // negative adjustment row jodna hoga. Abhi refund flow codebase me hai hi nahi.
 }

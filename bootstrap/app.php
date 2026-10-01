@@ -52,8 +52,17 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // /admin/* ka login page alag hai — creator login pe mat bhejo (aur ulta bhi)
-        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('admin', 'admin/*') ? '/admin/login' : route('login'));
-        $middleware->redirectUsersTo(fn (Request $request) => $request->is('admin', 'admin/*') ? '/admin' : route('dashboard'));
+        // customer portal (/me/*) ka bhi apna login hai — buyer ko creator login pe mat bhejo
+        $middleware->redirectGuestsTo(fn (Request $request) => match (true) {
+            $request->is('admin', 'admin/*') => '/admin/login',
+            $request->is('me', 'me/*') => '/me/login',
+            default => route('login'),
+        });
+        $middleware->redirectUsersTo(fn (Request $request) => match (true) {
+            $request->is('admin', 'admin/*') => '/admin',
+            $request->is('me', 'me/*') => '/me/courses',
+            default => route('dashboard'),
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

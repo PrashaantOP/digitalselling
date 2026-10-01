@@ -148,14 +148,12 @@ class ReferralService
     }
 
     /**
-     * Paid Razorpay subscription wale creator ka `plan_expires_at` null hota hai —
-     * usme mahine jodne ka koi matlab nahi, isliye redemption tab block rehta hai.
+     * Pro bina expiry ke (permanent — admin ne diya, ya purani paid subscription) ho to
+     * usme mahine jodne ka koi matlab nahi; credit kat jaata aur milta kuch nahi. Isliye redemption block.
      */
     public function blockedReason(User $user): ?string
     {
-        $hasPaidSubscription = \App\Models\Subscription::where('user_id', $user->id)->where('status', 'active')->exists();
-
-        return $hasPaidSubscription && $user->plan_expires_at === null ? 'paid_subscription' : null;
+        return $user->plan === 'pro' && $user->plan_expires_at === null ? 'paid_subscription' : null;
     }
 
     /** Credit → Pro. Poore mahine hi (₹499 = 1 mahina); bacha hua balance wallet me rehta hai. */
@@ -167,45 +165,13 @@ class ReferralService
 
         if ($this->blockedReason($user) === 'paid_subscription') {
             throw ValidationException::withMessages([
-                'months' => 'Your paid Pro subscription is active — you can use this credit once it ends.',
+                'months' => 'Your account already has Pro with no end date, so there is nothing to add this credit to.',
             ]);
         }
 
-        return DB::transaction(function () use ($user, $months) {
-            // do parallel redeem se balance negative na ho
-            User::whereKey($user->id)->lockForUpdate()->first();
-
-            $balance = $this->balanceFor($user);
-            $cost = round($months * $balance['monthly_price'], 2);
-
-            if ($cost > $balance['balance']) {
-                throw ValidationException::withMessages(['months' => 'You do not have enough referral credit for that.']);
-            }
-
-            $fresh = $user->fresh();
-            $before = $fresh->plan_expires_at;
-
-            // free ho to abhi se, Pro (trial/credit) chal rahi ho to uske aage se
-            $start = $before && $before->isFuture() ? $before : now();
-
-            $fresh->forceFill([
-                'plan' => 'pro',
-                'plan_expires_at' => $start->copy()->addMonthsNoOverflow($months),
-            ])->save();
-
-            return ReferralCredit::create([
-                'user_id' => $user->id,
-                'referral_id' => null,
-                'type' => 'redeemed',
-                'amount' => $cost,
-                'description' => $months . ' month' . ($months > 1 ? 's' : '') . ' of Pro',
-                'meta' => [
-                    'months' => $months,
-                    'plan_expires_at_before' => $before?->toIso8601String(),
-                    'plan_expires_at_after' => $fresh->plan_expires_at?->toIso8601String(),
-                ],
-            ]);
-        });
+        // Pro dene ka ek hi raasta — BillingService (kharid ki row, expiry, ledger sab wahin). Lazy resolve,
+        // kyunki BillingService khud is service pe depend karta hai.
+        return app(BillingService::class)->redeemWithCredit($user, $months);
     }
 
     private function uniqueCode(): string

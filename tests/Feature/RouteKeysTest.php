@@ -25,6 +25,7 @@ class RouteKeysTest extends TestCase
         'slug', 'serviceSlug', 'username',  // public, human-readable
         'type', 'page',                     // static pages / product type
         'token', 'hash', 'path',            // password reset, signed email verify, storage
+        'certificateNumber',                // public verify: CERT-XXXX random code, DB id nahi
     ];
 
     /** Laravel ka signed email-verify link — framework standard, hash + signature se protected. */

@@ -96,9 +96,34 @@ class CreatorController extends Controller
                     'uuid' => $o->uuid, 'order_number' => $o->order_number, 'product' => $o->product?->title,
                     'total_amount' => (float) $o->total_amount, 'status' => $o->status, 'created_at' => $o->created_at?->toIso8601String(),
                 ]),
+            'pendingAdjustments' => \App\Models\SettlementAdjustment::where('creator_id', $creator->id)->whereNull('settlement_id')->latest('id')->get()
+                ->map(fn ($a) => ['uuid' => $a->uuid, 'type' => $a->type, 'amount' => (float) $a->amount, 'reason' => $a->reason, 'created_at' => $a->created_at?->toIso8601String()]),
+            'planPurchases' => \App\Models\PlanPurchase::with('invoice:id,uuid,plan_purchase_id,invoice_number')->where('user_id', $creator->id)->where('status', 'paid')->latest('id')->limit(10)->get()
+                ->map(fn ($p) => [
+                    'uuid' => $p->uuid, 'months' => $p->months, 'amount' => (float) $p->amount_payable, 'credit' => (float) $p->credit_applied, 'gateway' => $p->gateway,
+                    'paid_at' => $p->paid_at?->toIso8601String(), 'invoice' => $p->invoice?->only(['uuid', 'invoice_number']),
+                ]),
             'recentSettlements' => $creator->settlements()->latest('id')->limit(10)->get()
                 ->map(fn ($s) => $s->only(['uuid', 'number', 'net_amount', 'status', 'reference_number']) + ['created_at' => $s->created_at?->toIso8601String()]),
         ]);
+    }
+
+    /**
+     * Agle settlement me manual +/− line (galat payout ka correction, goodwill credit…).
+     * Debit orders se zyada ho to settlement banta hi nahi — SettlementService carry kar deta hai.
+     */
+    public function addAdjustment(Request $request, User $creator, \App\Services\SettlementService $settlements): RedirectResponse
+    {
+        $data = $request->validate([
+            'type' => ['required', Rule::in(['manual_debit', 'manual_credit'])],
+            'amount' => ['required', 'numeric', 'min:1', 'max:1000000'],
+            'reason' => ['required', 'string', 'max:255'],
+        ]);
+
+        $adjustment = $settlements->addAdjustment($creator, $data['type'], (float) $data['amount'], $data['reason'], null, $request->user('admin'));
+        AdminAudit::log('settlement_adjustment.added', $adjustment, ['creator_id' => $creator->id, 'type' => $data['type'], 'amount' => (float) $adjustment->amount, 'reason' => $data['reason']]);
+
+        return back()->with('status', 'Adjustment added — it applies to the next settlement.');
     }
 
     /** Store band + saare chalu sessions (creator + uske sub-admins) turant khatam. */

@@ -11,6 +11,7 @@ import {
 } from '@/components/product-editor/preview-frame';
 import {
     ADD_BUTTON_CLASS,
+    AddonsField,
     CouponsField,
     FieldError,
     HINT_CLASS,
@@ -564,6 +565,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
             )}
 
             <CouponsField productUuid={item.uuid} initial={item.coupons ?? []} />
+            <AddonsField productUuid={item.uuid} />
 
             {/* What to collect from the buyer */}
             <div className="flex flex-col gap-2">

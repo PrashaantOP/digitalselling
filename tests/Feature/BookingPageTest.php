@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\SlotService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
@@ -205,12 +206,69 @@ class BookingPageTest extends TestCase
         $this->assertSame(0, Booking::count());
     }
 
-    public function test_paid_inactive_and_unpublished_sessions_cannot_be_booked(): void
+    private function fakeRazorpay(): void
+    {
+        config(['services.razorpay.key_id' => 'rzp_test_key', 'services.razorpay.key_secret' => 'test_secret']);
+        Http::fake(['api.razorpay.com/v1/orders' => Http::response(['id' => 'order_S1', 'status' => 'created'])]);
+    }
+
+    private function payFor(string $gatewayOrderId, string $paymentId = 'pay_s1')
+    {
+        return $this->postJson('/checkout/verify', [
+            'razorpay_order_id' => $gatewayOrderId,
+            'razorpay_payment_id' => $paymentId,
+            'razorpay_signature' => hash_hmac('sha256', "{$gatewayOrderId}|{$paymentId}", 'test_secret'),
+        ]);
+    }
+
+    public function test_paid_session_holds_the_slot_and_is_confirmed_only_after_payment(): void
+    {
+        Mail::fake();
+        $this->fakeRazorpay();
+        $creator = $this->creator();
+        $service = $this->bookingSession($creator, ['pricing_type' => 'fixed', 'price' => 999]);
+
+        $this->book($creator, $service, '2026-10-05T04:30:00Z')->assertCreated()
+            ->assertJsonPath('payment.paid', false)->assertJsonPath('payment.order_id', 'order_S1')->assertJsonPath('payment.amount', 99900);
+
+        $booking = Booking::firstOrFail();
+        $this->assertSame('pending', $booking->order->status);
+        // slot ruka hua hai, par creator ki list me abhi nahi aur koi mail nahi
+        $this->assertSame(['11:00 am', '12:00 pm'], $this->labels($creator, $service));
+        $this->actingAs($creator)->get('/dashboard/bookings')->assertInertia(fn (AssertableInertia $page) => $page->has('bookings.data', 0));
+        Mail::assertNothingSent();
+
+        $this->payFor('order_S1')->assertOk()->assertJson(['paid' => true]);
+
+        $this->assertSame('success', $booking->order->fresh()->status);
+        $this->assertSame('849.15', $booking->order->fresh()->net_payout_amount); // 15% commission
+        $this->actingAs($creator)->get('/dashboard/bookings')->assertInertia(fn (AssertableInertia $page) => $page->has('bookings.data', 1));
+        Mail::assertSent(BookingConfirmedMail::class, fn ($m) => $m->hasTo('rohan@test.com'));
+        Mail::assertSent(NewBookingMail::class, fn ($m) => $m->hasTo($creator->email));
+    }
+
+    public function test_an_unpaid_hold_blocks_others_briefly_then_frees_the_slot(): void
+    {
+        $this->fakeRazorpay();
+        $creator = $this->creator();
+        $service = $this->bookingSession($creator, ['pricing_type' => 'fixed', 'price' => 999]);
+
+        $this->book($creator, $service, '2026-10-05T04:30:00Z')->assertCreated();
+
+        // doosra insaan wahi slot: abhi nahi
+        $this->book($creator, $service, '2026-10-05T04:30:00Z', ['email' => 'meera@test.com', 'phone' => '9820144321'])->assertJsonValidationErrors('slot');
+
+        // pay nahi hua — scheduler order band karta hai aur slot wapas khaali
+        Booking::first()->order->forceFill(['created_at' => now()->subHour()])->save();
+        $this->artisan('orders:expire-pending')->assertSuccessful();
+
+        $this->assertSame('cancelled', Booking::first()->status);
+        $this->assertSame(['10:00 am', '11:00 am', '12:00 pm'], $this->labels($creator, $service));
+    }
+
+    public function test_inactive_and_unpublished_sessions_cannot_be_booked(): void
     {
         $creator = $this->creator();
-
-        $paid = $this->bookingSession($creator, ['pricing_type' => 'fixed', 'price' => 999]);
-        $this->book($creator, $paid, '2026-10-05T04:30:00Z')->assertStatus(422)->assertJsonPath('message', 'Online payment for sessions is coming soon.');
 
         $inactive = $this->bookingSession($creator, [], ['is_active' => false]);
         $this->book($creator, $inactive, '2026-10-05T04:30:00Z')->assertNotFound();
@@ -244,7 +302,7 @@ class BookingPageTest extends TestCase
                 ->component('Public/BookingPage')
                 ->has('services', 2)
                 ->where('services.0.bookable', true)
-                ->where('services.1.bookable', false)
+                ->where('services.1.bookable', true) // paid session bhi ab book hota hai
                 ->has('services.0.questions', 1)
                 ->where('services.0.questions.0.label', 'Your goal')
                 ->where('timezone', 'Asia/Kolkata')

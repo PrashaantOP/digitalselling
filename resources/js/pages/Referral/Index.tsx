@@ -304,7 +304,7 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                                 {blockedReason === 'paid_subscription' ? (
                                     <div className="mt-4 flex items-start gap-2 rounded-lg bg-[#FFF4DB] p-3 text-[12px] font-medium text-[#B46E00]">
                                         <Info className="mt-px size-4 shrink-0" />
-                                        Your paid Pro subscription is active — you can use this credit once it ends.
+                                        Your account already has Pro with no end date, so there is nothing to add this credit to.
                                     </div>
                                 ) : (
                                     <>

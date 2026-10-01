@@ -9,6 +9,7 @@ interface Props {
     settlement: SettlementRow & {
         gross_amount: number;
         commission_amount: number;
+        adjustment_amount: number;
         period_start: string | null;
         period_end: string | null;
         failure_reason: string | null;
@@ -16,10 +17,11 @@ interface Props {
         processed_at: string | null;
         payout_holder: string | null;
     };
+    adjustments: { uuid: string; type: string; amount: number; reason: string }[];
     orders: { uuid: string; order_number: string; product: string | null; buyer: string | null; paid_at: string | null; total_amount: number; platform_fee: number; net: number }[];
 }
 
-export default function AdminSettlementShow({ settlement: s, orders }: Props) {
+export default function AdminSettlementShow({ settlement: s, orders, adjustments }: Props) {
     const [action, setAction] = useState<'paid' | 'failed' | null>(null);
     const open = s.status === 'pending' || s.status === 'processing';
 
@@ -73,6 +75,12 @@ export default function AdminSettlementShow({ settlement: s, orders }: Props) {
                         <Field label="Orders">{s.orders_count}</Field>
                         <Field label="Gross">{money(s.gross_amount)}</Field>
                         <Field label="Platform commission">− {money(s.commission_amount)}</Field>
+                        {adjustments.map((a) => (
+                            <Field key={a.uuid} label={`Adjustment · ${a.reason}`}>
+                                {a.amount < 0 ? '− ' : '+ '}
+                                {money(Math.abs(a.amount))}
+                            </Field>
+                        ))}
                         <Field label="Net">{money(s.net_amount)}</Field>
                         <Field label="Period">
                             {dateTime(s.period_start)} → {dateTime(s.period_end)}

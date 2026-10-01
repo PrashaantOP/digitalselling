@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Route;
 */
 Route::prefix('webhooks')->group(function () {
     Route::post('razorpay', [RazorpayWebhookController::class, 'handle'])->name('razorpay.webhook');
-    Route::post('razorpay-subscription', [SubscriptionWebhookController::class, 'handle'])->name('razorpay-sub.webhook');
 
     Route::get('instagram', [InstagramWebhookController::class, 'verify'])->name('instagram.verify');
     Route::post('instagram', [InstagramWebhookController::class, 'handle'])->name('instagram.webhook');

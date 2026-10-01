@@ -49,13 +49,35 @@ class WebappThemeTest extends TestCase
         );
     }
 
+    /** Sirf Studio free hai — naye website designs (Bold / Azure / Notebook) samet baaki sab Pro. */
+    public function test_only_the_original_design_is_free(): void
+    {
+        $this->assertSame([WebappThemes::FREE], WebappThemes::allowedFor($this->creator));
+
+        foreach (['bold', 'azure', 'notebook'] as $slug) {
+            $this->assertTrue(WebappThemes::isPro($slug));
+
+            $this->actingAs($this->creator)
+                ->put('/dashboard/web-app', ['theme' => $slug])
+                ->assertSessionHasErrors('theme');
+        }
+
+        $this->goPro();
+
+        $this->actingAs($this->creator)
+            ->put('/dashboard/web-app', ['theme' => 'notebook'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('notebook', $this->theme());
+    }
+
     public function test_free_creator_cannot_apply_a_premium_theme(): void
     {
         $this->actingAs($this->creator)
-            ->put('/dashboard/web-app', ['theme' => 'grid'])
+            ->put('/dashboard/web-app', ['theme' => 'bold'])
             ->assertSessionHasErrors('theme');
 
-        $this->assertNotSame('grid', $this->theme());
+        $this->assertNotSame('bold', $this->theme());
     }
 
     public function test_pro_creator_can_apply_a_premium_theme(): void
@@ -63,10 +85,10 @@ class WebappThemeTest extends TestCase
         $this->goPro();
 
         $this->actingAs($this->creator)
-            ->put('/dashboard/web-app', ['theme' => 'pocket'])
+            ->put('/dashboard/web-app', ['theme' => 'azure'])
             ->assertSessionHasNoErrors();
 
-        $this->assertSame('pocket', $this->theme());
+        $this->assertSame('azure', $this->theme());
     }
 
     public function test_unknown_theme_is_rejected(): void
@@ -82,7 +104,7 @@ class WebappThemeTest extends TestCase
     public function test_premium_theme_falls_back_to_free_when_pro_lapses(): void
     {
         $this->goPro();
-        $this->actingAs($this->creator)->put('/dashboard/web-app', ['theme' => 'press']);
+        $this->actingAs($this->creator)->put('/dashboard/web-app', ['theme' => 'notebook']);
 
         $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => now()->subDay()])->save();
 
@@ -92,10 +114,10 @@ class WebappThemeTest extends TestCase
         );
 
         // DB me choice bachi hai — Pro wapas lete hi theme laut aati hai
-        $this->assertSame('press', $this->theme());
+        $this->assertSame('notebook', $this->theme());
 
         $this->goPro();
-        $this->get('/w/riya')->assertOk()->assertInertia(fn (Assert $page) => $page->where('theme', 'press'));
+        $this->get('/w/riya')->assertOk()->assertInertia(fn (Assert $page) => $page->where('theme', 'notebook'));
     }
 
     public function test_webapp_page_carries_products_and_sessions(): void

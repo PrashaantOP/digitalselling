@@ -11,11 +11,13 @@ use App\Models\Booking;
 use App\Models\BookingResponse;
 use App\Models\CheckoutQuestion;
 use App\Models\CreatorAvailability;
-use App\Models\Customer;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\CustomerResolver;
+use App\Services\OrderService;
 use App\Services\SlotService;
 use App\Support\CalendarLink;
+use App\Support\CheckoutSession;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -27,8 +29,8 @@ use Inertia\Inertia;
 
 /**
  * Public booking page: /book/{username}
- * Abhi sirf free sessions book hote hain — paid sessions dikhte hain par payment pipeline
- * (OrderService / Razorpay) banne tak unka button band hai.
+ * Free session turant book hota hai. Paid session: slot pending order ke saath kuch der ruka rehta hai
+ * aur payment success pe pakka hota hai (OrderService).
  */
 class BookingPageController extends Controller
 {
@@ -81,7 +83,7 @@ class BookingPageController extends Controller
                 + [
                     'description' => str($p->description)->stripTags()->squish()->limit(220)->toString(),
                     'duration_minutes' => $p->bookingServiceDetail->duration_minutes,
-                    'bookable' => self::isFree($p),
+                    'bookable' => true,
                     'questions' => $this->customQuestions($p)->map->only(['id', 'label', 'field_type', 'options', 'is_required'])->values(),
                 ]);
 
@@ -125,7 +127,8 @@ class BookingPageController extends Controller
         $product = $this->service($creator, $serviceSlug)->load('checkoutQuestions');
         $service = $product->bookingServiceDetail;
 
-        abort_unless(self::isFree($product), 422, 'Online payment for sessions is coming soon.');
+        $paid = ! self::isFree($product);
+        $product->setRelation('creator', $creator); // order ka commission creator ke plan se
 
         $questions = $this->customQuestions($product);
 
@@ -146,9 +149,7 @@ class BookingPageController extends Controller
             ])])->all(),
         ], [], $questions->mapWithKeys(fn (CheckoutQuestion $q) => ["answers.{$q->id}" => $q->label])->all());
 
-        // TODO (Auth module): phone OTP verification check
-
-        $booking = DB::transaction(function () use ($creator, $service, $data, $slots, $questions) {
+        $booking = DB::transaction(function () use ($creator, $product, $service, $data, $slots, $questions, $paid) {
             // isi creator ki dusri simultaneous booking ko wait karao — double booking se bachne ke liye
             User::whereKey($creator->id)->lockForUpdate()->first();
 
@@ -156,16 +157,16 @@ class BookingPageController extends Controller
                 throw ValidationException::withMessages(['slot' => 'Sorry, this slot was just taken. Please pick another.']);
             }
 
-            $customer = Customer::updateOrCreate(
-                ['creator_id' => $creator->id, 'phone' => $data['phone']],
-                ['name' => $data['name'], 'email' => $data['email']],
-            );
+            // buyer (email = pehchaan) + is creator ka customer row — phone se row "milti" nahi
+            $customer = app(CustomerResolver::class)->forPurchase($creator, $data);
 
             $booking = Booking::create([
                 'booking_service_id' => $service->id,
                 'creator_id' => $creator->id,
                 'customer_id' => $customer->id,
-                'order_id' => null, // free — SlotService::confirmed() isse turant pakki booking maanta hai
+                // free: null → SlotService::confirmed() turant pakki maanta hai.
+                // paid: pending order → slot sirf HOLD_MINUTES tak ruka rehta hai, payment success pe pakki.
+                'order_id' => $paid ? app(OrderService::class)->createPendingForBooking($product, $customer, $data)->id : null,
                 'scheduled_at' => CarbonImmutable::parse($data['slot'])->utc(),
                 'duration_minutes' => $service->duration_minutes,
                 'meeting_link' => $service->default_meeting_link,
@@ -179,8 +180,16 @@ class BookingPageController extends Controller
                 }
             }
 
-            return $booking;
+            return $booking->setRelation('customer', $customer);
         });
+
+        if ($paid) {
+            // mails payment success ke baad jaate hain (OrderService::fulfil → BookingNotifier)
+            $order = $booking->order;
+            CheckoutSession::remember($order, (bool) $booking->customer->buyer?->wasRecentlyCreated);
+
+            return response()->json(['payment' => app(OrderService::class)->initiatePayment($order)], 201);
+        }
 
         $booking->load(['customer', 'responses']);
         $timezone = SlotService::timezoneFor($creator->id);

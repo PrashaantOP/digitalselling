@@ -128,6 +128,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(NotificationPreference::class, 'user_id');
     }
 
+    /** Certificate ka design (template, logo, signature) — na ho to defaults. */
+    public function certificateSetting()
+    {
+        return $this->hasOne(CertificateSetting::class, 'user_id');
+    }
+
     public function payoutProfile()
     {
         return $this->hasOne(PayoutProfile::class, 'user_id');

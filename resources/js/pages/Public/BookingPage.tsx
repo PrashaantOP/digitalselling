@@ -1,6 +1,7 @@
 import { durationLabel, formatDate, formatTimeRange } from '@/components/bookings/format';
 import { cookie, money } from '@/components/public/checkout-card';
 import { PublicProductLayout, SectionLabel, type PublicCreator } from '@/components/public/public-product-layout';
+import { completePayment } from '@/lib/razorpay';
 import { cn } from '@/lib/utils';
 import { CalendarCheck, CalendarPlus, Check, ChevronLeft, ChevronRight, Clock, Loader2, Lock, Video } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
@@ -155,6 +156,19 @@ export default function BookingPage({ creator, services, timezone, availableWeek
             });
             const data = await res.json().catch(() => null);
 
+            // paid session: slot abhi ruka hua hai — pay hote hi pakka, phir done page
+            if (res.ok && data.payment) {
+                const result = await completePayment(data.payment, '/checkout/verify');
+
+                if (result.ok) {
+                    window.location.href = result.redirect ?? '/me/login';
+                    return;
+                }
+
+                setFormError(result.error ?? 'Payment was not completed. Your slot is held for a few minutes — you can try again.');
+                return;
+            }
+
             if (res.ok) {
                 setConfirmed(data.booking);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -258,9 +272,11 @@ export default function BookingPage({ creator, services, timezone, availableWeek
                                 className="mt-1 flex h-12 items-center justify-center gap-2 rounded-lg bg-[#4F46E5] text-sm font-semibold text-white transition hover:bg-[#4338CA] disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {submitting && <Loader2 className="size-4 animate-spin" />}
-                                {slot ? 'Confirm booking' : 'Select a time first'}
+                                {!slot ? 'Select a time first' : service.pricing_type === 'free' ? 'Confirm booking' : `Pay ${priceLabel(service)} & book`}
                             </button>
-                            <p className="text-center text-[11px] text-[#8A8A96]">You'll get a confirmation email with the details.</p>
+                            <p className="text-center text-[11px] text-[#8A8A96]">
+                                {service.pricing_type === 'free' ? "You'll get a confirmation email with the details." : 'Secure payment via Razorpay. Your slot is confirmed once the payment succeeds.'}
+                            </p>
                         </form>
                     )}
                 </aside>

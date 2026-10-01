@@ -418,7 +418,12 @@ export function CourseTab({
                 <div className="flex items-center justify-between rounded-xl border border-[#E4E2DA] bg-white px-4 py-3">
                     <div>
                         <p className="text-sm font-bold text-[#14141B]">Certificate of completion</p>
-                        <p className="text-xs text-[#6B6B78]">Issued automatically when a student finishes every lesson.</p>
+                        <p className="text-xs text-[#6B6B78]">
+                            Issued automatically when a student finishes every lesson.{' '}
+                            <a href="/dashboard/courses/certificate" target="_blank" rel="noreferrer" className="font-semibold text-[#4F46E5] hover:underline">
+                                Customise design
+                            </a>
+                        </p>
                     </div>
                     <Toggle checked={form.certificate_enabled} onChange={(v) => setField('certificate_enabled', v)} label="Certificate of completion" />
                 </div>

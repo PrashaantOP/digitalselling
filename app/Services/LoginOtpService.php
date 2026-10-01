@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Mail\LoginOtpMail;
 use App\Models\LoginOtp;
+use App\Services\Sms\SmsSender;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -50,8 +51,13 @@ class LoginOtpService
         return $last ? max(0, (int) now()->diffInSeconds($last->copy()->addSeconds(self::RESEND_COOLDOWN_SECONDS), false)) : 0;
     }
 
-    /** Naya code bhejo (purane sab bekaar). Cooldown baaki ho to false. */
-    public function send(Model $who, string $purpose, Request $request): bool
+    /**
+     * Naya code bhejo (purane sab bekaar). Cooldown baaki ho to false.
+     *
+     * $channel 'sms' ho to code $who->phone (ya $to) pe SMS se jaata hai — sirf customer portal use karta hai.
+     * SMS provider fail ho to code radd ho jaata hai aur exception upar jaati hai.
+     */
+    public function send(Model $who, string $purpose, Request $request, string $channel = 'email', ?string $to = null): bool
     {
         if ($this->secondsUntilResend($who, $purpose) > 0) {
             return false;
@@ -72,7 +78,20 @@ class LoginOtpService
         $otp->authenticatable()->associate($who);
         $otp->save();
 
-        Mail::to($who->email)->send(new LoginOtpMail($code, $who->name ?? '', $purpose, $request->ip(), (string) $request->userAgent()));
+        if ($channel === 'sms') {
+            try {
+                app(SmsSender::class)->sendOtp((string) ($to ?? $who->phone), $code);
+            } catch (\Throwable $e) {
+                // SMS gaya hi nahi — code ko zinda mat chhodo, aur cooldown bhi mat lagao
+                $otp->delete();
+
+                throw $e;
+            }
+
+            return true;
+        }
+
+        Mail::to($to ?? $who->email)->send(new LoginOtpMail($code, $who->name ?? '', $purpose, $request->ip(), (string) $request->userAgent()));
 
         return true;
     }

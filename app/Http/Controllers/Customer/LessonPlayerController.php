@@ -9,6 +9,7 @@ use App\Models\Enrollment;
 use App\Models\LessonNoteFile;
 use App\Models\LessonProgress;
 use App\Models\QuizAttempt;
+use App\Services\CertificateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -24,7 +25,13 @@ class LessonPlayerController extends Controller
         $enrollment = Enrollment::with('course.product:id,title,slug')
             ->whereIn('customer_id', $this->customerIds())->where('uuid', $enrollmentUuid)->firstOrFail();
 
-        abort_if($enrollment->access_expires_at && $enrollment->access_expires_at->isPast(), 403, 'Your access to this course has expired.');
+        if ($enrollment->access_expires_at && $enrollment->access_expires_at->isPast()) {
+            return Inertia::render('Customer/CourseExpired', [
+                'title' => $enrollment->course->product->title,
+                'expiredAt' => $enrollment->access_expires_at,
+                'buyUrl' => url('/c/' . $enrollment->course->product->slug),
+            ]);
+        }
 
         $modules = $enrollment->course->modules()->orderBy('sort_order')
             ->with(['lessons' => fn ($q) => $q->where('is_published', true)->orderBy('sort_order')->select('id', 'uuid', 'module_id', 'title', 'type', 'is_free_preview', 'sort_order')])
@@ -74,10 +81,8 @@ class LessonPlayerController extends Controller
             $updates['completed_at'] = now();
 
             if ($enrollment->course->certificate_enabled) {
-                Certificate::firstOrCreate(
-                    ['enrollment_id' => $enrollment->id],
-                    ['certificate_number' => 'CERT-' . strtoupper(Str::random(10)), 'issued_at' => now()]
-                );
+                // naam/course/creator ka snapshot yahin jamta hai
+                app(CertificateService::class)->issue($enrollment);
                 $updates['certificate_issued_at'] = now();
             }
         }

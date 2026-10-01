@@ -1,3 +1,4 @@
+import { AddonsField } from '@/components/product-editor/ui';
 import { cn } from '@/lib/utils';
 import { Check, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -353,6 +354,11 @@ export function SettingsTab({
             <CheckoutQuestions productUuid={productUuid} questions={questions} />
 
             <Coupons productUuid={productUuid} coupons={coupons} />
+
+            <div className="flex flex-col gap-3">
+                <PanelTitle>Sell more at checkout</PanelTitle>
+                <AddonsField productUuid={productUuid} />
+            </div>
 
             <div className="flex flex-col gap-3">
                 <PanelTitle>After purchase</PanelTitle>

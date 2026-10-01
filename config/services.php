@@ -24,6 +24,24 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Pro plan billing (aur aage buyer checkout). Webhook: POST /webhooks/razorpay
+    'razorpay' => [
+        'key_id' => env('RAZORPAY_KEY_ID'),
+        'key_secret' => env('RAZORPAY_KEY_SECRET'),
+        'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
+    ],
+
+    // Customer portal ka mobile login OTP. driver: log (local/test — SMS log me) | msg91
+    'sms' => [
+        'driver' => env('SMS_DRIVER', 'log'),
+    ],
+
+    'msg91' => [
+        'auth_key' => env('MSG91_AUTH_KEY'),
+        'sender_id' => env('MSG91_SENDER_ID'),
+        'otp_template_id' => env('MSG91_OTP_TEMPLATE_ID'),
+    ],
+
     'resend' => [
         'key' => env('RESEND_KEY'),
     ],

@@ -18,6 +18,7 @@
 use App\Models\AssignmentSubmission;
 use App\Models\AutodmRule;
 use App\Models\AvailabilityException;
+use App\Models\BillingInvoice;
 use App\Models\Booking;
 use App\Models\CheckoutQuestion;
 use App\Models\Coupon;
@@ -87,6 +88,9 @@ Route::bind('settlement', fn ($v) => $byUuid(Settlement::where('creator_id', Ten
 Route::bind('order', fn ($v) => $byUuid(Order::where('creator_id', Tenant::id()), $v));
 Route::bind('role', fn ($v) => $byUuid(Role::where(config('permission.column_names.team_foreign_key', 'team_id'), Tenant::id()), $v));
 
+// ---- Billing: Pro plan ka invoice sirf usi creator ko ----
+Route::bind('billingInvoice', fn ($v) => $byUuid(BillingInvoice::where('user_id', Tenant::id()), $v));
+
 // ---- Public checkout: sirf published product ----
 Route::bind('checkoutProduct', fn ($v) => $byUuid(
     Product::where('status', 'published')->whereHas('creator', fn ($q) => $q->where('status', 'active')),
@@ -99,9 +103,9 @@ $uuidParams = [
     'coupon', 'checkoutQuestion', 'addon', 'coverImage',
     'module', 'lesson', 'quizQuestion', 'liveClass', 'enrollment', 'registration', 'submission',
     'lockedContentFile', 'lockedContentImage', 'headerButton', 'exception', 'rule', 'subAdmin',
-    'booking', 'settlement', 'order', 'role', 'checkoutProduct',
+    'booking', 'settlement', 'order', 'role', 'checkoutProduct', 'billingInvoice',
     // customer (routes/customer.php) — controllers khud uuid se dhoondhte hain
-    'enrollmentUuid', 'lessonUuid', 'fileUuid', 'quizUuid', 'assignmentUuid', 'certificateUuid', 'bookUuid',
+    'enrollmentUuid', 'lessonUuid', 'fileUuid', 'quizUuid', 'assignmentUuid', 'certificateUuid', 'bookUuid', 'orderUuid',
 ];
 
 foreach ($uuidParams as $param) {

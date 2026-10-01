@@ -1,8 +1,10 @@
 import { type SharedData } from '@/types';
+import { CheckoutExtras, type CheckoutAddon, type CheckoutExtrasValue } from '@/components/public/checkout-extras';
 import { VideoEmbed } from '@/components/public/video-embed';
+import { completePayment, firstError } from '@/lib/razorpay';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowRight, Award, BookOpen, Check, ChevronDown, ClipboardCheck, Clock, FileText, Headphones, Link2, ListChecks, Lock, Video, type LucideIcon } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { ArrowRight, Award, BookOpen, Check, ChevronDown, ClipboardCheck, Clock, Download, FileText, Headphones, Link2, ListChecks, Loader2, Lock, Play, Video, X, type LucideIcon } from 'lucide-react';
+import { useEffect, useState, type FormEvent } from 'react';
 
 type CheckoutQuestion = {
     id: number;
@@ -32,6 +34,7 @@ type Product = {
     privacy_policy: string | null;
     cover_images: string[];
     checkout_questions: CheckoutQuestion[];
+    addons?: CheckoutAddon[];
     course: CourseData;
 };
 
@@ -40,7 +43,7 @@ type CourseData = {
     access_days: number | null;
     certificate_enabled: boolean;
     total_lessons: number;
-    modules: { id: number; title: string; lessons: { id: number; title: string; type: string; is_free_preview: boolean }[] }[];
+    modules: { id: number; title: string; lessons: { id: number; uuid: string | null; title: string; type: string; is_free_preview: boolean }[] }[];
     instructions: string[];
     benefits: string[];
     highlights: string[];
@@ -93,6 +96,11 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    // free-preview lesson jo abhi khula hai
+    const [preview, setPreview] = useState<{ uuid: string; title: string } | null>(null);
+    const [extras, setExtras] = useState<CheckoutExtrasValue>({ coupon_code: null, addons: [] });
+    // coupon / add-on lagne par server ka total; null = course ka normal price
+    const [quotedTotal, setQuotedTotal] = useState<number | null>(null);
 
     const set = (key: keyof typeof fields, value: string) => setFields((f) => ({ ...f, [key]: value }));
 
@@ -105,11 +113,24 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
             const response = await fetch(checkoutUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-XSRF-TOKEN': cookie('XSRF-TOKEN') },
-                body: JSON.stringify({ ...fields, answers }),
+                body: JSON.stringify({ ...fields, answers, ...extras }),
             });
             const data = await response.json().catch(() => null);
 
-            setError(response.ok ? 'Payment is not available yet. Please try again later.' : (data?.message ?? 'Could not start checkout. Please check your details.'));
+            if (!response.ok) {
+                setError(firstError(data, 'Could not start checkout. Please check your details.'));
+                return;
+            }
+
+            // free ho to seedha done page; warna Razorpay → verify → done page
+            const result = await completePayment(data, '/checkout/verify', accent);
+
+            if (result.ok) {
+                window.location.href = result.redirect ?? '/me/login';
+                return;
+            }
+
+            setError(result.error);
         } catch {
             setError('Could not reach the server. Please try again.');
         } finally {
@@ -138,6 +159,7 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
     return (
         <>
             <Head title={product.title} />
+            {preview && <LessonPreview slug={product.slug} lesson={preview} accent={accent} cta={product.button_text || 'Enroll now'} onClose={() => setPreview(null)} />}
             <main className="flex min-h-screen flex-col bg-[#FAF9F5] text-[#14141B]">
                 <div className="h-1" style={{ backgroundColor: accent }} />
                 <header>
@@ -229,18 +251,36 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
                                             </div>
                                             {module.lessons.map((lesson) => {
                                                 const Icon = LESSON_ICONS[lesson.type] ?? FileText;
+                                                // free preview wala lesson poora row hi button hai — click pe bina kharide khulta hai
+                                                if (lesson.is_free_preview && lesson.uuid) {
+                                                    const uuid = lesson.uuid;
+
+                                                    return (
+                                                        <button
+                                                            key={lesson.id}
+                                                            type="button"
+                                                            onClick={() => setPreview({ uuid, title: lesson.title })}
+                                                            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-[#14141B] transition hover:bg-[#FAF9F5]"
+                                                        >
+                                                            <span className="flex size-7 shrink-0 items-center justify-center rounded-full text-white" style={{ background: accent }}>
+                                                                <Play className="size-3" />
+                                                            </span>
+                                                            <span className="min-w-0 flex-1 truncate font-medium">{lesson.title}</span>
+                                                            <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase" style={{ border: `1px solid ${accent}`, color: accent }}>
+                                                                Free preview
+                                                            </span>
+                                                        </button>
+                                                    );
+                                                }
+
                                                 return (
                                                     <div key={lesson.id} className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#14141B]">
                                                         <span className="flex size-7 shrink-0 items-center justify-center rounded-full" style={{ background: '#FAF9F5', color: '#6B6B78' }}>
                                                             <Icon className="size-3" />
                                                         </span>
                                                         <span className="min-w-0 flex-1 truncate">{lesson.title}</span>
-                                                        <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase" style={{ border: '1px solid #E4E2DA', color: lesson.is_free_preview ? accent : '#8A8A96' }}>
-                                                            {lesson.is_free_preview ? 'Free preview' : (
-                                                                <>
-                                                                    <Lock className="size-2.5" /> Locked
-                                                                </>
-                                                            )}
+                                                        <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase" style={{ border: '1px solid #E4E2DA', color: '#8A8A96' }}>
+                                                            <Lock className="size-2.5" /> Locked
                                                         </span>
                                                     </div>
                                                 );
@@ -409,6 +449,15 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
                                 )
                             ))}
 
+                            <CheckoutExtras
+                                checkoutUrl={checkoutUrl}
+                                addons={product.addons}
+                                accent={accent}
+                                showCoupon={product.pricing_type !== 'free'}
+                                onChange={setExtras}
+                                onTotal={setQuotedTotal}
+                            />
+
                             {error && <p role="alert" className="rounded-lg bg-[#FFEDE8] px-3 py-2 text-xs font-medium text-[#C2410C]">{error}</p>}
 
                             <button
@@ -420,7 +469,7 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
                                 <span className="truncate">{submitting ? 'Please wait…' : product.button_text || 'Enroll now'}</span>
                                 {product.pricing_type !== 'customer_decides' && (
                                     <span className="flex shrink-0 items-center gap-1">
-                                        {price} <ArrowRight className="size-4" />
+                                        {quotedTotal !== null ? money(quotedTotal) : price} <ArrowRight className="size-4" />
                                     </span>
                                 )}
                             </button>
@@ -443,5 +492,124 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
                 </footer>
             </main>
         </>
+    );
+}
+
+type PreviewLesson = {
+    uuid: string;
+    title: string;
+    type: string;
+    // shape lesson.type pe depend karta hai (CourseCheckoutController::preview)
+    content: Record<string, unknown> | null;
+};
+
+/**
+ * Free preview — creator ke chune hue lesson ko bina kharide dikhata hai (modal). Content click pe hi load hota hai.
+ * Quiz / assignment yahan nahi khulte; unke liye enroll karna padta hai.
+ */
+function LessonPreview({ slug, lesson, accent, cta, onClose }: { slug: string; lesson: { uuid: string; title: string }; accent: string; cta: string; onClose: () => void }) {
+    const [data, setData] = useState<PreviewLesson | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        setData(null);
+        setError(null);
+
+        fetch(`/c/${slug}/preview/${lesson.uuid}`, { headers: { Accept: 'application/json' } })
+            .then(async (res) => {
+                if (cancelled) return;
+                if (!res.ok) return setError('This preview is not available right now.');
+                setData((await res.json()).lesson);
+            })
+            .catch(() => !cancelled && setError('Could not load the preview. Check your connection and try again.'));
+
+        const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+        document.addEventListener('keydown', onKey);
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            cancelled = true;
+            document.removeEventListener('keydown', onKey);
+            document.body.style.overflow = '';
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [slug, lesson.uuid]);
+
+    const content = data?.content;
+    const notes = typeof content?.notes === 'string' && content.notes.trim() ? <p className="mt-4 text-sm leading-relaxed whitespace-pre-line text-[#4B4B57]">{content.notes}</p> : null;
+    const files = (content?.files as { name: string | null; url: string }[] | undefined) ?? [];
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
+            <div className="absolute inset-0 bg-[#14141B]/60" onClick={onClose} />
+            <div role="dialog" aria-modal="true" aria-label={`Free preview: ${lesson.title}`} className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:max-w-2xl sm:rounded-2xl">
+                <div className="flex items-start justify-between gap-3 border-b border-[#E4E2DA] px-5 py-4">
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-bold tracking-[0.14em] uppercase" style={{ color: accent }}>
+                            Free preview
+                        </p>
+                        <h2 className="truncate text-base font-bold text-[#14141B]">{lesson.title}</h2>
+                    </div>
+                    <button type="button" onClick={onClose} aria-label="Close preview" className="rounded-lg p-1 text-[#8A8A96] transition hover:bg-[#F6F5F2] hover:text-[#14141B]">
+                        <X className="size-5" />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-5 py-5">
+                    {error ? (
+                        <p className="py-8 text-center text-sm text-[#6B6B78]">{error}</p>
+                    ) : !data ? (
+                        <div className="flex justify-center py-12">
+                            <Loader2 className="size-6 animate-spin text-[#8A8A96]" />
+                        </div>
+                    ) : data.type === 'video' && content ? (
+                        <>
+                            <VideoEmbed url={content.video_url as string} accent={accent} />
+                            {notes}
+                        </>
+                    ) : data.type === 'text_image' && content ? (
+                        <>
+                            {/* content server pe sanitize hota hai (App\Support\Html) */}
+                            <div className="text-[15px] leading-relaxed text-[#14141B] [&_a]:underline [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-bold [&_li]:ml-5 [&_ol]:list-decimal [&_p]:mb-3 [&_ul]:list-disc" dangerouslySetInnerHTML={{ __html: (content.content as string) ?? '' }} />
+                            {((content.images as string[]) ?? []).map((path) => (
+                                <img key={path} src={`/assets/${path}`} alt="" loading="lazy" className="mt-3 w-full rounded-xl border border-[#E4E2DA]" />
+                            ))}
+                        </>
+                    ) : data.type === 'audio' && content ? (
+                        <>
+                            <audio controls preload="metadata" src={(content.audio_url as string) || (content.audio_path ? `/assets/${content.audio_path as string}` : undefined)} className="w-full" />
+                            {notes}
+                        </>
+                    ) : data.type === 'notes_pdf' && content ? (
+                        <>
+                            {typeof content.description === 'string' && content.description && <p className="text-sm leading-relaxed whitespace-pre-line text-[#4B4B57]">{content.description}</p>}
+                            <div className="mt-3 flex flex-col gap-2">
+                                {files.map((file) => (
+                                    <a key={file.url} href={file.url} className="flex items-center justify-between gap-3 rounded-lg border border-[#E4E2DA] p-3 text-sm transition hover:bg-[#F6F5F2]">
+                                        <span className="flex min-w-0 items-center gap-2.5 font-medium">
+                                            <FileText className="size-4 shrink-0" style={{ color: accent }} /> <span className="truncate">{file.name ?? 'Download'}</span>
+                                        </span>
+                                        <Download className="size-4 shrink-0 text-[#8A8A96]" />
+                                    </a>
+                                ))}
+                                {files.length === 0 && <p className="text-sm text-[#8A8A96]">Files for this lesson are available after you enroll.</p>}
+                            </div>
+                        </>
+                    ) : (
+                        <p className="py-8 text-center text-sm text-[#6B6B78]">
+                            {data.type === 'quiz' || data.type === 'assignment' ? 'This one is interactive — enroll to attempt it and get your result.' : 'This lesson has no content yet.'}
+                        </p>
+                    )}
+                </div>
+
+                <div className="flex flex-col gap-2 border-t border-[#E4E2DA] bg-[#FAF9F5] px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xs text-[#6B6B78]">Like what you see? The rest of the course unlocks when you enroll.</p>
+                    <button type="button" onClick={onClose} className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-bold text-white" style={{ backgroundColor: accent }}>
+                        {cta} <ArrowRight className="size-4" />
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 }

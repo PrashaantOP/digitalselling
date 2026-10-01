@@ -1,3 +1,5 @@
+import { CheckoutExtras, type CheckoutAddon, type CheckoutExtrasValue } from '@/components/public/checkout-extras';
+import { completePayment, firstError } from '@/lib/razorpay';
 import { cn } from '@/lib/utils';
 import { ArrowRight, Link2, type LucideIcon } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
@@ -18,6 +20,8 @@ export type CheckoutPricing = {
     price: string | number;
     has_discount: boolean;
     discounted_price: string | number | null;
+    /** creator ne is product ke saath jo add-ons jode hain (controller bhejta hai) */
+    addons?: CheckoutAddon[];
 };
 
 export const money = (value: string | number) =>
@@ -73,6 +77,9 @@ export function CheckoutCard({
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    const [extras, setExtras] = useState<CheckoutExtrasValue>({ coupon_code: null, addons: [] });
+    // coupon / add-on lagne par server ka total; null = product ka normal price
+    const [quotedTotal, setQuotedTotal] = useState<number | null>(null);
 
     const set = (key: keyof typeof fields, value: string) => setFields((f) => ({ ...f, [key]: value }));
 
@@ -86,15 +93,24 @@ export function CheckoutCard({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-XSRF-TOKEN': cookie('XSRF-TOKEN') },
                 // customer_decides pe OrderController `amount` maangta hai
-                body: JSON.stringify({ ...fields, answers, ...(payWhatYouWant ? { amount: Number(amount) } : {}) }),
+                body: JSON.stringify({ ...fields, answers, ...extras, ...(payWhatYouWant ? { amount: Number(amount) } : {}) }),
             });
             const data = await response.json().catch(() => null);
 
-            setError(
-                response.ok
-                    ? 'Payment is not available yet. Please try again later.'
-                    : (data?.message ?? 'Could not start checkout. Please check your details.'),
-            );
+            if (!response.ok) {
+                setError(firstError(data, 'Could not start checkout. Please check your details.'));
+                return;
+            }
+
+            // free ho to seedha done page; warna Razorpay → verify → done page
+            const result = await completePayment(data, '/checkout/verify', accent);
+
+            if (result.ok) {
+                window.location.href = result.redirect ?? '/me/login';
+                return;
+            }
+
+            setError(result.error);
         } catch {
             setError('Could not reach the server. Please try again.');
         } finally {
@@ -213,6 +229,16 @@ export function CheckoutCard({
                     ),
                 )}
 
+                <CheckoutExtras
+                    checkoutUrl={checkoutUrl}
+                    addons={pricing.addons}
+                    amount={payWhatYouWant ? Number(amount) || undefined : undefined}
+                    accent={accent}
+                    showCoupon={pricing.pricing_type !== 'free'}
+                    onChange={setExtras}
+                    onTotal={setQuotedTotal}
+                />
+
                 {error && (
                     <p role="alert" className="rounded-lg bg-[#FFEDE8] px-3 py-2 text-xs font-medium text-[#C2410C]">
                         {error}
@@ -228,7 +254,7 @@ export function CheckoutCard({
                     <span className="truncate">{submitting ? 'Please wait…' : cta}</span>
                     {!payWhatYouWant && (
                         <span className="flex shrink-0 items-center gap-1">
-                            {price} <ArrowRight className="size-4" />
+                            {quotedTotal !== null ? money(quotedTotal) : price} <ArrowRight className="size-4" />
                         </span>
                     )}
                 </button>

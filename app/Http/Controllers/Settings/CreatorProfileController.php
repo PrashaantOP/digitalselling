@@ -35,6 +35,7 @@ class CreatorProfileController extends Controller
         'email',
         'confirm-password',
         'checkout',
+        'certificates',
         'webhooks',
         'api',
         'storage',

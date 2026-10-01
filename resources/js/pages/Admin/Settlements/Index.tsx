@@ -1,8 +1,8 @@
 import { Badge, BUTTON, Card, dateTime, EmptyRow, FilterTabs, money, PageHeader, Pagination, SearchBox, TD, TH, type Paginated } from '@/components/admin/ui';
 import AdminLayout from '@/layouts/admin-layout';
 import { router } from '@inertiajs/react';
-import { Loader2, Play, X } from 'lucide-react';
-import { useState } from 'react';
+import { Download, Loader2, Play, Upload, X } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 export interface SettlementRow {
     uuid: string;
@@ -48,6 +48,52 @@ export default function AdminSettlements({ items, filters, pendingTotal }: { ite
         router.post('/admin/settlements/run', {}, { preserveScroll: true, onFinish: () => { setRunning(false); setPreview(null); } });
     }
 
+    const [exporting, setExporting] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [fileError, setFileError] = useState<string | null>(null);
+    const fileInput = useRef<HTMLInputElement>(null);
+
+    // Bank ke bulk transfer ki CSV. Server isi call me un settlements ko "processing" kar deta hai.
+    async function exportPending() {
+        setExporting(true);
+        setFileError(null);
+        try {
+            const xsrf = decodeURIComponent(document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/)?.[1] ?? '');
+            const res = await fetch('/admin/settlements/export', { method: 'POST', headers: { 'X-XSRF-TOKEN': xsrf, Accept: 'text/csv, application/json' } });
+
+            if (!res.ok) {
+                setFileError(res.status === 422 ? 'There are no pending settlements to export.' : 'Could not export. Please try again.');
+                return;
+            }
+
+            const url = URL.createObjectURL(await res.blob());
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = res.headers.get('Content-Disposition')?.match(/filename="?([^";]+)/)?.[1] ?? 'settlements.csv';
+            link.click();
+            URL.revokeObjectURL(url);
+            router.reload();
+        } finally {
+            setExporting(false);
+        }
+    }
+
+    // Wahi file, UTR column bhar ke — har bhari hui row paid ho jaati hai.
+    function uploadUtrs(file: File | undefined) {
+        if (!file) return;
+        setUploading(true);
+        setFileError(null);
+        router.post('/admin/settlements/bulk-paid', { file }, {
+            forceFormData: true,
+            preserveScroll: true,
+            onError: (errors) => setFileError(Object.values(errors)[0] as string),
+            onFinish: () => {
+                setUploading(false);
+                if (fileInput.current) fileInput.current.value = '';
+            },
+        });
+    }
+
     const willSettle = preview?.rows.filter((r) => !r.blocked_reason) ?? [];
 
     return (
@@ -56,11 +102,22 @@ export default function AdminSettlements({ items, filters, pendingTotal }: { ite
                 title="Settlements"
                 description={`${money(pendingTotal)} waiting to be transferred. Mark each one paid with its bank UTR after the transfer.`}
                 action={
-                    <button onClick={openPreview} disabled={loading} className={BUTTON.ghost}>
-                        {loading ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />} Run settlement cycle
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                        <button onClick={exportPending} disabled={exporting} className={BUTTON.ghost}>
+                            {exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Export to pay
+                        </button>
+                        <button onClick={() => fileInput.current?.click()} disabled={uploading} className={BUTTON.ghost}>
+                            {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />} Upload UTRs
+                        </button>
+                        <input ref={fileInput} type="file" accept=".csv,text/csv" hidden onChange={(e) => uploadUtrs(e.target.files?.[0])} />
+                        <button onClick={openPreview} disabled={loading} className={BUTTON.ghost}>
+                            {loading ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />} Run settlement cycle
+                        </button>
+                    </div>
                 }
             />
+
+            {fileError && <div className="rounded-xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 ring-1 ring-rose-200">{fileError}</div>}
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <FilterTabs base="/admin/settlements" tabs={TABS} active={filters.status} params={{ q: filters.q }} />

@@ -2,7 +2,8 @@ import { GradeForm, submissionFileUrl, SubmissionStatusPill } from '@/components
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { useCan } from '@/hooks/use-can';
+import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, Award, BookOpen, Check, ClipboardCheck, Copy, Download, FileText, Headphones, ListChecks, Video, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 
@@ -56,7 +57,7 @@ interface EnrollmentDetail {
     created_at: string;
     customer: { id: number; name: string | null; email: string | null; phone: string | null } | null;
     order: { id: number; order_number: string; total_amount: string | number; paid_at: string | null } | null;
-    certificate: { id: number; certificate_number: string; issued_at: string | null } | null;
+    certificate: { id: number; certificate_number: string; issued_at: string | null; student_name: string | null; revoked_at: string | null; revoke_reason: string | null } | null;
     lesson_progress: { id: number; lesson_id: number; is_completed: boolean; completed_at: string | null }[];
     quiz_attempts: QuizAttemptRow[];
     assignment_submissions: SubmissionRow[];
@@ -443,6 +444,7 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
                                         )}
                                     </DetailRow>
                                 </div>
+                                {enrollment.certificate && <CertificateActions enrollmentUuid={enrollment.uuid} certificate={enrollment.certificate} />}
                             </div>
 
                             <div className="rounded-xl bg-white p-5 shadow-sm">
@@ -475,4 +477,113 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
 /** `course.product.id` is the id the assignments review queue filters on (?course=<product id>). */
 function courseIdOf(course: EnrollmentDetail['course']) {
     return course?.product?.uuid ?? '';
+}
+
+/**
+ * Certificate ek record hai (naam issue ke waqt jam jaata hai) — creator yahan se use dekh sakta hai,
+ * naam ki spelling sudhaar sakta hai, ya radd kar sakta hai (jaise refund ke baad).
+ */
+function CertificateActions({ enrollmentUuid, certificate }: { enrollmentUuid: string; certificate: NonNullable<EnrollmentDetail['certificate']> }) {
+    const { can } = useCan();
+    const base = `/dashboard/enrollments/${enrollmentUuid}/certificate`;
+    const [mode, setMode] = useState<'idle' | 'rename' | 'revoke'>('idle');
+    const [name, setName] = useState(certificate.student_name ?? '');
+    const [reason, setReason] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const revoked = certificate.revoked_at !== null;
+
+    function send(method: 'put' | 'post', url: string, data: Record<string, string>) {
+        setBusy(true);
+        setError(null);
+        router[method](url, data, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setMode('idle');
+                setReason('');
+            },
+            onError: (errors) => setError(Object.values(errors)[0] as string),
+            onFinish: () => setBusy(false),
+        });
+    }
+
+    const link = 'text-xs font-semibold text-[#4F46E5] hover:underline disabled:opacity-50';
+    const field = 'h-9 w-full rounded-lg border border-[#DAD8D0] bg-white px-3 text-sm text-[#14141B] outline-none focus:border-[#4F46E5]';
+
+    return (
+        <div className="mt-3 border-t border-[#E4E2DA]/60 pt-3">
+            {revoked && (
+                <p className="mb-2 rounded-lg bg-[#FFEDE8] px-3 py-2 text-xs font-medium text-[#C2410C]">
+                    Revoked{certificate.revoke_reason ? ` — ${certificate.revoke_reason}` : ''}. The public verify page shows it as no longer valid.
+                </p>
+            )}
+            <p className="text-xs text-[#8A8A96]">
+                Name on certificate: <span className="font-semibold text-[#14141B]">{certificate.student_name ?? '—'}</span>
+            </p>
+
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                <a href={base} target="_blank" rel="noreferrer" className={link}>
+                    View certificate
+                </a>
+                {can('courses.edit') && (
+                    <>
+                        <button type="button" onClick={() => setMode(mode === 'rename' ? 'idle' : 'rename')} className={link}>
+                            Edit name
+                        </button>
+                        {revoked ? (
+                            <button type="button" disabled={busy} onClick={() => send('post', `${base}/restore`, {})} className={link}>
+                                Restore
+                            </button>
+                        ) : (
+                            <button type="button" onClick={() => setMode(mode === 'revoke' ? 'idle' : 'revoke')} className="text-xs font-semibold text-[#C2410C] hover:underline">
+                                Revoke
+                            </button>
+                        )}
+                    </>
+                )}
+            </div>
+
+            {mode === 'rename' && (
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        send('put', base, { student_name: name });
+                    }}
+                    className="mt-3 flex flex-col gap-2"
+                >
+                    <label htmlFor="cert-name" className="text-xs font-semibold text-[#4B4B57]">
+                        Name as it should appear
+                    </label>
+                    <input id="cert-name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={150} className={field} />
+                    <button type="submit" disabled={busy || name.trim() === ''} className="h-9 w-fit rounded-lg bg-[#4F46E5] px-3 text-xs font-semibold text-white disabled:opacity-50">
+                        Save name
+                    </button>
+                </form>
+            )}
+
+            {mode === 'revoke' && (
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        send('post', `${base}/revoke`, { reason });
+                    }}
+                    className="mt-3 flex flex-col gap-2"
+                >
+                    <label htmlFor="cert-reason" className="text-xs font-semibold text-[#4B4B57]">
+                        Why are you revoking it? (only you see this)
+                    </label>
+                    <input id="cert-reason" value={reason} onChange={(e) => setReason(e.target.value)} required maxLength={255} placeholder="e.g. Order refunded" className={field} />
+                    <button type="submit" disabled={busy || reason.trim() === ''} className="h-9 w-fit rounded-lg bg-[#C2410C] px-3 text-xs font-semibold text-white disabled:opacity-50">
+                        Revoke certificate
+                    </button>
+                </form>
+            )}
+
+            {error && (
+                <p role="alert" className="mt-2 text-xs font-medium text-[#C2410C]">
+                    {error}
+                </p>
+            )}
+        </div>
+    );
 }

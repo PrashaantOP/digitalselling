@@ -2,25 +2,28 @@
 
 namespace App\Http\Controllers\Customer;
 
+use App\Models\Buyer;
 use App\Models\Customer;
 use App\Models\Enrollment;
 use Illuminate\Support\Collection;
 
 /**
- * `customers` table per-creator hai (unique: creator_id + phone), yaani ek insaan ke alag creators ke
- * liye alag rows ho sakte hain. Portal me "meri saari cheezein" dikhane ke liye hum ek hi phone ke
- * saare customer rows ke ids use karte hain.
+ * `customers` table per-creator hai — ek insaan ke alag creators ke liye alag rows. Portal me "meri saari
+ * cheezein" dikhane ke liye logged-in buyer ke saare customer rows ke ids use hote hain.
+ *
+ * Jodna `buyer_id` se hota hai, phone se NAHI: checkout pe phone verify nahi hota, to phone se jodne pe
+ * koi doosre ka number likh kar uski kharid dekh leta.
  */
 trait ResolvesCustomer
 {
-    protected function me(): Customer
+    protected function me(): Buyer
     {
         return auth('customer')->user();
     }
 
     protected function customerIds(): Collection
     {
-        return Customer::where('phone', $this->me()->phone)->pluck('id');
+        return Customer::where('buyer_id', $this->me()->id)->pluck('id');
     }
 
     /** Course ke liye valid (expire nahi hua) enrollment, warna 404/403. */

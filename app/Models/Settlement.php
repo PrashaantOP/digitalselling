@@ -24,6 +24,7 @@ class Settlement extends Model
         'orders_count',
         'gross_amount',
         'commission_amount',
+        'adjustment_amount',
         'net_amount',
         'period_start',
         'period_end',
@@ -37,6 +38,7 @@ class Settlement extends Model
     protected $casts = [
         'gross_amount' => 'decimal:2',
         'commission_amount' => 'decimal:2',
+        'adjustment_amount' => 'decimal:2',
         'net_amount' => 'decimal:2',
         'period_start' => 'datetime',
         'period_end' => 'datetime',
@@ -51,6 +53,12 @@ class Settlement extends Model
     public function payoutMethod()
     {
         return $this->belongsTo(PayoutMethod::class, 'payout_method_id');
+    }
+
+    /** Orders ke alawa jo +/− lines is settlement me lagi (refund recovery, manual correction). */
+    public function adjustments()
+    {
+        return $this->hasMany(SettlementAdjustment::class, 'settlement_id');
     }
 
     /** Is settlement me kaun kaun si bookings/sales thi. */

@@ -201,7 +201,7 @@ export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
                                             <Sparkles className="size-5" />
                                         </span>
                                         <div>
-                                            <p className="text-sm font-semibold text-[#14141B]">3 more designs with Pro</p>
+                                            <p className="text-sm font-semibold text-[#14141B]">{themes.filter((theme) => theme.locked).length} more designs with Pro</p>
                                             <p className="mt-0.5 text-xs text-[#8A8A96]">
                                                 Premium themes unlock the moment you upgrade — and if Pro ends, your web app falls back to the free
                                                 theme on its own.

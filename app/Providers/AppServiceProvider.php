@@ -15,7 +15,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // SMS driver ek jagah se — tests isi binding ko fake se badal dete hain
+        $this->app->bind(\App\Services\Sms\SmsSender::class, fn () => config('services.sms.driver') === 'msg91'
+            ? new \App\Services\Sms\Msg91SmsSender
+            : new \App\Services\Sms\LogSmsSender);
     }
 
     /**
@@ -38,6 +41,11 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login-ip', fn (Request $request) => Limit::perMinute(20)->by($request->ip()));
         // ek IP se ghante me 5 naye accounts — bulk fake signups / verification-email spam rokne ke liye
         RateLimiter::for('register', fn (Request $request) => Limit::perHour(5)->by($request->ip()));
+
+        // log driver pe mobile login ke codes log file me jaate hain — production me asli provider chahiye
+        if ($this->app->isProduction() && config('services.sms.driver') === 'log') {
+            logger()->critical('SMS_DRIVER is "log" in production — mobile sign-in codes are being written to logs instead of sent by SMS.');
+        }
 
         if ($this->app->isProduction() && config('app.debug')) {
             logger()->critical('APP_DEBUG is enabled in production — stack traces and env values can leak. Set APP_DEBUG=false.');

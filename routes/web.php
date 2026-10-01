@@ -10,6 +10,7 @@ use App\Http\Controllers\BookingAvailabilityController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BookingResponseController;
 use App\Http\Controllers\BookingServiceController;
+use App\Http\Controllers\CertificateSettingController;
 use App\Http\Controllers\CheckoutQuestionController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\CourseController;
@@ -153,7 +154,9 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
     // ---- 6. Payouts ----
     // Settlements read-only hain — batches cycle (settlements:run) banati hai, creator request nahi karta.
     Route::get('/dashboard/settlements', [SettlementController::class, 'index'])->name('settlements.index')->middleware('perm:payouts.view');
+    Route::get('/dashboard/settlements/export', [SettlementController::class, 'export'])->name('settlements.export')->middleware('perm:payouts.view');
     Route::get('/dashboard/settlements/{settlement}', [SettlementController::class, 'show'])->name('settlements.show')->middleware('perm:payouts.view');
+    Route::get('/dashboard/settlements/{settlement}/statement', [SettlementController::class, 'statement'])->name('settlements.statement')->middleware('perm:payouts.view');
 
     // ---- 7. Audience & Refer-Earn ----
     Route::get('/dashboard/audience', [AudienceController::class, 'index'])->name('audience.index')->middleware('perm:audience.view');
@@ -180,6 +183,10 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
     });
 
     // ---- 9. Courses ----
+    // Certificate design — productCrud se pehle (waise bhi {course} sirf uuid match karta hai)
+    Route::get('/dashboard/courses/certificate', [CertificateSettingController::class, 'edit'])->name('certificate.edit')->middleware('perm:courses.view');
+    Route::get('/dashboard/courses/certificate/preview', [CertificateSettingController::class, 'preview'])->name('certificate.preview')->middleware('perm:courses.view');
+    Route::put('/dashboard/courses/certificate', [CertificateSettingController::class, 'update'])->name('certificate.update')->middleware('perm:courses.edit');
     $productCrud('courses', CourseController::class, 'course', 'courses', 'courses');
 
     Route::prefix('dashboard')->middleware('perm:courses.edit')->group(function () {
@@ -221,6 +228,10 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
     Route::prefix('dashboard')->middleware('perm:courses.view')->group(function () {
         Route::get('courses/{courseUuid}/students', [CourseEnrollmentController::class, 'index'])->name('enrollments.index');
         Route::get('enrollments/{enrollment}', [CourseEnrollmentController::class, 'show'])->name('enrollments.show');
+        Route::get('enrollments/{enrollment}/certificate', [CourseEnrollmentController::class, 'certificate'])->name('enrollments.certificate');
+        Route::put('enrollments/{enrollment}/certificate', [CourseEnrollmentController::class, 'renameCertificate'])->name('enrollments.certificate.rename')->middleware('perm:courses.edit');
+        Route::post('enrollments/{enrollment}/certificate/revoke', [CourseEnrollmentController::class, 'revokeCertificate'])->name('enrollments.certificate.revoke')->middleware('perm:courses.edit');
+        Route::post('enrollments/{enrollment}/certificate/restore', [CourseEnrollmentController::class, 'restoreCertificate'])->name('enrollments.certificate.restore')->middleware('perm:courses.edit');
         Route::get('assignments/submissions', [AssignmentSubmissionController::class, 'index'])->name('submissions.index');
         Route::get('assignments/submissions/{submission}/file', [AssignmentSubmissionController::class, 'file'])->name('submissions.file');
     });
@@ -258,6 +269,7 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
             Route::delete('checkout-questions/{checkoutQuestion}', [CheckoutQuestionController::class, 'destroy'])->name('checkout-questions.destroy');
 
             Route::post('products/{product}/addons', [ProductAddonController::class, 'store'])->name('addons.store');
+            Route::put('product-addons/{addon}', [ProductAddonController::class, 'update'])->name('addons.update');
             Route::delete('product-addons/{addon}', [ProductAddonController::class, 'destroy'])->name('addons.destroy');
 
             Route::post('products/{product}/cover-images', [ProductCoverImageController::class, 'store'])->name('cover-images.store');
@@ -298,7 +310,10 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
 
         Route::middleware('owner')->group(function () {
             Route::get('billing', [BillingController::class, 'edit'])->name('settings.billing');
-            Route::post('billing/upgrade', [BillingController::class, 'upgrade'])->name('settings.billing.upgrade');
+            // paisa lene wale actions verified email pe hi (payout method jaisa)
+            Route::post('billing/checkout', [BillingController::class, 'checkout'])->name('settings.billing.checkout')->middleware(['verified', 'throttle:10,1']);
+            Route::post('billing/verify', [BillingController::class, 'verify'])->name('settings.billing.verify')->middleware('throttle:20,1');
+            Route::get('billing/invoices/{billingInvoice}', [BillingController::class, 'invoice'])->name('settings.billing.invoice');
         });
 
         Route::get('notifications', [NotificationPreferenceController::class, 'edit'])->name('settings.notifications');

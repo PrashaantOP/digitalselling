@@ -2,7 +2,7 @@ import { type StoreProduct, type StoreTheme } from '@/components/store-page/type
 
 /* WebappPayload (app/Support/WebappPayload.php) ka shape — live page aur dashboard preview dono yahi bhejte hain. */
 
-export type WebappThemeSlug = 'studio' | 'aurora' | 'grid' | 'press' | 'pocket';
+export type WebappThemeSlug = 'studio' | 'bold' | 'azure' | 'notebook';
 
 export interface WebappData {
     theme: WebappThemeSlug;
@@ -30,10 +30,9 @@ export interface WebappData {
 /** Sirf gallery ki copy ke liye — asli list aur locking server (WebappThemes.php) se aati hai. */
 export const WEBAPP_THEMES: Record<WebappThemeSlug, { name: string; blurb: string; swatch: string }> = {
     studio: { name: 'Studio', blurb: 'Full website — hero, sections, footer', swatch: 'from-[#12151E] via-[#1D2129] to-[#FF5C48]' },
-    aurora: { name: 'Aurora', blurb: 'Soft gradient hero with stacked cards', swatch: 'from-[#4F46E5] via-[#7C3AED] to-[#DB2777]' },
-    grid: { name: 'Grid', blurb: 'Sticky header with a two-column catalogue', swatch: 'from-[#0F172A] via-[#1E293B] to-[#334155]' },
-    press: { name: 'Press', blurb: 'Editorial look — big type, quiet layout', swatch: 'from-[#FDFCF9] via-[#F1EDE4] to-[#E4DDD0]' },
-    pocket: { name: 'Pocket', blurb: 'App-style with a bottom tab bar', swatch: 'from-[#059669] via-[#0D9488] to-[#0284C7]' },
+    bold: { name: 'Bold', blurb: 'Neo-brutalist website — thick borders, hard shadows', swatch: 'from-[#F6F3EC] via-[#0E6E55] to-[#E8572C]' },
+    azure: { name: 'Azure', blurb: 'Clean corporate website with a diagonal hero', swatch: 'from-[#EEF3FF] via-[#2454E8] to-[#15348F]' },
+    notebook: { name: 'Notebook', blurb: 'Classroom feel — graph paper, filters, clickable steps', swatch: 'from-[#F5F6F0] via-[#0E7A5C] to-[#F0A23A]' },
 };
 
 /** Booking type ke products hi "sessions" hain (StorefrontCatalog inhe bhi bhejta hai). */

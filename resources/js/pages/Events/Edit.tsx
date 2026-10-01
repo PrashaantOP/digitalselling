@@ -1,3 +1,4 @@
+import { AddonsField } from '@/components/product-editor/ui';
 import { Button } from '@/components/ui/button';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { RequestPayload } from '@inertiajs/core';
@@ -759,6 +760,10 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                     </button>
                                 </div>
                                 <p className="text-[10px] text-[#8A8A96]">Buyers enter this code at checkout for a discount.</p>
+                            </div>
+
+                            <div className="order-12">
+                                <AddonsField productUuid={item.uuid} />
                             </div>
 
                             <div className="order-14 flex flex-col gap-1.5">

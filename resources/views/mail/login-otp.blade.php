@@ -11,5 +11,9 @@ It expires in {{ $minutes }} minutes. Never share this code with anyone — our 
 
 **Request details:** {{ $ip ?? 'unknown IP' }} · {{ \Illuminate\Support\Str::limit($userAgent, 80) }}
 
+@if ($isCustomer)
+If this wasn't you, you can ignore this email — nobody can sign in without this code.
+@else
 If this wasn't you, someone knows your password. Change it right away.
+@endif
 </x-mail::message>

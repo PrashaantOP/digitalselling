@@ -1,0 +1,339 @@
+import { Button } from '@/components/ui/button';
+import { useCan } from '@/hooks/use-can';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
+import { type BreadcrumbItem } from '@/types';
+import { Head, router } from '@inertiajs/react';
+import { Check, ImagePlus, Info, Loader2, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Courses', href: '/dashboard/courses' },
+    { title: 'Certificate design', href: '/dashboard/courses/certificate' },
+];
+
+interface Props {
+    settings: {
+        template: string;
+        accent_color: string | null;
+        signatory_name: string | null;
+        signatory_title: string | null;
+        has_logo: boolean;
+        has_signature: boolean;
+    };
+    /** defaults lagne ke baad jo asal me certificate pe aa raha hai */
+    resolved: { accent: string; logo: string | null; signature: string | null; signatory_name: string; signatory_title: string };
+    templates: { key: string; label: string }[];
+    previewUrl: string;
+}
+
+const TEMPLATE_HINT: Record<string, string> = {
+    classic: 'Serif, centred, double border',
+    modern: 'Colour band with a bold name',
+    minimal: 'White, left-aligned, lots of space',
+};
+
+const INPUT = 'h-10 w-full rounded-lg border border-[#DAD8D0] bg-white px-3 text-sm text-[#14141B] outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15';
+
+/** Dashboard → Courses → Certificate design. Ek design, creator ke saare courses ke certificates pe. */
+export default function CertificateDesign({ settings, resolved, templates, previewUrl }: Props) {
+    const { can } = useCan();
+    const editable = can('courses.edit');
+
+    const [template, setTemplate] = useState(settings.template);
+    const [accent, setAccent] = useState<string | null>(settings.accent_color);
+    const [name, setName] = useState(settings.signatory_name ?? '');
+    const [title, setTitle] = useState(settings.signatory_title ?? '');
+    const [logo, setLogo] = useState<File | null>(null);
+    const [signature, setSignature] = useState<File | null>(null);
+    const [removeLogo, setRemoveLogo] = useState(false);
+    const [removeSignature, setRemoveSignature] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [saved, setSaved] = useState(false);
+    // save ke baad iframe ko naye logo/signature ke saath dobara load karne ke liye
+    const [version, setVersion] = useState(0);
+
+    // preview form ki abhi ki values se — typing ke har akshar pe nahi, thoda ruk kar
+    const [debounced, setDebounced] = useState({ template, accent, name, title });
+    useEffect(() => {
+        const t = window.setTimeout(() => setDebounced({ template, accent, name, title }), 350);
+        return () => window.clearTimeout(t);
+    }, [template, accent, name, title]);
+
+    const previewSrc = useMemo(() => {
+        const params = new URLSearchParams({ template: debounced.template, v: String(version) });
+        if (debounced.accent) params.set('accent_color', debounced.accent);
+        if (debounced.name.trim()) params.set('signatory_name', debounced.name.trim());
+        if (debounced.title.trim()) params.set('signatory_title', debounced.title.trim());
+
+        return `${previewUrl}?${params.toString()}`;
+    }, [debounced, previewUrl, version]);
+
+    useEffect(() => {
+        if (!saved) return;
+        const t = window.setTimeout(() => setSaved(false), 4000);
+        return () => window.clearTimeout(t);
+    }, [saved]);
+
+    function submit(e: FormEvent) {
+        e.preventDefault();
+        setSaving(true);
+        setErrors({});
+
+        router.post(
+            '/dashboard/courses/certificate',
+            {
+                _method: 'put',
+                template,
+                accent_color: accent,
+                signatory_name: name.trim() || null,
+                signatory_title: title.trim() || null,
+                ...(logo ? { logo } : {}),
+                ...(signature ? { signature } : {}),
+                remove_logo: removeLogo && !logo,
+                remove_signature: removeSignature && !signature,
+            },
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setSaved(true);
+                    setLogo(null);
+                    setSignature(null);
+                    setRemoveLogo(false);
+                    setRemoveSignature(false);
+                    setVersion((v) => v + 1);
+                },
+                onError: (errs) => setErrors(errs as Record<string, string>),
+                onFinish: () => setSaving(false),
+            },
+        );
+    }
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Certificate design" />
+            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+                <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
+                    <div className="flex flex-col gap-1 pt-1">
+                        <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Certificate design</h1>
+                        <p className="text-sm text-[#8A8A96]">One design for every course that has certificates turned on. It carries your logo and name — students share it as yours.</p>
+                    </div>
+
+                    {saved && (
+                        <div role="status" className="flex items-center gap-2 rounded-xl bg-[#E6F6EC] p-3.5 text-[13px] font-semibold text-[#059669]">
+                            <Check className="size-4" /> Certificate design saved. Certificates already issued use the new design too.
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
+                        <form onSubmit={submit} className="flex flex-col gap-5">
+                            <fieldset disabled={!editable} className="flex flex-col gap-5 disabled:opacity-70">
+                                {/* Template */}
+                                <section className="rounded-xl bg-white p-5 shadow-sm">
+                                    <h2 className="text-sm font-bold text-[#14141B]">Template</h2>
+                                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3 xl:grid-cols-1" role="radiogroup" aria-label="Template">
+                                        {templates.map((t) => (
+                                            <button
+                                                key={t.key}
+                                                type="button"
+                                                role="radio"
+                                                aria-checked={template === t.key}
+                                                onClick={() => setTemplate(t.key)}
+                                                className={cn(
+                                                    'flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition',
+                                                    template === t.key ? 'border-[#4F46E5] bg-[#EEF2FF]' : 'border-[#E4E2DA] bg-white hover:bg-[#F6F5F2]',
+                                                )}
+                                            >
+                                                <span>
+                                                    <span className="block text-sm font-bold text-[#14141B]">{t.label}</span>
+                                                    <span className="block text-[11px] text-[#6B6B78]">{TEMPLATE_HINT[t.key]}</span>
+                                                </span>
+                                                {template === t.key && <Check className="size-4 shrink-0 text-[#4F46E5]" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                {/* Colour */}
+                                <section className="rounded-xl bg-white p-5 shadow-sm">
+                                    <h2 className="text-sm font-bold text-[#14141B]">Accent colour</h2>
+                                    <div className="mt-3 flex items-center gap-3">
+                                        <input
+                                            type="color"
+                                            aria-label="Accent colour"
+                                            value={accent ?? resolved.accent}
+                                            onChange={(e) => setAccent(e.target.value.toUpperCase())}
+                                            className="size-10 shrink-0 cursor-pointer rounded-lg border border-[#DAD8D0] bg-white p-1"
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-mono text-sm font-semibold text-[#14141B]">{accent ?? resolved.accent}</p>
+                                            <p className="text-xs text-[#8A8A96]">{accent ? 'Custom colour for certificates' : "Using your store's brand colour"}</p>
+                                        </div>
+                                        {accent && (
+                                            <button type="button" onClick={() => setAccent(null)} className="text-xs font-semibold text-[#6B6B78] hover:text-[#14141B]">
+                                                Use store colour
+                                            </button>
+                                        )}
+                                    </div>
+                                    {errors.accent_color && <p className="mt-2 text-xs font-medium text-[#C2410C]">{errors.accent_color}</p>}
+                                </section>
+
+                                {/* Logo + signature */}
+                                <section className="flex flex-col gap-4 rounded-xl bg-white p-5 shadow-sm">
+                                    <ImageField
+                                        label="Logo"
+                                        hint={settings.has_logo ? 'Your certificate logo.' : 'No certificate logo yet — your store picture is used. Upload one to replace it.'}
+                                        current={removeLogo ? null : settings.has_logo ? resolved.logo : null}
+                                        file={logo}
+                                        onFile={(f) => {
+                                            setLogo(f);
+                                            setRemoveLogo(false);
+                                        }}
+                                        onRemove={settings.has_logo ? () => setRemoveLogo(true) : undefined}
+                                        error={errors.logo}
+                                    />
+                                    <ImageField
+                                        label="Signature"
+                                        hint="A photo or scan of your signature on a white or transparent background."
+                                        current={removeSignature ? null : resolved.signature}
+                                        file={signature}
+                                        onFile={(f) => {
+                                            setSignature(f);
+                                            setRemoveSignature(false);
+                                        }}
+                                        onRemove={settings.has_signature ? () => setRemoveSignature(true) : undefined}
+                                        error={errors.signature}
+                                    />
+                                    {(logo || signature || removeLogo || removeSignature) && (
+                                        <p className="flex items-start gap-1.5 text-xs text-[#8A8A96]">
+                                            <Info className="mt-px size-3.5 shrink-0" /> Image changes show in the preview after you save.
+                                        </p>
+                                    )}
+                                </section>
+
+                                {/* Signatory */}
+                                <section className="flex flex-col gap-3 rounded-xl bg-white p-5 shadow-sm">
+                                    <h2 className="text-sm font-bold text-[#14141B]">Signed by</h2>
+                                    <div>
+                                        <label htmlFor="signatory_name" className="text-xs font-semibold text-[#4B4B57]">
+                                            Name
+                                        </label>
+                                        <input id="signatory_name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} placeholder={resolved.signatory_name} className={cn(INPUT, 'mt-1')} />
+                                        {errors.signatory_name && <p className="mt-1 text-xs font-medium text-[#C2410C]">{errors.signatory_name}</p>}
+                                    </div>
+                                    <div>
+                                        <label htmlFor="signatory_title" className="text-xs font-semibold text-[#4B4B57]">
+                                            Designation
+                                        </label>
+                                        <input id="signatory_title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="Instructor" className={cn(INPUT, 'mt-1')} />
+                                        {errors.signatory_title && <p className="mt-1 text-xs font-medium text-[#C2410C]">{errors.signatory_title}</p>}
+                                    </div>
+                                </section>
+                            </fieldset>
+
+                            {editable ? (
+                                <Button type="submit" disabled={saving} className="w-fit bg-[#4F46E5] hover:bg-[#4338CA]">
+                                    {saving && <Loader2 className="size-4 animate-spin" />} Save design
+                                </Button>
+                            ) : (
+                                <p className="text-xs text-[#8A8A96]">You can view this design but not change it.</p>
+                            )}
+                        </form>
+
+                        {/* Live preview */}
+                        <div className="flex flex-col gap-3 rounded-xl bg-[#14141B] p-4 shadow-sm xl:sticky xl:top-6">
+                            <div>
+                                <p className="text-[13px] font-semibold text-white">Preview</p>
+                                <p className="text-[11px] text-white/50">A sample student and course. The real certificate carries their name, your course title and a verify link.</p>
+                            </div>
+                            <div className="overflow-hidden rounded-lg bg-white" style={{ aspectRatio: '297 / 210' }}>
+                                <iframe key={previewSrc} src={previewSrc} title="Certificate preview" className="size-full border-0" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </AppLayout>
+    );
+}
+
+function ImageField({
+    label,
+    hint,
+    current,
+    file,
+    onFile,
+    onRemove,
+    error,
+}: {
+    label: string;
+    hint: string;
+    /** jo abhi save hai uska URL */
+    current: string | null;
+    file: File | null;
+    onFile: (file: File | null) => void;
+    onRemove?: () => void;
+    error?: string;
+}) {
+    const input = useRef<HTMLInputElement>(null);
+    const [localUrl, setLocalUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!file) {
+            setLocalUrl(null);
+            return;
+        }
+        const url = URL.createObjectURL(file);
+        setLocalUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [file]);
+
+    const shown = localUrl ?? current;
+
+    return (
+        <div>
+            <h2 className="text-sm font-bold text-[#14141B]">{label}</h2>
+            <p className="mt-0.5 text-xs text-[#8A8A96]">{hint}</p>
+            <div className="mt-3 flex items-center gap-3">
+                <span className="flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-[#DAD8D0] bg-[#FAFAF8]">
+                    {shown ? <img src={shown} alt="" className="max-h-full max-w-full object-contain" /> : <ImagePlus className="size-5 text-[#C9C6BC]" />}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        onClick={() => input.current?.click()}
+                        className="inline-flex h-9 items-center rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm font-medium text-[#4B4B57] transition hover:bg-[#F6F5F2]"
+                    >
+                        {shown ? 'Replace' : 'Upload'}
+                    </button>
+                    {file ? (
+                        <button type="button" onClick={() => onFile(null)} className="inline-flex h-9 items-center px-2 text-sm font-medium text-[#6B6B78] hover:text-[#14141B]">
+                            Undo
+                        </button>
+                    ) : (
+                        current &&
+                        onRemove && (
+                            <button type="button" onClick={onRemove} aria-label={`Remove ${label.toLowerCase()}`} className="inline-flex h-9 items-center gap-1 px-2 text-sm font-medium text-[#C2410C] hover:underline">
+                                <Trash2 className="size-3.5" /> Remove
+                            </button>
+                        )
+                    )}
+                </div>
+                <input
+                    ref={input}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    hidden
+                    onChange={(e) => {
+                        onFile(e.target.files?.[0] ?? null);
+                        e.target.value = '';
+                    }}
+                />
+            </div>
+            <p className="mt-2 text-[11px] text-[#8A8A96]">PNG, JPG or WebP, up to 2 MB.</p>
+            {error && <p className="mt-1 text-xs font-medium text-[#C2410C]">{error}</p>}
+        </div>
+    );
+}

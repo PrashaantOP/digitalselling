@@ -1,18 +1,16 @@
 import { fontName } from '@/components/store-page/types';
 import { useEffect } from 'react';
-import { AuroraTheme } from './themes/aurora';
-import { GridTheme } from './themes/grid';
-import { PocketTheme } from './themes/pocket';
-import { PressTheme } from './themes/press';
+import { AzureTheme } from './themes/azure';
+import { BoldTheme } from './themes/bold';
+import { NotebookTheme } from './themes/notebook';
 import { StudioTheme } from './themes/studio';
 import { type WebappData, type WebappThemeSlug } from './types';
 
 const THEME_COMPONENTS: Record<WebappThemeSlug, (props: { data: WebappData }) => React.ReactElement> = {
     studio: StudioTheme,
-    aurora: AuroraTheme,
-    grid: GridTheme,
-    press: PressTheme,
-    pocket: PocketTheme,
+    bold: BoldTheme,
+    azure: AzureTheme,
+    notebook: NotebookTheme,
 };
 
 /** Creator ka chuna hua Google font load karo (store page bhi yahi karta hai). */

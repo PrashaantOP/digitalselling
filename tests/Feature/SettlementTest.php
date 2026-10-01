@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\KycVerification;
+use App\Mail\SettlementStatusMail;
+use App\Models\NotificationPreference;
 use App\Models\Order;
 use App\Models\PayoutMethod;
 use App\Models\Product;
@@ -10,6 +12,7 @@ use App\Models\Settlement;
 use App\Models\User;
 use App\Services\SettlementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class SettlementTest extends TestCase
@@ -262,5 +265,107 @@ class SettlementTest extends TestCase
         $this->actingAs($this->creator())
             ->get("/dashboard/settlements/{$settlement->uuid}")
             ->assertNotFound();
+    }
+
+    // ---------------------------------------------------------------- adjustments
+
+    public function test_a_debit_adjustment_reduces_the_next_settlement(): void
+    {
+        $creator = $this->creator();
+        $this->order($creator, 3, 1000); // net 900
+        $this->settlements->addAdjustment($creator, 'manual_debit', 200, 'Refund recovered for ORD-0009');
+
+        $this->assertEquals(-200, $this->settlements->balanceFor($creator)['adjustments']);
+
+        $settlement = $this->settlements->settleCreator($creator);
+
+        $this->assertSame('-200.00', $settlement->adjustment_amount);
+        $this->assertSame('700.00', $settlement->net_amount);
+        $this->assertSame(1, $settlement->adjustments()->count());
+        $this->assertEquals(0, $this->settlements->balanceFor($creator)['adjustments']);
+    }
+
+    public function test_a_debit_larger_than_sales_holds_everything_until_sales_catch_up(): void
+    {
+        $creator = $this->creator();
+        $first = $this->order($creator, 3, 1000); // net 900
+        $this->settlements->addAdjustment($creator, 'manual_debit', 1500, 'Chargeback');
+
+        $this->assertNull($this->settlements->settleCreator($creator));
+        $this->assertNull($first->fresh()->settlement_id);
+
+        $this->order($creator, 3, 2000); // net 1800 → 900 + 1800 − 1500 = 1200
+        $settlement = $this->settlements->settleCreator($creator);
+
+        $this->assertSame('1200.00', $settlement->net_amount);
+        $this->assertSame(2, $settlement->orders_count);
+    }
+
+    public function test_a_credit_adjustment_is_paid_out_even_without_new_orders(): void
+    {
+        $creator = $this->creator();
+        $this->settlements->addAdjustment($creator, 'manual_credit', 300, 'Goodwill credit');
+
+        $result = $this->settlements->runAll();
+
+        $this->assertSame(1, $result['settlements']);
+        $this->assertSame('300.00', Settlement::first()->net_amount);
+    }
+
+    public function test_failed_settlement_releases_its_adjustments_too(): void
+    {
+        $creator = $this->creator();
+        $this->order($creator, 3, 1000);
+        $this->settlements->addAdjustment($creator, 'manual_debit', 100, 'Correction');
+        $settlement = $this->settlements->settleCreator($creator);
+
+        $this->settlements->markFailed($settlement, 'Bank rejected');
+
+        $this->assertEquals(-100, $this->settlements->balanceFor($creator)['adjustments']);
+        $this->assertSame('800.00', $this->settlements->settleCreator($creator)->net_amount);
+    }
+
+    // ---------------------------------------------------------------- mails / creator exports
+
+    public function test_creator_is_emailed_when_a_settlement_is_paid_or_fails(): void
+    {
+        Mail::fake();
+        $creator = $this->creator();
+        $this->order($creator, 3);
+
+        $this->settlements->markPaid($this->settlements->settleCreator($creator), 'UTR777');
+        Mail::assertSent(SettlementStatusMail::class, fn ($mail) => $mail->hasTo($creator->email) && $mail->settlement->status === 'paid');
+
+        $this->order($creator, 3);
+        $this->settlements->markFailed($this->settlements->settleCreator($creator), 'Account closed');
+        Mail::assertSent(SettlementStatusMail::class, fn ($mail) => $mail->settlement->status === 'failed');
+    }
+
+    public function test_no_email_when_the_creator_turned_payment_notifications_off(): void
+    {
+        Mail::fake();
+        $creator = $this->creator();
+        NotificationPreference::create(['user_id' => $creator->id, 'payment_received' => false]);
+        $this->order($creator, 3);
+
+        $this->settlements->markPaid($this->settlements->settleCreator($creator), 'UTR778');
+
+        Mail::assertNothingSent();
+    }
+
+    public function test_statement_and_csv_export_are_only_for_the_owner(): void
+    {
+        $creator = $this->creator();
+        $this->order($creator, 3);
+        $this->settlements->addAdjustment($creator, 'manual_debit', 50, 'Correction');
+        $settlement = $this->settlements->settleCreator($creator);
+
+        $this->actingAs($creator)->get("/dashboard/settlements/{$settlement->uuid}/statement")
+            ->assertOk()->assertSee($settlement->number)->assertSee('Correction');
+        $this->actingAs($this->creator())->get("/dashboard/settlements/{$settlement->uuid}/statement")->assertNotFound();
+
+        $csv = $this->actingAs($creator)->get('/dashboard/settlements/export')->assertOk()->streamedContent();
+        $this->assertStringContainsString($settlement->number, $csv);
+        $this->assertStringContainsString('850.00', $csv);
     }
 }

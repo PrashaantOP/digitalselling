@@ -10,6 +10,7 @@ import {
 } from '@/components/product-editor/preview-frame';
 import {
     ADD_BUTTON_CLASS,
+    AddonsField,
     CouponsField,
     FieldError,
     HINT_CLASS,
@@ -534,6 +535,7 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
             )}
 
             <CouponsField productUuid={item.uuid} initial={item.coupons ?? []} />
+            <AddonsField productUuid={item.uuid} />
 
             <SlugField prefix="/l/" value={form.slug} onChange={(slug) => patch({ slug })} placeholder="your-content" error={errorFor('slug')} />
         </EditorShell>

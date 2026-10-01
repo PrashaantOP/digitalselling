@@ -23,7 +23,11 @@ class LoginOtpMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $what = str_starts_with($this->purpose, 'admin') ? 'Admin sign-in' : 'Sign-in';
+        $what = match (true) {
+            str_starts_with($this->purpose, 'admin') => 'Admin sign-in',
+            str_starts_with($this->purpose, 'customer') => 'Your purchases — sign-in',
+            default => 'Sign-in',
+        };
 
         return new Envelope(subject: "{$what} code: {$this->code}");
     }
@@ -33,6 +37,7 @@ class LoginOtpMail extends Mailable
         return new Content(markdown: 'mail.login-otp', with: [
             'minutes' => LoginOtpService::TTL_MINUTES,
             'isSetup' => $this->purpose === 'creator_2fa_setup',
+            'isCustomer' => str_starts_with($this->purpose, 'customer'),
         ]);
     }
 }

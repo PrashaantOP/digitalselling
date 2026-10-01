@@ -14,6 +14,7 @@ class Customer extends Model
 
     protected $fillable = [
         'creator_id',
+        'buyer_id',
         'name',
         'email',
         'phone',
@@ -34,6 +35,12 @@ class Customer extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'creator_id');
+    }
+
+    /** Login karne wala insaan — NULL sirf purani bina-email wali rows pe. */
+    public function buyer()
+    {
+        return $this->belongsTo(Buyer::class, 'buyer_id');
     }
 
     public function orders()

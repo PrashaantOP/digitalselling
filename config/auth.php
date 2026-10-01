@@ -46,6 +46,12 @@ return [
             'driver' => 'session',
             'provider' => 'admins',
         ],
+
+        // Buyers (customer portal /me) — OTP login, `buyers` table; dashboard/admin se alag session
+        'customer' => [
+            'driver' => 'session',
+            'provider' => 'buyers',
+        ],
     ],
 
     /*
@@ -69,6 +75,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
+        ],
+
+        'buyers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Buyer::class,
         ],
 
         'admins' => [

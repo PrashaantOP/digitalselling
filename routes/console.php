@@ -21,6 +21,50 @@ Artisan::command('plans:expire', function () {
 Schedule::command('plans:expire')->daily();
 
 /*
+ | Pro billing (prepaid) — auto-renew nahi hai, isliye expiry se pehle yaad dilana zaroori hai.
+ | Roz ek baar chalta hai aur sirf un creators ko mail karta hai jinki expiry theek N din door hai
+ | (config billing.reminder_days) — isliye ek hi din me do baar mail nahi jaati.
+ */
+Artisan::command('billing:remind', function () {
+    $freeRate = (float) (\App\Models\SubscriptionPlan::where('slug', 'free')->value('commission_rate') ?? PlanPricing::FALLBACK_RATES['free']);
+    $proRate = (float) (\App\Models\SubscriptionPlan::where('slug', 'pro')->value('commission_rate') ?? PlanPricing::FALLBACK_RATES['pro']);
+    $sent = 0;
+
+    foreach (config('billing.reminder_days', []) as $days) {
+        // IST ke din ke hisaab se — creator ke liye "3 din baad" wahi matlab rakhta hai
+        $day = now('Asia/Kolkata')->addDays((int) $days);
+
+        User::where('role', 'creator')->where('plan', 'pro')
+            ->whereBetween('plan_expires_at', [$day->copy()->startOfDay()->setTimezone(config('app.timezone')), $day->copy()->endOfDay()->setTimezone(config('app.timezone'))])
+            ->each(function (User $user) use ($days, $proRate, $freeRate, &$sent) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\PlanExpiringMail(
+                        $user->name, (int) $days, $user->plan_expires_at->copy()->setTimezone('Asia/Kolkata')->format('j F Y'), $proRate, $freeRate,
+                    ));
+                    $sent++;
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            });
+    }
+
+    $this->info("{$sent} reminder(s) sent.");
+})->purpose('Email creators whose Pro plan is about to end');
+
+Artisan::command('billing:expire-pending', function (\App\Services\BillingService $billing) {
+    $this->info($billing->expirePending() . ' abandoned checkout(s) closed.');
+})->purpose('Mark unpaid Pro checkouts as failed');
+
+// Buyer checkout: adhoore orders band + unke roke hue session slots khaali
+Artisan::command('orders:expire-pending', function (\App\Services\OrderService $orders) {
+    $this->info($orders->expirePending() . ' abandoned order(s) closed.');
+})->purpose('Mark unpaid buyer orders as failed and release held session slots');
+
+Schedule::command('orders:expire-pending')->everyFiveMinutes();
+Schedule::command('billing:remind')->dailyAt('10:00')->timezone('Asia/Kolkata');
+Schedule::command('billing:expire-pending')->everyTenMinutes();
+
+/*
  | Settlements — creator ko payout request nahi karni padti. Cycle roz chalti hai aur
  | har creator ke eligible orders (paid + T+2 purane) ko ek batch me group kar deti hai.
  */

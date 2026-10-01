@@ -8,6 +8,7 @@ use App\Models\Settlement;
 use App\Models\User;
 use App\Services\SettlementService;
 use App\Support\AdminAudit;
+use App\Support\Csv;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -56,7 +57,11 @@ class SettlementController extends Controller
                 'notes' => $s->notes,
                 'processed_at' => $s->processed_at?->toIso8601String(),
                 'payout_holder' => $s->payoutMethod?->account_holder_name,
+                'adjustment_amount' => (float) $s->adjustment_amount,
             ],
+            'adjustments' => $s->adjustments()->oldest('id')->get()->map(fn ($a) => [
+                'uuid' => $a->uuid, 'type' => $a->type, 'amount' => (float) $a->amount, 'reason' => $a->reason,
+            ]),
             'orders' => $s->orders()->with('product:id,title')->oldest('paid_at')->get()
                 ->map(fn (Order $o) => [
                     'uuid' => $o->uuid, 'order_number' => $o->order_number, 'product' => $o->product?->title,
@@ -90,6 +95,89 @@ class SettlementController extends Controller
         AdminAudit::log('settlement.marked_failed', $adminSettlement, ['reason' => $data['reason']]);
 
         return back()->with('status', "{$adminSettlement->number} marked as failed — its orders go back into the next cycle.");
+    }
+
+    /**
+     * Bank ke bulk-transfer ke liye pending settlements ki CSV. Nikalte hi wo processing ho jaate hain,
+     * taaki do admin ek hi batch do baar na bhej dein. UTR aane par bulkPaid() se band karo.
+     */
+    public function export()
+    {
+        $rows = Settlement::with(['creator:id,name,email', 'payoutMethod'])->where('status', 'pending')->oldest('id')->get();
+
+        abort_if($rows->isEmpty(), 422, 'There are no pending settlements to export.');
+
+        foreach ($rows as $settlement) {
+            $this->settlements->markProcessing($settlement);
+        }
+
+        AdminAudit::log('settlements.exported', null, ['count' => $rows->count(), 'total' => (float) $rows->sum('net_amount')]);
+
+        return response()->streamDownload(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // BOM — Excel UTF-8 naam sahi dikhaye
+            fputcsv($out, ['Settlement', 'Creator', 'Email', 'Mode', 'Beneficiary name', 'Account number', 'IFSC', 'UPI ID', 'Amount', 'UTR']);
+
+            foreach ($rows as $s) {
+                $m = $s->payoutMethod;
+                // creator ka naam/UPI unka diya hua hai — formula injection se bachao
+                fputcsv($out, Csv::row([
+                    $s->number, $s->creator?->name, $s->creator?->email, $m?->type === 'upi' ? 'UPI' : 'Bank transfer',
+                    $m?->account_holder_name ?: $s->creator?->name, $m?->account_number, $m?->ifsc, $m?->upi_id,
+                    number_format((float) $s->net_amount, 2, '.', ''), '',
+                ]));
+            }
+
+            fclose($out);
+        }, 'settlements-' . now()->format('Ymd-His') . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * Wahi CSV, UTR column bhar ke wapas upload karo — har row jisme UTR hai paid ho jaati hai.
+     * Sirf "Settlement" aur "UTR" columns padhe jaate hain; galat rows chhod kar report hoti hain.
+     */
+    public function bulkPaid(Request $request): RedirectResponse
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:csv,txt', 'max:1024']]);
+
+        $handle = fopen($request->file('file')->getRealPath(), 'r');
+        $header = array_map(fn ($h) => strtolower(trim((string) preg_replace('/^\xEF\xBB\xBF/', '', (string) $h))), fgetcsv($handle) ?: []);
+        $numberCol = array_search('settlement', $header, true);
+        $utrCol = array_search('utr', $header, true);
+
+        if ($numberCol === false || $utrCol === false) {
+            fclose($handle);
+
+            return back()->withErrors(['file' => 'The file needs "Settlement" and "UTR" columns — use the exported file.']);
+        }
+
+        $paid = 0;
+        $skipped = [];
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $number = trim((string) ($row[$numberCol] ?? ''));
+            $utr = ltrim(trim((string) ($row[$utrCol] ?? '')), "'");
+
+            if ($number === '' || $utr === '') {
+                continue; // UTR abhi nahi aaya — row waise hi rehne do
+            }
+
+            $settlement = Settlement::where('number', $number)->first();
+
+            if (! $settlement || ! in_array($settlement->status, ['pending', 'processing'], true) || mb_strlen($utr) > 100) {
+                $skipped[] = $number;
+
+                continue;
+            }
+
+            $this->settlements->markPaid($settlement, $utr);
+            $paid++;
+        }
+
+        fclose($handle);
+        AdminAudit::log('settlements.bulk_paid', null, ['paid' => $paid, 'skipped' => $skipped]);
+
+        return back()->with('status', "{$paid} settlement(s) marked paid." . ($skipped ? ' Skipped: ' . implode(', ', array_slice($skipped, 0, 10)) . (count($skipped) > 10 ? '…' : '') . '.' : ''));
     }
 
     /** Cycle chalane se pehle dekh lo kiske kitne orders settle honge / kaun blocked hai. */

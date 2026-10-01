@@ -12,6 +12,7 @@ import {
 } from '@/components/product-editor/preview-frame';
 import {
     ADD_BUTTON_CLASS,
+    AddonsField,
     CouponsField,
     FieldError,
     HINT_CLASS,
@@ -805,6 +806,7 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
             )}
 
             <CouponsField productUuid={item.uuid} initial={item.coupons ?? []} />
+            <AddonsField productUuid={item.uuid} />
 
             {/* FAQs */}
             <div className="flex flex-col gap-2">

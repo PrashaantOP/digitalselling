@@ -14,7 +14,7 @@ class PaymentTransactionController extends Controller
 {
     use RespondsFlexibly;
 
-    private const TYPE_LABELS = [
+    public const TYPE_LABELS = [
         'course' => 'Course', 'event' => 'Event', 'book' => 'Book', 'locked_content' => 'Locked Content',
         'payment_page' => 'Payment Page', 'booking' => 'Booking',
     ];
@@ -77,6 +77,22 @@ class PaymentTransactionController extends Controller
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
+    /** Invoice pe seller (creator) ki details — creator dashboard aur buyer portal dono ka invoice yahi use karta hai. */
+    public static function sellerFor(Order $order): array
+    {
+        $creator = $order->creator;
+        $profile = $creator->payoutProfile;
+        $kyc = $creator->kycVerification;
+
+        return [
+            'name' => $profile?->business_name ?: ($profile?->full_name ?: ($kyc?->legal_name ?: $creator->name)),
+            'legal_name' => $kyc?->status === 'verified' ? $kyc->legal_name : null,
+            'email' => $profile?->email ?: $creator->email,
+            'phone' => $creator->phone,
+            'gstin' => $kyc?->status === 'verified' ? $kyc->gst_number : null,
+        ];
+    }
+
     /**
      * Buyer ke liye printable invoice — naye tab me khulta hai, browser ke "Save as PDF" se download.
      * Sirf paid orders ka, aur sirf apne tenant ka (dusre creator ka uuid ho to 404).
@@ -87,19 +103,9 @@ class PaymentTransactionController extends Controller
         abort_unless(in_array($order->status, ['success', 'refunded'], true), 404);
         $order->load(['product:id,title,type', 'addonItems.addonProduct:id,title', 'coupon:id,code', 'creator.payoutProfile', 'creator.kycVerification']);
 
-        $creator = $order->creator;
-        $profile = $creator->payoutProfile;
-        $kyc = $creator->kycVerification;
-
         return response()->view('invoices.order', [
             'order' => $order,
-            'seller' => [
-                'name' => $profile?->business_name ?: ($profile?->full_name ?: ($kyc?->legal_name ?: $creator->name)),
-                'legal_name' => $kyc?->status === 'verified' ? $kyc->legal_name : null,
-                'email' => $profile?->email ?: $creator->email,
-                'phone' => $creator->phone,
-                'gstin' => $kyc?->status === 'verified' ? $kyc->gst_number : null,
-            ],
+            'seller' => self::sellerFor($order),
             'typeLabel' => self::TYPE_LABELS[$order->product?->type] ?? null,
             'autoPrint' => $request->boolean('print'),
         ]);

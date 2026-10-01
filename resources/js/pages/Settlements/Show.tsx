@@ -29,6 +29,7 @@ interface Settlement {
     orders_count: number;
     gross_amount: string | number;
     commission_amount: string | number;
+    adjustment_amount: string | number;
     net_amount: string | number;
     period_start: string | null;
     period_end: string | null;
@@ -54,9 +55,17 @@ interface SettlementOrder {
     product: { id: number; title: string; type: string } | null;
 }
 
+interface Adjustment {
+    uuid: string;
+    label: string;
+    amount: number;
+    reason: string;
+}
+
 interface Props {
     settlement: Settlement;
     orders: SettlementOrder[];
+    adjustments: Adjustment[];
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -94,7 +103,7 @@ function MetaRow({ label, value, mono, copy, copied }: { label: string; value: s
     );
 }
 
-export default function SettlementShow({ settlement, orders }: Props) {
+export default function SettlementShow({ settlement, orders, adjustments }: Props) {
     const [copied, setCopied] = useState(false);
     const failed = settlement.status === 'failed';
     const paid = settlement.status === 'paid';
@@ -129,9 +138,19 @@ export default function SettlementShow({ settlement, orders }: Props) {
                                 {settlement.orders_count} {settlement.orders_count === 1 ? 'booking' : 'bookings'} · {formatDate(settlement.period_start)} – {formatDate(settlement.period_end)}
                             </p>
                         </div>
-                        <div className="rounded-xl bg-white p-4 text-right shadow-sm">
-                            <p className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">{paid ? 'Paid to you' : 'Payable to you'}</p>
-                            <p className="mt-0.5 text-3xl font-semibold tracking-tight text-[#14141B]">{money(settlement.net_amount)}</p>
+                        <div className="flex items-center gap-3">
+                            <a
+                                href={`/dashboard/settlements/${settlement.uuid}/statement`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E4E2DA] bg-white px-3.5 text-sm font-medium text-[#4B4B57] transition hover:bg-[#F6F5F2]"
+                            >
+                                Statement
+                            </a>
+                            <div className="rounded-xl bg-white p-4 text-right shadow-sm">
+                                <p className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">{paid ? 'Paid to you' : 'Payable to you'}</p>
+                                <p className="mt-0.5 text-3xl font-semibold tracking-tight text-[#14141B]">{money(settlement.net_amount)}</p>
+                            </div>
                         </div>
                     </div>
 
@@ -228,6 +247,15 @@ export default function SettlementShow({ settlement, orders }: Props) {
                                         hint={`${settlement.orders_count} ${settlement.orders_count === 1 ? 'booking' : 'bookings'} total`}
                                     />
                                     <SummaryTile label="Platform commission" value={`− ${money(settlement.commission_amount)}`} tone="text-[#C2410C]" />
+                                    {adjustments.map((a) => (
+                                        <SummaryTile
+                                            key={a.uuid}
+                                            label={a.label}
+                                            value={`${a.amount < 0 ? '−' : '+'} ${money(Math.abs(a.amount))}`}
+                                            hint={a.reason}
+                                            tone={a.amount < 0 ? 'text-[#C2410C]' : 'text-[#059669]'}
+                                        />
+                                    ))}
                                     <SummaryTile label="Net settled" value={money(settlement.net_amount)} tone="text-[#059669]" />
                                 </div>
                             </div>

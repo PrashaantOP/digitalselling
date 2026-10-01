@@ -25,10 +25,28 @@ interface Props {
     payoutMethods: { uuid: string; type: string; destination: string; holder: string | null; is_default: boolean; verified_at: string | null }[];
     totals: { orders: number; gross: number; commission: number; net: number; settled: number };
     recentOrders: { uuid: string; order_number: string; product: string | null; total_amount: number; status: string; created_at: string | null }[];
+    pendingAdjustments: { uuid: string; type: string; amount: number; reason: string; created_at: string | null }[];
+    planPurchases: { uuid: string; months: number; amount: number; credit: number; gateway: string; paid_at: string | null; invoice: { uuid: string; invoice_number: string } | null }[];
     recentSettlements: { uuid: string; number: string; net_amount: string | number; status: string; reference_number: string | null; created_at: string | null }[];
 }
 
-export default function AdminCreatorShow({ creator, kyc, payoutMethods, totals, recentOrders, recentSettlements }: Props) {
+export default function AdminCreatorShow({ creator, kyc, payoutMethods, totals, recentOrders, recentSettlements, pendingAdjustments, planPurchases }: Props) {
+    const [adjustment, setAdjustment] = useState({ type: 'manual_debit', amount: '', reason: '' });
+    const [savingAdjustment, setSavingAdjustment] = useState(false);
+    const [adjustmentError, setAdjustmentError] = useState<string | null>(null);
+
+    function addAdjustment(e: FormEvent) {
+        e.preventDefault();
+        setSavingAdjustment(true);
+        setAdjustmentError(null);
+        router.post(`/admin/creators/${creator.uuid}/adjustments`, adjustment, {
+            preserveScroll: true,
+            onSuccess: () => setAdjustment({ type: 'manual_debit', amount: '', reason: '' }),
+            onError: (errs) => setAdjustmentError(Object.values(errs)[0] as string),
+            onFinish: () => setSavingAdjustment(false),
+        });
+    }
+
     const [suspendOpen, setSuspendOpen] = useState(false);
     const [resetOpen, setResetOpen] = useState(false);
     const [plan, setPlan] = useState({ plan: creator.plan, plan_expires_at: creator.plan_expires_at?.slice(0, 10) ?? '' });
@@ -166,6 +184,72 @@ export default function AdminCreatorShow({ creator, kyc, payoutMethods, totals, 
                     ) : (
                         <p className="p-5 text-sm text-slate-500">No payout method added.</p>
                     )}
+                </Card>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <Card title="Settlement adjustments">
+                    <form onSubmit={addAdjustment} className="flex flex-col gap-3 p-5">
+                        <p className="text-sm text-slate-600">Adds a debit or credit to this creator's next settlement. If debits exceed their sales, nothing is settled until sales catch up.</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <label className="flex flex-col gap-1.5">
+                                <span className="text-xs font-semibold text-slate-700">Type</span>
+                                <select value={adjustment.type} onChange={(e) => setAdjustment({ ...adjustment, type: e.target.value })} className="h-9 rounded-lg border border-slate-200 px-2 text-sm">
+                                    <option value="manual_debit">Debit (take back)</option>
+                                    <option value="manual_credit">Credit (pay extra)</option>
+                                </select>
+                            </label>
+                            <label className="flex flex-col gap-1.5">
+                                <span className="text-xs font-semibold text-slate-700">Amount (₹)</span>
+                                <input type="number" min="1" step="0.01" required value={adjustment.amount} onChange={(e) => setAdjustment({ ...adjustment, amount: e.target.value })} className="h-9 rounded-lg border border-slate-200 px-2 text-sm" />
+                            </label>
+                        </div>
+                        <label className="flex flex-col gap-1.5">
+                            <span className="text-xs font-semibold text-slate-700">Reason (the creator sees this)</span>
+                            <input type="text" required maxLength={255} value={adjustment.reason} onChange={(e) => setAdjustment({ ...adjustment, reason: e.target.value })} className="h-9 rounded-lg border border-slate-200 px-2 text-sm" />
+                        </label>
+                        {adjustmentError && <p className="text-xs text-rose-600">{adjustmentError}</p>}
+                        <button type="submit" disabled={savingAdjustment} className={`${BUTTON.ghost} w-fit`}>
+                            {savingAdjustment && <Loader2 className="size-4 animate-spin" />} Add adjustment
+                        </button>
+                    </form>
+                    {pendingAdjustments.length > 0 && (
+                        <ul className="divide-y divide-slate-100 border-t border-slate-100">
+                            {pendingAdjustments.map((a) => (
+                                <li key={a.uuid} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
+                                    <div className="min-w-0">
+                                        <p className="truncate font-medium text-slate-900">{a.reason}</p>
+                                        <p className="text-xs text-slate-500">Waiting for the next settlement · {dateOnly(a.created_at)}</p>
+                                    </div>
+                                    <span className={`font-semibold ${a.amount < 0 ? 'text-rose-600' : 'text-emerald-700'}`}>
+                                        {a.amount < 0 ? '− ' : '+ '}
+                                        {money(Math.abs(a.amount))}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </Card>
+
+                <Card title="Pro payments" action={<Link href={`/admin/billing?status=all&q=${encodeURIComponent(creator.email)}`} className="text-xs font-semibold text-indigo-600 hover:underline">All</Link>}>
+                    <ul className="divide-y divide-slate-100">
+                        {planPurchases.map((p) => (
+                            <li key={p.uuid} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
+                                <div className="min-w-0">
+                                    <p className="font-medium text-slate-900">
+                                        {p.months} month{p.months > 1 ? 's' : ''} · {p.gateway === 'credit' ? 'referral credit' : money(p.amount)}
+                                    </p>
+                                    <p className="text-xs text-slate-500">{dateTime(p.paid_at)}</p>
+                                </div>
+                                {p.invoice && (
+                                    <a href={`/admin/billing/invoices/${p.invoice.uuid}`} target="_blank" rel="noreferrer" className="font-mono text-xs font-semibold text-indigo-600 hover:underline">
+                                        {p.invoice.invoice_number}
+                                    </a>
+                                )}
+                            </li>
+                        ))}
+                        {planPurchases.length === 0 && <li className="px-5 py-6 text-center text-sm text-slate-500">No Pro payments yet.</li>}
+                    </ul>
                 </Card>
             </div>
 

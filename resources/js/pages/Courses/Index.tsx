@@ -364,9 +364,17 @@ export default function CoursesIndex({ items, counts, filters }: CoursesIndexPro
                             </div>
                             <p className="text-sm text-[#8A8A96]">Build, price and publish courses — track sales and students from one place.</p>
                         </div>
-                        <Button onClick={createCourse} disabled={creating} className="w-fit bg-[#4F46E5] hover:bg-[#4338CA]">
-                            {creating ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {creating ? 'Creating…' : 'Create course'}
-                        </Button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Link
+                                href="/dashboard/courses/certificate"
+                                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E4E2DA] bg-white px-3.5 text-sm font-medium text-[#4B4B57] transition hover:bg-[#F6F5F2]"
+                            >
+                                Certificate design
+                            </Link>
+                            <Button onClick={createCourse} disabled={creating} className="w-fit bg-[#4F46E5] hover:bg-[#4338CA]">
+                                {creating ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {creating ? 'Creating…' : 'Create course'}
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Notice */}

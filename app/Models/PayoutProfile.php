@@ -18,6 +18,7 @@ class PayoutProfile extends Model
         'business_name',
         'email',
         'profession',
+        'state',
     ];
 
 

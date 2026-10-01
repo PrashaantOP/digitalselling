@@ -182,4 +182,101 @@ class AdminModulesTest extends TestCase
             ->assertInertia(fn (AssertableInertia $page) => $page->has('orders.data', 1)->where('orders.data.0.order_number', 'ORD-0042'));
         $this->asAdmin()->get("/admin/orders/{$order->uuid}")->assertOk();
     }
+
+    /** Payout ke liye tayyar creator + ek settle hone layak order → pending settlement. */
+    private function pendingSettlement(string $orderNumber = 'ORD-0100'): Settlement
+    {
+        $creator = $this->creator();
+        KycVerification::create(['user_id' => $creator->id, 'legal_name' => 'Test', 'pan_number' => 'ABCDE1234F', 'status' => 'verified']);
+        PayoutMethod::create(['user_id' => $creator->id, 'type' => 'bank_transfer', 'account_holder_name' => 'Test Maker', 'account_number' => '123456789012', 'ifsc' => 'HDFC0001234', 'is_default' => true])->markVerified();
+        $product = Product::create(['creator_id' => $creator->id, 'type' => 'payment_page', 'title' => 'Call', 'slug' => 'call-' . $orderNumber]);
+        Order::create([
+            'order_number' => $orderNumber, 'creator_id' => $creator->id, 'product_id' => $product->id, 'buyer_phone' => '9876543210',
+            'base_amount' => 1000, 'total_amount' => 1000, 'commission_rate' => 10, 'platform_fee' => 100, 'net_payout_amount' => 900,
+            'status' => 'success', 'paid_at' => now()->subDays(3),
+        ]);
+
+        return app(SettlementService::class)->settleCreator($creator);
+    }
+
+    public function test_export_gives_a_bank_file_and_moves_settlements_to_processing(): void
+    {
+        $settlement = $this->pendingSettlement();
+
+        $csv = $this->asAdmin()->post('/admin/settlements/export')->assertOk()->streamedContent();
+
+        $this->assertStringContainsString($settlement->number, $csv);
+        $this->assertStringContainsString('HDFC0001234', $csv);
+        $this->assertStringContainsString('900.00', $csv);
+        $this->assertSame('processing', $settlement->fresh()->status);
+        $this->assertTrue($this->audited('settlements.exported'));
+
+        // dobara export me wahi batch nahi aata
+        $this->asAdmin()->post('/admin/settlements/export')->assertStatus(422);
+    }
+
+    public function test_uploading_utrs_marks_matching_settlements_paid_and_skips_the_rest(): void
+    {
+        $paid = $this->pendingSettlement('ORD-0101');
+        $waiting = $this->pendingSettlement('ORD-0102');
+
+        $file = \Illuminate\Http\UploadedFile::fake()->createWithContent('utrs.csv', implode("\n", [
+            'Settlement,Creator,Amount,UTR',
+            "{$paid->number},Maker,900.00,UTR555",
+            "{$waiting->number},Maker,900.00,",   // UTR abhi nahi aaya
+            'STL-NOPE-0001,Ghost,10.00,UTR000',    // aisa settlement hai hi nahi
+        ]));
+
+        $this->asAdmin()->post('/admin/settlements/bulk-paid', ['file' => $file])->assertSessionHasNoErrors()->assertSessionHas('status');
+
+        $this->assertSame('paid', $paid->fresh()->status);
+        $this->assertSame('UTR555', $paid->fresh()->reference_number);
+        $this->assertSame('pending', $waiting->fresh()->status);
+        $this->assertTrue($this->audited('settlements.bulk_paid'));
+    }
+
+    public function test_utr_upload_rejects_a_file_without_the_right_columns(): void
+    {
+        $file = \Illuminate\Http\UploadedFile::fake()->createWithContent('wrong.csv', "Name,Amount\nA,10");
+
+        $this->asAdmin()->post('/admin/settlements/bulk-paid', ['file' => $file])->assertSessionHasErrors('file');
+    }
+
+    public function test_admin_can_add_a_settlement_adjustment_and_it_is_audited(): void
+    {
+        $creator = $this->creator();
+
+        $this->asAdmin()->post("/admin/creators/{$creator->uuid}/adjustments", ['type' => 'manual_debit', 'amount' => 250, 'reason' => 'Duplicate payout'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('settlement_adjustments', ['creator_id' => $creator->id, 'type' => 'manual_debit', 'amount' => -250, 'admin_id' => $this->admin->id, 'settlement_id' => null]);
+        $this->assertTrue($this->audited('settlement_adjustment.added'));
+
+        $this->asAdmin()->post("/admin/creators/{$creator->uuid}/adjustments", ['type' => 'refund_reversal', 'amount' => 10, 'reason' => 'x'])->assertSessionHasErrors('type');
+        $this->asAdmin()->get("/admin/creators/{$creator->uuid}")->assertInertia(fn (AssertableInertia $page) => $page->has('pendingAdjustments', 1)->has('planPurchases', 0));
+    }
+
+    public function test_billing_page_lists_pro_payments_with_month_totals(): void
+    {
+        $creator = $this->creator();
+        $plan = \App\Models\SubscriptionPlan::where('slug', 'pro')->firstOrFail();
+        $purchase = \App\Models\PlanPurchase::create(['user_id' => $creator->id, 'plan_id' => $plan->id, 'months' => 1, 'unit_price' => 499, 'subtotal' => 499, 'amount_payable' => 499, 'gateway' => 'razorpay']);
+        $purchase->forceFill(['status' => 'paid', 'paid_at' => now(), 'gateway_payment_id' => 'pay_admin1'])->save();
+        $invoice = \App\Models\BillingInvoice::create([
+            'user_id' => $creator->id, 'plan_purchase_id' => $purchase->id, 'invoice_number' => 'INV-2627-000001', 'amount' => 499,
+            'taxable_amount' => 422.88, 'gst_rate' => 18, 'igst_amount' => 76.12, 'status' => 'paid', 'paid_at' => now(), 'created_at' => now(),
+        ]);
+
+        $this->asAdmin()->get('/admin/billing')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Admin/Billing/Index')
+            ->has('items.data', 1)
+            ->where('items.data.0.invoice.invoice_number', 'INV-2627-000001')
+            ->where('totals.month_revenue', 499)
+            ->where('totals.month_gst', 76.12)
+        );
+        $this->asAdmin()->get('/admin/billing?q=pay_admin1&status=all')->assertInertia(fn (AssertableInertia $page) => $page->has('items.data', 1));
+
+        $this->asAdmin()->get("/admin/billing/invoices/{$invoice->uuid}")->assertOk()->assertSee('INV-2627-000001');
+        $this->asAdmin()->get("/admin/billing/invoices/{$invoice->id}")->assertNotFound();
+    }
 }

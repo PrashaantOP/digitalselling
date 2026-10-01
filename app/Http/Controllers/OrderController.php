@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\Product;
 use App\Services\OrderService;
+use App\Services\RazorpayService;
+use App\Support\CheckoutSession;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * POST /checkout/{checkoutProduct}/order  (axios JSON)
@@ -41,8 +45,6 @@ class OrderController extends Controller
             'answers' => ['nullable', 'array'],
         ]);
 
-        // TODO (Auth module): phone OTP verified hai ya nahi yahan check karna — abhi OTP flow baad me hai.
-
         $order = $orders->createPending($checkoutProduct->load('creator'), [
             'name' => $data['name'] ?? null, 'email' => $data['email'], 'phone' => $data['phone'],
             'gstin' => $data['gstin'] ?? null, 'state' => $data['state'] ?? null, 'note' => $data['note'] ?? null,
@@ -53,6 +55,58 @@ class OrderController extends Controller
             'answers' => $data['answers'] ?? [],
         ]);
 
+        // done page sirf isi browser me khulta hai jisne order banaya
+        CheckoutSession::remember($order, (bool) $order->customer->buyer?->wasRecentlyCreated);
+
         return response()->json($orders->initiatePayment($order), 201);
+    }
+
+    /** POST /checkout/{checkoutProduct}/quote — coupon / add-on / amount badalne par live total. Kuch save nahi hota. */
+    public function quote(Request $request, Product $checkoutProduct, OrderService $orders)
+    {
+        $data = $request->validate([
+            'coupon_code' => ['nullable', 'string', 'max:30'],
+            'amount' => ['nullable', 'numeric', 'min:1', 'max:1000000'],
+            'addons' => ['nullable', 'array'],
+            'addons.*' => ['integer'],
+        ]);
+
+        // pay-what-you-want me amount abhi khaali ho sakta hai — tab minimum pe hisaab dikhao
+        if ($checkoutProduct->pricing_type === 'customer_decides' && empty($data['amount'])) {
+            $data['amount'] = max(1, OrderService::unitPrice($checkoutProduct));
+        }
+
+        $quote = $orders->quote($checkoutProduct, $data);
+
+        return response()->json([
+            'base' => $quote['base'],
+            'discount' => $quote['discount'],
+            'addons' => $quote['addons'],
+            'total' => $quote['total'],
+            'coupon' => $quote['coupon']?->only(['code', 'discount_percent']),
+        ]);
+    }
+
+    /**
+     * POST /checkout/verify — Razorpay Checkout.js ka success handler. Signature sahi ho tabhi access milta hai.
+     * Browser band ho jaye to webhook (RazorpayWebhookController → ProcessSuccessfulOrder) yahi kaam kar deta hai.
+     */
+    public function verify(Request $request, OrderService $orders, RazorpayService $razorpay)
+    {
+        $data = $request->validate([
+            'razorpay_order_id' => ['required', 'string', 'max:100'],
+            'razorpay_payment_id' => ['required', 'string', 'max:100'],
+            'razorpay_signature' => ['required', 'string', 'max:200'],
+        ]);
+
+        $order = Order::where('gateway_order_id', $data['razorpay_order_id'])->firstOrFail();
+
+        if (! $razorpay->validPaymentSignature($data['razorpay_order_id'], $data['razorpay_payment_id'], $data['razorpay_signature'])) {
+            throw ValidationException::withMessages(['payment' => 'We could not verify this payment. If money was deducted, your access will be emailed to you in a few minutes.']);
+        }
+
+        $orders->fulfil($order, $data['razorpay_payment_id']);
+
+        return response()->json(['paid' => true, 'redirect' => url("/checkout/done/{$order->uuid}")]);
     }
 }

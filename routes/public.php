@@ -3,6 +3,7 @@
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Public\BookCheckoutController;
 use App\Http\Controllers\Public\BookingPageController;
+use App\Http\Controllers\Public\CertificateVerifyController;
 use App\Http\Controllers\Public\CourseCheckoutController;
 use App\Http\Controllers\Public\EventCheckoutController;
 use App\Http\Controllers\Public\LinkClickController;
@@ -19,6 +20,9 @@ use Illuminate\Support\Facades\Route;
 // ---- Product / checkout pages ----
 $pages = ['throttle:120,1', 'track.visit'];
 Route::get('/c/{slug}', [CourseCheckoutController::class, 'show'])->middleware($pages)->name('course.show');
+// Free preview: creator ke chune hue lessons bina kharide
+Route::get('/c/{slug}/preview/{lessonUuid}', [CourseCheckoutController::class, 'preview'])->middleware('throttle:60,1')->name('course.preview');
+Route::get('/c/{slug}/preview/{lessonUuid}/files/{fileUuid}', [CourseCheckoutController::class, 'previewFile'])->middleware('throttle:30,1')->name('course.preview.file');
 Route::get('/e/{slug}', [EventCheckoutController::class, 'show'])->middleware($pages)->name('event.show');
 Route::get('/b/{slug}', [BookCheckoutController::class, 'show'])->middleware($pages)->name('book.show');
 Route::get('/l/{slug}', [LockedContentCheckoutController::class, 'show'])->middleware($pages)->name('locked.show');
@@ -26,6 +30,16 @@ Route::get('/p/{slug}', [PaymentPageCheckoutController::class, 'show'])->middlew
 
 Route::post('/checkout/{checkoutProduct}/order', [OrderController::class, 'store'])
     ->middleware('throttle:10,1')->name('checkout.order');
+Route::post('/checkout/{checkoutProduct}/quote', [OrderController::class, 'quote'])
+    ->middleware('throttle:60,1')->name('checkout.quote');
+// Razorpay Checkout.js ka success handler — signature verify karke access deta hai
+Route::post('/checkout/verify', [OrderController::class, 'verify'])
+    ->middleware('throttle:20,1')->name('checkout.verify');
+
+// ---- Certificate verify: koi bhi number se asliyat check kare ----
+Route::get('/certificates', [CertificateVerifyController::class, 'index'])->middleware('throttle:30,1')->name('certificates.verify');
+Route::get('/certificates/{certificateNumber}', [CertificateVerifyController::class, 'show'])
+    ->where('certificateNumber', '[A-Za-z0-9\-]{4,40}')->middleware('throttle:30,1')->name('certificates.show');
 
 // ---- Public booking page ----
 Route::get('/book/{username}', [BookingPageController::class, 'show'])->middleware($pages)->name('booking-page.show');
