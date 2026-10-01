@@ -160,6 +160,8 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
     Route::get('/dashboard/audience/visitors', [AudienceController::class, 'visitors'])->name('audience.visitors')->middleware('perm:audience.view');
     Route::get('/dashboard/audience/export', [AudienceController::class, 'export'])->name('audience.export')->middleware('perm:audience.view');
     Route::get('/dashboard/refer-earn', [ReferralController::class, 'index'])->name('referral.index')->middleware('owner');
+    // credit sirf Pro me redeem hota hai — withdraw ka koi route jaan-bujh ke nahi hai
+    Route::post('/dashboard/refer-earn/redeem', [ReferralController::class, 'redeem'])->name('referral.redeem')->middleware(['owner', 'throttle:10,1']);
 
     // ---- 8. Sub-admins & roles (sirf owner creator) ----
     Route::middleware('owner')->prefix('dashboard')->group(function () {

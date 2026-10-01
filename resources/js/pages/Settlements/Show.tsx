@@ -239,7 +239,7 @@ export default function SettlementShow({ settlement, orders }: Props) {
                                     <MetaRow label="Status" value={statusMeta(settlement.status).label} />
                                     <MetaRow
                                         label="Bank UTR"
-                                        value={settlement.reference_number ?? 'Transfer hone par aayega'}
+                                        value={settlement.reference_number ?? 'Added once transferred'}
                                         mono={Boolean(settlement.reference_number)}
                                         copy={settlement.reference_number ? () => copyRef(settlement.reference_number as string) : undefined}
                                         copied={copied}
@@ -251,7 +251,7 @@ export default function SettlementShow({ settlement, orders }: Props) {
                             </div>
 
                             <div className="rounded-xl bg-white p-5 shadow-sm">
-                                <h3 className="text-sm font-semibold text-[#14141B]">Kahan bheja gaya</h3>
+                                <h3 className="text-sm font-semibold text-[#14141B]">Sent to</h3>
                                 <div className="mt-4 flex items-center gap-3 rounded-xl bg-[#F6F5F2] p-3">
                                     <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#4F46E5]">
                                         <MethodIcon type={settlement.payout_method?.type} className="size-4" />

@@ -73,7 +73,7 @@ export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
                                 </span>
                             </div>
                             <p className="text-sm text-[#8A8A96]">
-                                Ek design chuno — aapke products, sessions aur store ki jaankari apne aap is par aa jaate hain.
+                                Pick a design — your products, sessions and store details fill it in automatically.
                             </p>
                         </div>
                         <a
@@ -99,8 +99,8 @@ export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
                                     <EyeOff className="size-5" />
                                 </span>
                                 <div>
-                                    <p className="text-sm font-semibold text-[#14141B]">Aapka store abhi offline hai</p>
-                                    <p className="mt-0.5 text-xs text-[#8A8A96]">Web app sirf aapko dikhega — public ko 404 milega jab tak store live na ho.</p>
+                                    <p className="text-sm font-semibold text-[#14141B]">Your store is offline</p>
+                                    <p className="mt-0.5 text-xs text-[#8A8A96]">Only you can see the web app — visitors get a 404 until your store is live.</p>
                                 </div>
                             </div>
                             <Link
@@ -201,10 +201,10 @@ export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
                                             <Sparkles className="size-5" />
                                         </span>
                                         <div>
-                                            <p className="text-sm font-semibold text-[#14141B]">3 aur designs Pro ke saath</p>
+                                            <p className="text-sm font-semibold text-[#14141B]">3 more designs with Pro</p>
                                             <p className="mt-0.5 text-xs text-[#8A8A96]">
-                                                Pro lene par premium themes turant khul jaate hain — aur plan khatam hone par web app apne aap free theme
-                                                pe wapas aa jaata hai.
+                                                Premium themes unlock the moment you upgrade — and if Pro ends, your web app falls back to the free
+                                                theme on its own.
                                             </p>
                                         </div>
                                     </div>
@@ -223,7 +223,7 @@ export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-[13px] font-semibold text-white">Live preview</p>
-                                    <p className="text-[11px] text-white/50">Aapka asli data — buyers ko bilkul aisa hi dikhega.</p>
+                                    <p className="text-[11px] text-white/50">Your real data — this is exactly what buyers see.</p>
                                 </div>
                                 <div className="flex items-center rounded-lg border border-white/10 bg-white/5 p-0.5">
                                     {(['mobile', 'desktop'] as const).map((key) => (

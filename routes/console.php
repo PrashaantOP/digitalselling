@@ -32,7 +32,7 @@ Artisan::command('settlements:run {--creator= : sirf is creator id ke liye} {--d
             ? User::whereKey($creatorId)->get()
             : User::whereIn('id', \App\Models\Order::where('status', 'success')->whereNull('settlement_id')->distinct()->pluck('creator_id'))->get();
 
-        $this->line('Cutoff (is date tak ke orders eligible): ' . SettlementService::cutoffDate()->toDateString());
+        $this->line('Cutoff (orders paid on or before this date are eligible): ' . SettlementService::cutoffDate()->toDateString());
 
         foreach ($creators as $creator) {
             $eligible = $settlements->eligibleOrders($creator->id);
@@ -53,13 +53,13 @@ Artisan::command('settlements:run {--creator= : sirf is creator id ke liye} {--d
         $settlement = $settlements->settleCreator(User::findOrFail($creatorId));
         $this->info($settlement
             ? "{$settlement->number}: {$settlement->orders_count} order(s), net {$settlement->net_amount}"
-            : 'Kuch settle karne layak nahi mila.');
+            : 'Nothing eligible to settle.');
 
         return;
     }
 
     $result = $settlements->runAll();
-    $this->info("{$result['settlements']} settlement(s) banaye, {$result['orders']} order(s) settle hue, {$result['blocked']} creator blocked (KYC / payout method / unverified method).");
+    $this->info("{$result['settlements']} settlement(s) created, {$result['orders']} order(s) settled, {$result['blocked']} creator(s) blocked (KYC / payout method / unverified method).");
 })->purpose('Group eligible paid orders into settlements (T+2)');
 
 // Bank transfer ke baad UTR ke saath close karo. Yahi seam hai jahan aage RazorpayX Payouts plug hoga.
@@ -74,7 +74,7 @@ Artisan::command('settlements:mark-failed {settlement : STL-… number} {reason}
     $settlement = Settlement::where('number', $this->argument('settlement'))->firstOrFail();
     $released = $settlement->orders()->count();
     $settlements->markFailed($settlement, $this->argument('reason'));
-    $this->warn("{$settlement->number} failed — {$released} order(s) agli cycle me wapas aayenge.");
+    $this->warn("{$settlement->number} failed — {$released} order(s) will return in the next cycle.");
 })->purpose('Mark a settlement as failed and release its orders');
 
 Schedule::command('settlements:run')->dailyAt('02:00');
@@ -87,7 +87,7 @@ Artisan::command('payout-methods:pending', function () {
     $pending = PayoutMethod::with('user:id,name,email')->whereNull('verified_at')->oldest('updated_at')->get();
 
     if ($pending->isEmpty()) {
-        $this->info('Koi unverified payout method nahi.');
+        $this->info('No unverified payout methods.');
 
         return;
     }
@@ -110,14 +110,14 @@ Artisan::command('payout-methods:verify {method : payout_methods.id}', function 
     $method = PayoutMethod::findOrFail($this->argument('method'));
 
     if ($method->isVerified()) {
-        $this->line("#{$method->id} pehle se verified hai ({$method->verified_at->toDateTimeString()}).");
+        $this->line("#{$method->id} is already verified ({$method->verified_at->toDateTimeString()}).");
 
         return;
     }
 
     $method->markVerified();
     \App\Support\AdminAudit::log('payout_method.verified', $method, ['creator_id' => $method->user_id]);
-    $this->info("#{$method->id} verified — creator #{$method->user_id} ke settlements ab isi pe jayenge.");
+    $this->info("#{$method->id} verified — settlements for creator #{$method->user_id} will now go here.");
 })->purpose('Mark a payout method as verified so settlements can be sent to it');
 
 /*
@@ -128,7 +128,7 @@ Artisan::command('kyc:pending', function () {
     $pending = \App\Models\KycVerification::with('user:id,name,email')->where('status', 'pending')->oldest('submitted_at')->get();
 
     if ($pending->isEmpty()) {
-        $this->info('Koi pending KYC nahi.');
+        $this->info('No KYC submissions pending review.');
 
         return;
     }
@@ -156,7 +156,7 @@ Artisan::command('kyc:verify {user : creator user id}', function (\App\Services\
 Artisan::command('kyc:reject {user : creator user id} {reason}', function (\App\Services\KycReviewService $review) {
     $kyc = \App\Models\KycVerification::where('user_id', $this->argument('user'))->firstOrFail();
     $review->reject($kyc, $this->argument('reason'));
-    $this->warn("KYC rejected — creator #{$kyc->user_id} ko reason dikhega aur wo dobara submit kar sakta hai.");
+    $this->warn("KYC rejected — creator #{$kyc->user_id} will see the reason and can submit again.");
 })->purpose('Reject a creator KYC submission with a reason');
 
 /*

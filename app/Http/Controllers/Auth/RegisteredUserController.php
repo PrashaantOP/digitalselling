@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\ReferralService;
 use App\Support\DeviceTracker;
 use App\Support\PlanPricing;
 use Illuminate\Auth\Events\Registered;
@@ -20,9 +21,16 @@ class RegisteredUserController extends Controller
     /**
      * Show the registration page.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('auth/register');
+        // ?ref= session me rakho — user register karne se pehle idhar-udhar ghoome to bhi code na khoye
+        if ($code = $request->query('ref')) {
+            $request->session()->put('referral_code', substr((string) $code, 0, 20));
+        }
+
+        return Inertia::render('auth/register', [
+            'referralCode' => $request->session()->get('referral_code'),
+        ]);
     }
 
     /**
@@ -51,6 +59,9 @@ class RegisteredUserController extends Controller
             'username' => User::uniqueUsername($request->name),
         ] + PlanPricing::trialAttributes());
         $user->save();
+
+        // referral jodo — galat/khud ka code chup-chaap ignore hota hai, signup kabhi fail nahi hota
+        app(ReferralService::class)->attach($user, $request->input('ref') ?: $request->session()->pull('referral_code'));
 
         event(new Registered($user));
 

@@ -12,7 +12,7 @@ import AuthLayout from '@/layouts/auth-layout';
 // landing jaisa input look
 const field = 'h-11 rounded-xl bg-white px-4 shadow-none';
 
-export default function Register() {
+export default function Register({ referralCode }: { referralCode?: string | null }) {
     return (
         <AuthLayout title="Create your store" description="Start selling in minutes — no card required.">
             <Head title="Register" />
@@ -37,6 +37,8 @@ export default function Register() {
                     <>
                         {/* honeypot — insaan ko nahi dikhta, bot bhar deta hai (server chup-chaap reject karta hai) */}
                         <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 opacity-0" />
+                        {/* kisi ke refer link se aaya ho to code saath bhejo (server session se bhi padh leta hai) */}
+                        {referralCode && <input type="hidden" name="ref" value={referralCode} />}
                         <div className="grid gap-5">
                             <div className="grid gap-2">
                                 <Label htmlFor="name">Full name</Label>
