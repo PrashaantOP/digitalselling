@@ -1,6 +1,6 @@
 import { VideoEmbed } from '@/components/public/video-embed';
 import { cn } from '@/lib/utils';
-import { Check, FileText, Loader2, Pencil, Plus, Trash2, Upload, X } from 'lucide-react';
+import { AlertTriangle, Check, FileText, Loader2, Pencil, Plus, Trash2, Upload, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { assetUrl, firstError, send } from './api';
 import { normalizeLesson, type Lesson, type QuizQuestion } from './types';
@@ -173,6 +173,9 @@ function AudioEditor({ lesson, onSaved, startSaved }: EditorProps) {
 /*  Notes / PDF                                                        */
 /* ------------------------------------------------------------------ */
 
+/** Player sirf PDF / txt dikha sakta hai (LessonNoteFile::viewKind) */
+const readableInApp = (name: string) => /\.(pdf|txt)$/i.test(name);
+
 function NotesEditor({ lesson, onSaved, startSaved }: EditorProps) {
     const s = useSaver(lesson.uuid, onSaved, startSaved);
     const existing = lesson.notes?.files ?? [];
@@ -180,6 +183,10 @@ function NotesEditor({ lesson, onSaved, startSaved }: EditorProps) {
     const [description, setDescription] = useState(lesson.notes?.description ?? '');
     const [files, setFiles] = useState<File[]>([]);
     const [removed, setRemoved] = useState<number[]>([]);
+
+    // download band ho to learner sirf PDF / txt hi khol sakta hai (player me) — baaki files uske liye band rehti hain
+    const blocked = allow ? [] : [...existing.filter((f) => !removed.includes(f.id)).map((f) => f.original_name), ...files.map((f) => f.name)].filter((name) => !readableInApp(name));
+
     return (
         <div className="flex flex-col gap-3">
             <Field label="Description" htmlFor={`notes-desc-${lesson.id}`}>
@@ -190,16 +197,29 @@ function NotesEditor({ lesson, onSaved, startSaved }: EditorProps) {
                 .map((f) => (
                     <div key={f.id} className="flex items-center gap-2 rounded-lg bg-[#F6F5F2] px-3 py-1.5 text-xs text-[#14141B]">
                         <FileText className="size-3.5 shrink-0 text-[#8A8A96]" /> <span className="min-w-0 flex-1 truncate">{f.original_name}</span>
+                        {!allow && !readableInApp(f.original_name) && <span className="shrink-0 rounded-full bg-[#FFEDE8] px-2 py-0.5 text-[10px] font-semibold text-[#C2410C]">Learners can’t open</span>}
                         <button type="button" aria-label={`Remove ${f.original_name}`} onClick={() => (setRemoved([...removed, f.id]), s.touch())} className="text-[#D93838]">
                             <X className="size-3.5" />
                         </button>
                     </div>
                 ))}
-            <FilePicker label="Add files" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip" files={files} onChange={(f) => (setFiles(f), s.touch())} hint="pdf, doc, ppt, xls, txt or zip · up to 50 MB each" />
+            <FilePicker label="Add files" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip" files={files} onChange={(f) => (setFiles(f), s.touch())} hint="PDF preferred — learners read it inside the lesson. Also doc, ppt, xls, txt or zip · up to 50 MB each" />
             <div className="flex items-center justify-between rounded-lg bg-[#F6F5F2] px-3 py-2.5">
                 <span className="text-sm text-[#14141B]">Let learners download these files</span>
                 <Toggle checked={allow} onChange={(v) => (setAllow(v), s.touch())} label="Allow download" />
             </div>
+            <p className="text-xs text-[#8A8A96]">{allow ? 'PDF and txt files also open inside the lesson. Other files are download-only.' : 'Learners read PDF and txt files inside the lesson, with no download button.'}</p>
+            {blocked.length > 0 && (
+                <div role="alert" className="flex items-start gap-2 rounded-lg border border-[#F5C6B8] bg-[#FFEDE8] p-3 text-xs text-[#9A3412]">
+                    <AlertTriangle className="mt-px size-4 shrink-0" />
+                    <div className="min-w-0">
+                        <p className="font-semibold">
+                            Learners won’t be able to open {blocked.length === 1 ? 'this file' : `these ${blocked.length} files`}: <span className="font-normal break-words">{blocked.join(', ')}</span>
+                        </p>
+                        <p className="mt-0.5">Only PDF and txt files open inside the lesson. Upload a PDF instead, or turn on downloads.</p>
+                    </div>
+                </div>
+            )}
             <SaveRow busy={s.busy} saved={s.saved} error={s.error} onSave={() => s.save({ allow_download: allow, description: description.trim() || null, files, remove_file_ids: removed }, true)} />
         </div>
     );

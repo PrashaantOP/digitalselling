@@ -274,7 +274,7 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
     const [fileError, setFileError] = useState<string | null>(null);
     const [linkInput, setLinkInput] = useState(item.book_detail?.external_link ?? '');
 
-    const { status: saveStatus, errors: saveErrors, errorFor, queue: queueSave, flush: flushSave } = useAutoSave(`/dashboard/books/${item.uuid}`);
+    const { status: saveStatus, errors: saveErrors, errorFor, queue: queueSave, flush: flushSave, afterSave, leave } = useAutoSave(`/dashboard/books/${item.uuid}`);
 
     useEffect(() => setCoverImages(item.cover_images ?? []), [item.cover_images]);
     useEffect(() => {
@@ -417,7 +417,7 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
     // ----- publish / unpublish -------------------------------------
 
     function publish() {
-        publishProduct(`/dashboard/books/${item.uuid}/publish`, flushSave, setPublishing, setPublishError);
+        publishProduct(`/dashboard/books/${item.uuid}/publish`, afterSave, setPublishing, setPublishError);
     }
 
     // ----- preview item (same shape, but live) ----------------------
@@ -466,7 +466,7 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
             headTitle={`${item.title || 'Untitled book'} · Edit book`}
             title={item.title || 'Your book title here'}
             status={item.status}
-            backHref="/dashboard/books"
+            onBack={() => leave('/dashboard/books')}
             backLabel="Back to books"
             heading="Sell your book / e-book"
             publishError={publishError}

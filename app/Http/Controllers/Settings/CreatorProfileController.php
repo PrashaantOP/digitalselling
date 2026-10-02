@@ -53,6 +53,9 @@ class CreatorProfileController extends Controller
         'products',
     ];
 
+    /** Username ka ek hi rule — registration (Str::slug → hyphen), profile aur Store tab teeno yahi maante hain. */
+    public const USERNAME_REGEX = 'regex:/^[a-z0-9_.\-]{3,30}$/';
+
     public function edit()
     {
         return Inertia::render('settings/creator-profile', ['profile' => auth()->user()]);
@@ -78,7 +81,7 @@ class CreatorProfileController extends Controller
         if ($user->isCreator()) {
             $rules['username'] = [
                 'required',
-                'regex:/^[a-z0-9_.\-]{3,30}$/',
+                self::USERNAME_REGEX,
                 Rule::notIn(self::RESERVED_USERNAMES),
                 Rule::unique('users', 'username')->ignore($user->id),
             ];

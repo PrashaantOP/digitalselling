@@ -16,7 +16,18 @@ class CertificateSetting extends Model
         'classic' => 'Classic',
         'modern' => 'Modern',
         'minimal' => 'Minimal',
+        'ribbon' => 'Ribbon',
+        'portrait' => 'Classic portrait',
+        'portrait_modern' => 'Modern portrait',
     ];
+
+    /** Ye templates khade (A4 portrait) page pe bante hain; baaki sab A4 landscape. */
+    public const PORTRAIT = ['portrait', 'portrait_modern'];
+
+    public static function orientation(string $template): string
+    {
+        return in_array($template, self::PORTRAIT, true) ? 'portrait' : 'landscape';
+    }
 
     protected $fillable = [
         'user_id',

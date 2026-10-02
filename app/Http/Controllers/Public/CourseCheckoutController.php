@@ -41,7 +41,11 @@ class CourseCheckoutController extends BaseProductCheckoutController
                     'id' => $m->id,
                     'title' => $m->title,
                     // uuid sirf free-preview lessons ka — wahi bina kharide khul sakte hain
-                    'lessons' => $m->lessons->map(fn ($l) => $l->only(['id', 'title', 'type', 'is_free_preview']) + ['uuid' => $l->is_free_preview ? $l->uuid : null])->values(),
+                    'lessons' => $m->lessons->map(function ($l) {
+                        $free = $l->is_free_preview && CourseLesson::previewable($l->type);
+
+                        return ['is_free_preview' => $free, 'uuid' => $free ? $l->uuid : null] + $l->only(['id', 'title', 'type']);
+                    })->values(),
                 ])->values(),
                 'instructions' => $d->instructions->pluck('text'),
                 'benefits' => $d->benefits->pluck('text'),
@@ -57,7 +61,7 @@ class CourseCheckoutController extends BaseProductCheckoutController
     /**
      * GET /c/{slug}/preview/{lessonUuid} — creator ne jis lesson pe "Free preview" on kiya hai, wo bina kharide
      * khulta hai. Sirf published course ka published + free-preview lesson; baaki sab 404.
-     * Quiz / assignment ka content nahi jaata (unke liye enrollment chahiye) — sirf ek sandesh.
+     * Quiz / assignment kabhi preview nahi hote (unke liye enrollment chahiye) — flag on ho to bhi 404.
      */
     public function preview(string $slug, string $lessonUuid)
     {
@@ -111,6 +115,7 @@ class CourseCheckoutController extends BaseProductCheckoutController
         return CourseLesson::where('uuid', $lessonUuid)
             ->where('is_published', true)
             ->where('is_free_preview', true) // yahi asli darwaza hai — flag band to 404
+            ->whereIn('type', CourseLesson::PREVIEWABLE_TYPES)
             ->whereHas('module', fn ($q) => $q->where('course_id', $product->courseDetail?->id))
             ->firstOrFail();
     }

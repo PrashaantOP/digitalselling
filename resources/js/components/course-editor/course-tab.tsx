@@ -152,10 +152,17 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
                                                     <span className="text-xs font-medium text-[#14141B]">Published</span>
                                                     <Toggle checked={l.is_published} disabled={busy} onChange={(v) => patchLesson(l, { is_published: v })} label={`Published: ${l.title}`} />
                                                 </div>
-                                                <div className="flex items-center justify-between rounded-lg bg-[#F6F5F2] px-3 py-2.5">
-                                                    <span className="text-xs font-medium text-[#14141B]">Free preview</span>
-                                                    <Toggle checked={l.is_free_preview} disabled={busy} onChange={(v) => patchLesson(l, { is_free_preview: v })} label={`Free preview: ${l.title}`} />
-                                                </div>
+                                                {/* quiz / assignment ke liye enrollment chahiye — unka free preview hota hi nahi */}
+                                                {l.type === 'quiz' || l.type === 'assignment' ? (
+                                                    <div className="flex items-center rounded-lg bg-[#F6F5F2] px-3 py-2.5">
+                                                        <span className="text-xs text-[#8A8A96]">No free preview for {l.type === 'quiz' ? 'quizzes' : 'assignments'} — enrolled students only.</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center justify-between rounded-lg bg-[#F6F5F2] px-3 py-2.5">
+                                                        <span className="text-xs font-medium text-[#14141B]">Free preview</span>
+                                                        <Toggle checked={l.is_free_preview} disabled={busy} onChange={(v) => patchLesson(l, { is_free_preview: v })} label={`Free preview: ${l.title}`} />
+                                                    </div>
+                                                )}
                                             </div>
                                             <LessonContentEditor key={`${l.id}:${saves[l.id] ?? 0}`} lesson={l} startSaved={(saves[l.id] ?? 0) > 0} onSaved={() => setSaves((s) => ({ ...s, [l.id]: (s[l.id] ?? 0) + 1 }))} />
                                         </div>

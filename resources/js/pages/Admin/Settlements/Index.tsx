@@ -1,7 +1,7 @@
 import { Badge, BUTTON, Card, dateTime, EmptyRow, FilterTabs, money, PageHeader, Pagination, SearchBox, TD, TH, type Paginated } from '@/components/admin/ui';
 import AdminLayout from '@/layouts/admin-layout';
 import { router } from '@inertiajs/react';
-import { Download, Loader2, Play, Upload, X } from 'lucide-react';
+import { Download, Loader2, Play, Plus, Upload, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 export interface SettlementRow {
@@ -112,6 +112,10 @@ export default function AdminSettlements({ items, filters, pendingTotal }: { ite
                         <input ref={fileInput} type="file" accept=".csv,text/csv" hidden onChange={(e) => uploadUtrs(e.target.files?.[0])} />
                         <button onClick={openPreview} disabled={loading} className={BUTTON.ghost}>
                             {loading ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />} Run settlement cycle
+                        </button>
+                        {/* khud chuno kaun se orders — jo chhoot jaye wo cycle utha leti hai */}
+                        <button onClick={() => router.visit('/admin/settlements/create')} className={BUTTON.primary}>
+                            <Plus className="size-4" /> New settlement
                         </button>
                     </div>
                 }

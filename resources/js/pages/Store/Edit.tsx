@@ -133,7 +133,8 @@ const FONT_OPTIONS = [
 ];
 
 function slugify(value: string) {
-    return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '').slice(0, 30) || 'yourstore';
+    // server ka username rule: a-z, 0-9, hyphen, underscore, dot (registration hyphen wala username banata hai)
+    return value.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9_.-]+/g, '').slice(0, 30) || 'yourstore';
 }
 
 /** Brand color ko safe hex me normalize karta hai (leading # + fallback ke saath). */
@@ -396,6 +397,9 @@ function StoreTab({ store }: { store: Store }) {
         is_live: store.is_live,
     });
     const avatarUrl = store.avatar ? `/assets/${store.avatar}` : null;
+    const [avatarError, setAvatarError] = useState<string | null>(null);
+    const [avatarBusy, setAvatarBusy] = useState(false);
+    const errors = usePage().props.errors as Record<string, string> | undefined;
     const brandColor = brandHex(store.appearance?.brand_color);
     const backgroundUrl = store.appearance?.custom_background_path ? `/assets/${store.appearance.custom_background_path}` : null;
 
@@ -411,6 +415,13 @@ function StoreTab({ store }: { store: Store }) {
     }
 
     function uploadAvatar(file: File) {
+        setAvatarError(null);
+        // server ki limit 3 MB hai — phone ki photo aksar badi hoti hai, upload se pehle hi bata do
+        if (file.size > 3 * 1024 * 1024) {
+            setAvatarError(`This photo is ${(file.size / 1024 / 1024).toFixed(1)} MB. Please choose one under 3 MB.`);
+            return;
+        }
+
         const data = new FormData();
         data.append('_method', 'put');
         data.append('avatar', file);
@@ -420,7 +431,15 @@ function StoreTab({ store }: { store: Store }) {
         data.append('header_heading', form.header_heading);
         data.append('welcome_message', form.welcome_message);
         data.append('is_live', form.is_live ? '1' : '0');
-        router.post('/dashboard/store', data, { preserveScroll: true, preserveState: true, forceFormData: true });
+        setAvatarBusy(true);
+        router.post('/dashboard/store', data, {
+            preserveScroll: true,
+            preserveState: true,
+            forceFormData: true,
+            // fail ho to chup na rahe — jis field ne roka wahi bata do
+            onError: (errors) => setAvatarError(errors.avatar ?? Object.values(errors)[0] ?? 'Could not upload the photo. Please try again.'),
+            onFinish: () => setAvatarBusy(false),
+        });
     }
 
     return (
@@ -475,6 +494,11 @@ function StoreTab({ store }: { store: Store }) {
                                     <CheckCircle2 className="size-4" />
                                 </span>
                             </div>
+                            {errors?.username && (
+                                <p role="alert" className="text-xs font-medium text-[#D93838]">
+                                    {errors.username}
+                                </p>
+                            )}
                             <p className="text-xs text-[#8A8A96]">
                                 Your store is at <code className="font-mono text-[11px] text-[#4B4B57]">creatorapp.in/{form.username}</code>, your website at <code className="font-mono text-[11px] text-[#4B4B57]">/w/{form.username}</code> and bookings at <code className="font-mono text-[11px] text-[#4B4B57]">/book/{form.username}</code>
                             </p>
@@ -519,10 +543,24 @@ function StoreTab({ store }: { store: Store }) {
                                     <input
                                         type="file"
                                         accept="image/*"
-                                        onChange={(e) => e.target.files?.[0] && uploadAvatar(e.target.files[0])}
+                                        disabled={avatarBusy}
+                                        onChange={(e) => {
+                                            if (e.target.files?.[0]) uploadAvatar(e.target.files[0]);
+                                            e.target.value = ''; // wahi file dobara chunne par bhi onChange chale
+                                        }}
                                         className="w-full text-xs file:mr-2 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-[#14141B] file:shadow-sm"
                                     />
-                                    <span className="text-[10px] leading-tight text-[#8A8A96]">JPG or PNG, 400×400+ (max 3 MB). Uploads instantly.</span>
+                                    {avatarBusy ? (
+                                        <span className="flex items-center gap-1 text-[10px] leading-tight text-[#8A8A96]">
+                                            <Loader2 className="size-3 animate-spin" /> Uploading…
+                                        </span>
+                                    ) : avatarError ? (
+                                        <span role="alert" className="text-[11px] leading-tight font-medium text-[#D93838]">
+                                            {avatarError}
+                                        </span>
+                                    ) : (
+                                        <span className="text-[10px] leading-tight text-[#8A8A96]">JPG or PNG, 400×400+ (max 3 MB). Uploads instantly.</span>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -15,6 +15,7 @@ use App\Services\CourseContentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class CourseLessonController extends Controller
 {
@@ -31,6 +32,8 @@ class CourseLessonController extends Controller
             'is_free_preview' => ['sometimes', 'boolean'],
             'is_published' => ['sometimes', 'boolean'],
         ]);
+
+        $this->guardPreview($data['type'], $data);
 
         $lesson = DB::transaction(function () use ($module, $data) {
             $lesson = $module->lessons()->create([
@@ -67,6 +70,8 @@ class CourseLessonController extends Controller
             'is_published' => ['sometimes', 'boolean'],
             'is_free_preview' => ['sometimes', 'boolean'],
         ]);
+
+        $this->guardPreview($lesson->type, $data);
 
         $lesson->update($data);
 
@@ -121,6 +126,14 @@ class CourseLessonController extends Controller
         });
 
         return $this->done($request, 'Order saved.');
+    }
+
+    /** Quiz / assignment ko free preview nahi banaya ja sakta (band karna hamesha chalta hai). */
+    private function guardPreview(string $type, array $data): void
+    {
+        if (! empty($data['is_free_preview']) && ! CourseLesson::previewable($type)) {
+            throw ValidationException::withMessages(['is_free_preview' => 'Quizzes and assignments cannot be a free preview — students need to be enrolled to take them.']);
+        }
     }
 
     private function withContent(CourseLesson $lesson): CourseLesson

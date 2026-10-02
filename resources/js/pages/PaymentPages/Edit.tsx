@@ -227,7 +227,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
     const [coverBusy, setCoverBusy] = useState(false);
     const [coverError, setCoverError] = useState<string | null>(null);
 
-    const { status: saveStatus, errors: saveErrors, errorFor, queue: queueSave, flush: flushSave } = useAutoSave(`/dashboard/payment-pages/${item.uuid}`);
+    const { status: saveStatus, errors: saveErrors, errorFor, queue: queueSave, flush: flushSave, afterSave, leave } = useAutoSave(`/dashboard/payment-pages/${item.uuid}`);
 
     useEffect(() => setCoverImages(item.cover_images ?? []), [item.cover_images]);
 
@@ -297,7 +297,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
     // ----- publish / unpublish -------------------------------------
 
     function publish() {
-        publishProduct(`/dashboard/payment-pages/${item.uuid}/publish`, flushSave, setPublishing, setPublishError);
+        publishProduct(`/dashboard/payment-pages/${item.uuid}/publish`, afterSave, setPublishing, setPublishError);
     }
 
     // ----- preview item (same shape, but live) ----------------------
@@ -341,7 +341,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
             headTitle={`${item.title || 'Untitled payment page'} · Edit payment page`}
             title={item.title || 'Your payment page title here'}
             status={item.status}
-            backHref="/dashboard/payment-pages"
+            onBack={() => leave('/dashboard/payment-pages')}
             backLabel="Back to payment pages"
             heading="Tell us about your payment page"
             publishError={publishError}

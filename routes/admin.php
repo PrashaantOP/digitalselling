@@ -75,6 +75,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('settlements', [SettlementController::class, 'index'])->name('settlements.index');
         Route::get('settlements/preview', [SettlementController::class, 'preview'])->name('settlements.preview');
         Route::post('settlements/run', [SettlementController::class, 'run'])->name('settlements.run');
+        Route::get('settlements/create', [SettlementController::class, 'create'])->name('settlements.create');
+        Route::post('settlements', [SettlementController::class, 'store'])->name('settlements.store');
         Route::post('settlements/export', [SettlementController::class, 'export'])->name('settlements.export');
         Route::post('settlements/bulk-paid', [SettlementController::class, 'bulkPaid'])->name('settlements.bulk-paid');
         Route::get('settlements/{adminSettlement}', [SettlementController::class, 'show'])->name('settlements.show');

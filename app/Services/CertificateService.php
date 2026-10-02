@@ -36,6 +36,28 @@ class CertificateService
         );
     }
 
+    /**
+     * Jisne course poora kiya hai aur course pe certificate on hai, uska certificate hona hi chahiye — na ho to
+     * abhi bana do. Do halaat sambhalta hai: creator ne toggle baad me on kiya, ya course pehle hi "completed"
+     * ho chuka tha jab certificate nahi bana. Baar-baar bulana safe hai.
+     */
+    public function ensure(Enrollment $enrollment): ?Certificate
+    {
+        if (! $enrollment->completed_at) {
+            return null;
+        }
+
+        $existing = Certificate::where('enrollment_id', $enrollment->id)->first();
+        if ($existing || ! $enrollment->course?->certificate_enabled) {
+            return $existing;
+        }
+
+        $certificate = $this->issue($enrollment);
+        $enrollment->forceFill(['certificate_issued_at' => $enrollment->certificate_issued_at ?? now()])->save();
+
+        return $certificate;
+    }
+
     /** Blade (certificates.show) ke liye sab kuch. */
     public function viewData(Certificate $certificate): array
     {
@@ -97,8 +119,11 @@ class CertificateService
 
         [$r, $g, $b] = sscanf($accent, '#%02x%02x%02x');
 
+        $template = array_key_exists($template, CertificateSetting::TEMPLATES) ? $template : 'classic';
+
         return [
-            'template' => array_key_exists($template, CertificateSetting::TEMPLATES) ? $template : 'classic',
+            'template' => $template,
+            'orientation' => CertificateSetting::orientation($template),
             'accent' => $accent,
             // accent ke upar padhne layak text — halka colour ho to dark
             'accent_ink' => (0.299 * $r + 0.587 * $g + 0.114 * $b) > 160 ? '#14141B' : '#FFFFFF',

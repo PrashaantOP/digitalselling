@@ -12,7 +12,9 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Auto-settlement engine. Creator kuch request nahi karta — `settlements:run` roz chalta hai
@@ -28,6 +30,9 @@ class SettlementService
 {
     /** Order paid hone ke itne din baad wo settle hone layak hota hai (T+2). */
     public const HOLD_DAYS = 2;
+
+    /** Admin ka custom settlement: order paid hone ke itne ghante baad hi usme liya ja sakta hai (refund window). */
+    public const CUSTOM_HOLD_HOURS = 24;
 
     /** Jis din ke orders aaj settle ho sakte hain uska last date (inclusive). */
     public static function cutoffDate(): Carbon
@@ -137,25 +142,95 @@ class SettlementService
                 return null;
             }
 
-            $settlement = Settlement::create([
-                'number' => $this->nextNumber(),
-                'creator_id' => $creator->id,
-                'payout_method_id' => $method->id,
-                'orders_count' => $orders->count(),
-                'gross_amount' => round((float) $orders->sum('total_amount'), 2),
-                'commission_amount' => round((float) $orders->sum('platform_fee'), 2),
-                'adjustment_amount' => $adjustment,
-                'net_amount' => $net,
-                'period_start' => $orders->min('paid_at'),
-                'period_end' => $orders->max('paid_at'),
-                'status' => 'pending',
-            ]);
-
-            Order::whereIn('id', $orders->pluck('id'))->update(['settlement_id' => $settlement->id]);
-            SettlementAdjustment::whereIn('id', $adjustments->pluck('id'))->update(['settlement_id' => $settlement->id]);
-
-            return $settlement;
+            return $this->createSettlement($creator, $method, $orders, $adjustments);
         });
+    }
+
+    /**
+     * Wo saare paid orders jo abhi kisi settlement me nahi hain — hold me hon ya hold paar kar chuke.
+     * Admin custom settlement me inhi me se chunta hai.
+     */
+    public function unsettledOrders(int $creatorId): Builder
+    {
+        return Order::query()
+            ->where('creator_id', $creatorId)
+            ->where('status', 'success')
+            ->whereNull('settlement_id')
+            ->whereNotNull('paid_at');
+    }
+
+    /**
+     * Custom settlement: admin ke chune hue orders (aur adjustments) ka ek settlement. Cycle ka T+2 hold yahan
+     * nahi lagta — admin 24 ghante (CUSTOM_HOLD_HOURS) purane order jaldi de sakta hai — par usse naye order
+     * nahi, aur KYC / verified payout method zaroori hai.
+     * Jo yahan nahi chuna gaya wo agli cycle (`settlements:run` / admin ka button) me apne aap aata hai.
+     *
+     * @param  int[]  $orderIds
+     * @param  int[]  $adjustmentIds
+     */
+    public function settleCustom(User $creator, array $orderIds, array $adjustmentIds = []): Settlement
+    {
+        if ($reason = $this->blockedReason($creator)) {
+            throw ValidationException::withMessages(['creator' => match ($reason) {
+                'kyc' => 'This creator\'s KYC is not verified yet.',
+                'payout_method' => 'This creator has not added a payout method.',
+                default => 'This creator\'s payout method is not verified yet.',
+            }]);
+        }
+
+        $method = $this->payoutMethodFor($creator);
+
+        return DB::transaction(function () use ($creator, $method, $orderIds, $adjustmentIds) {
+            User::whereKey($creator->id)->lockForUpdate()->first();
+
+            $orders = $this->unsettledOrders($creator->id)->whereIn('id', $orderIds)->lockForUpdate()
+                ->get(['id', 'paid_at', 'total_amount', 'platform_fee', 'net_payout_amount']);
+            $adjustments = $this->pendingAdjustments($creator->id)->whereIn('id', $adjustmentIds)->lockForUpdate()->get(['id', 'amount']);
+
+            // beech me cycle chal gayi ya kisi aur admin ne le liye — aadha-adhura mat banao
+            if ($orders->count() !== count(array_unique($orderIds)) || $adjustments->count() !== count(array_unique($adjustmentIds))) {
+                throw ValidationException::withMessages(['orders' => 'Some of the selected items were just settled elsewhere. Reload and pick again.']);
+            }
+
+            if ($orders->isEmpty()) {
+                throw ValidationException::withMessages(['orders' => 'Select at least one order.']);
+            }
+
+            if ($orders->contains(fn (Order $o) => $o->paid_at->gt(now()->subHours(self::CUSTOM_HOLD_HOURS)))) {
+                throw ValidationException::withMessages(['orders' => 'An order can be settled only ' . self::CUSTOM_HOLD_HOURS . ' hours after it was paid.']);
+            }
+
+            if (round((float) $orders->sum('net_payout_amount') + (float) $adjustments->sum('amount'), 2) <= 0) {
+                throw ValidationException::withMessages(['orders' => 'The amount to transfer must be more than zero — the selected debits are larger than the orders.']);
+            }
+
+            return $this->createSettlement($creator, $method, $orders, $adjustments);
+        });
+    }
+
+    /** Orders + adjustments ko ek pending settlement me baandho (transaction ke andar hi bulao). */
+    private function createSettlement(User $creator, PayoutMethod $method, Collection $orders, Collection $adjustments): Settlement
+    {
+        $adjustment = round((float) $adjustments->sum('amount'), 2);
+
+        $settlement = Settlement::create([
+            'number' => $this->nextNumber(),
+            'creator_id' => $creator->id,
+            'payout_method_id' => $method->id,
+            'orders_count' => $orders->count(),
+            'gross_amount' => round((float) $orders->sum('total_amount'), 2),
+            'commission_amount' => round((float) $orders->sum('platform_fee'), 2),
+            'adjustment_amount' => $adjustment,
+            'net_amount' => round((float) $orders->sum('net_payout_amount') + $adjustment, 2),
+            'period_start' => $orders->min('paid_at'),
+            'period_end' => $orders->max('paid_at'),
+            'status' => 'pending',
+        ]);
+
+        Order::whereIn('id', $orders->pluck('id'))->update(['settlement_id' => $settlement->id]);
+        SettlementAdjustment::whereIn('id', $adjustments->pluck('id'))->update(['settlement_id' => $settlement->id]);
+
+        return $settlement;
     }
 
     /**

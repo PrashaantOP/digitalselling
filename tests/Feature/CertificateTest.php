@@ -73,6 +73,41 @@ class CertificateTest extends TestCase
         $this->assertNotNull(Enrollment::first()->certificate_issued_at);
     }
 
+    /** Course pehle poora hua jab certificate band tha; creator ne baad me on kiya — student ko phir bhi milta hai. */
+    public function test_a_student_who_finished_before_certificates_were_turned_on_still_gets_one(): void
+    {
+        $this->course->courseDetail->update(['certificate_enabled' => false]);
+        $this->buy($this->course);
+        $this->asBuyer()->postJson('/me/lessons/' . CourseLesson::first()->uuid . '/complete')->assertOk()->assertJson(['certificate_uuid' => null]);
+
+        $this->asBuyer()->get('/me/courses')->assertInertia(fn (Assert $page) => $page->where('courses.0.certificate_uuid', null));
+        $this->assertSame(0, Certificate::count());
+
+        $this->course->courseDetail->update(['certificate_enabled' => true]);
+
+        // portal kholte hi ban jaata hai, aur card pe uska link aata hai
+        $this->asBuyer()->get('/me/courses')->assertInertia(fn (Assert $page) => $page->where('courses.0.certificate_uuid', Certificate::firstOrFail()->uuid));
+        $this->assertNotNull(Enrollment::first()->certificate_issued_at);
+
+        // dobara kholne / lesson dobara complete karne se doosra nahi banta
+        $this->asBuyer()->get('/me/courses/' . Enrollment::first()->uuid . '/learn')->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('enrollment.certificate_uuid', Certificate::firstOrFail()->uuid));
+        $this->asBuyer()->postJson('/me/lessons/' . CourseLesson::first()->uuid . '/complete')->assertOk();
+        $this->assertSame(1, Certificate::count());
+    }
+
+    public function test_no_certificate_before_the_course_is_finished_or_when_certificates_are_off(): void
+    {
+        $module = CourseModule::firstOrFail();
+        CourseLesson::create(['module_id' => $module->id, 'title' => 'Second lesson', 'type' => 'text_image', 'is_published' => true, 'sort_order' => 2]);
+        $this->buy($this->course);
+
+        $this->asBuyer()->postJson('/me/lessons/' . CourseLesson::first()->uuid . '/complete')->assertOk()->assertJson(['course_completed' => false, 'certificate_uuid' => null]);
+        $this->asBuyer()->get('/me/courses')->assertInertia(fn (Assert $page) => $page->where('courses.0.certificate_uuid', null));
+
+        $this->assertSame(0, Certificate::count());
+    }
+
     public function test_later_renames_do_not_change_an_issued_certificate(): void
     {
         $certificate = $this->earn();
@@ -118,7 +153,8 @@ class CertificateTest extends TestCase
     {
         $certificate = $this->earn();
 
-        foreach (['classic', 'modern', 'minimal'] as $template) {
+        foreach (array_keys(CertificateSetting::TEMPLATES) as $template) {
+            $portrait = in_array($template, CertificateSetting::PORTRAIT, true);
             CertificateSetting::updateOrCreate(['user_id' => $this->creator->id], [
                 'template' => $template, 'accent_color' => '#B8434F', 'logo_path' => 'images/guru/certificate/logo.png',
                 'signature_path' => 'images/guru/certificate/sign.png', 'signatory_name' => 'Asha Rao', 'signatory_title' => 'Founder',
@@ -127,6 +163,9 @@ class CertificateTest extends TestCase
 
             $this->buyerView($certificate)->assertOk()
                 ->assertSee("t-{$template}")
+                // khada template khade A4 pe chhapta hai, baaki lete hue
+                ->assertSee($portrait ? 'size: A4 portrait' : 'size: A4 landscape')
+                ->assertSee($portrait ? 'aspect-ratio: 210 / 297' : 'aspect-ratio: 297 / 210')
                 ->assertSee('#B8434F')
                 ->assertSee('images/guru/certificate/logo.png')->assertDontSee('images/guru/store/avatar.png')
                 ->assertSee('images/guru/certificate/sign.png')
@@ -141,7 +180,9 @@ class CertificateTest extends TestCase
             ->component('Courses/Certificate')
             ->where('settings.template', 'classic')->where('settings.accent_color', null)->where('settings.has_logo', false)
             ->where('resolved.accent', '#0E7A5C')
-            ->has('templates', 3)
+            ->has('templates', count(CertificateSetting::TEMPLATES))
+            ->where('templates.0.orientation', 'landscape')
+            ->where('templates.4.key', 'portrait')->where('templates.4.orientation', 'portrait')
         );
 
         $this->actingAs($this->creator)->put('/dashboard/courses/certificate', [

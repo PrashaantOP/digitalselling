@@ -1,11 +1,12 @@
 {{--
     Course certificate — printable page (browser ka "Save as PDF"). Data CertificateService::viewData() / sampleData() se.
-    Sheet A4 landscape ke ratio me hai aur andar ka sab kuch container units (cqw) me — phone, iframe preview aur
-    print teeno me wahi dikhta hai. Design $design['template'] se chunta hai.
+    Sheet A4 ke ratio me hai (template ke hisab se landscape ya portrait) aur andar ka sab kuch container units
+    (cqw) me — phone, iframe preview aur print teeno me wahi dikhta hai. Design $design['template'] se chunta hai.
 --}}
 @php
     $embedded = $embedded ?? false; // settings page ka iframe preview: toolbar nahi
     $issued = $issuedAt?->copy()->setTimezone('Asia/Kolkata')->format('j F Y');
+    $portrait = ($design['orientation'] ?? 'landscape') === 'portrait';
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -18,26 +19,27 @@
         * { box-sizing: border-box; }
         html, body { margin: 0; }
         body { background: {{ $embedded ? '#FFFFFF' : '#F6F5F2' }}; color: #14141B; font: 15px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        .toolbar { max-width: 1100px; margin: 24px auto 0; padding: 0 16px; display: flex; justify-content: flex-end; gap: 8px; }
+        .toolbar { max-width: {{ $portrait ? '760px' : '1100px' }}; margin: 24px auto 0; padding: 0 16px; display: flex; justify-content: flex-end; gap: 8px; }
         .btn { display: inline-flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 8px; border: 1px solid #E4E2DA; background: #fff; color: #14141B; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
         .btn-primary { background: #4F46E5; border-color: #4F46E5; color: #fff; }
-        .page { max-width: {{ $embedded ? 'none' : '1100px' }}; margin: {{ $embedded ? '0' : '16px auto 40px' }}; padding: {{ $embedded ? '0' : '0 16px' }}; }
+        .page { max-width: {{ $embedded ? 'none' : ($portrait ? '760px' : '1100px') }}; margin: {{ $embedded ? '0' : '16px auto 40px' }}; padding: {{ $embedded ? '0' : '0 16px' }}; }
 
-        /* A4 landscape sheet; andar ke sizes cqw me (1cqw = sheet ki chaudai ka 1%) */
-        .cert { --accent: {{ $design['accent'] }}; --accent-ink: {{ $design['accent_ink'] }}; --ink: #14141B; --muted: #6B6B78;
-            position: relative; width: 100%; aspect-ratio: 297 / 210; container-type: inline-size; background: #fff; color: var(--ink); overflow: hidden;
+        /* A4 sheet; andar ke sizes cqw me (1cqw = sheet ki chaudai ka 1%). Portrait sheet kam chaudi hoti hai,
+           isliye saanjhe sizes --k se bade hote hain (297/210). */
+        .cert { --k: {{ $portrait ? '1.4' : '1' }}; --accent: {{ $design['accent'] }}; --accent-ink: {{ $design['accent_ink'] }}; --ink: #14141B; --muted: #6B6B78;
+            position: relative; width: 100%; aspect-ratio: {{ $portrait ? '210 / 297' : '297 / 210' }}; container-type: inline-size; background: #fff; color: var(--ink); overflow: hidden;
             box-shadow: {{ $embedded ? 'none' : '0 1px 3px rgba(0,0,0,.08)' }}; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .cert img { display: block; max-width: 100%; }
-        .cert .logo { height: 9cqw; max-width: 26cqw; object-fit: contain; }
-        .cert .logo-text { font-size: 2.6cqw; font-weight: 700; letter-spacing: -.01em; }
-        .cert .eyebrow { font-size: 1.35cqw; font-weight: 700; letter-spacing: .32em; text-transform: uppercase; color: var(--accent); }
+        .cert .logo { height: calc(var(--k) * 9cqw); max-width: calc(var(--k) * 26cqw); object-fit: contain; }
+        .cert .logo-text { font-size: calc(var(--k) * 2.6cqw); font-weight: 700; letter-spacing: -.01em; }
+        .cert .eyebrow { font-size: calc(var(--k) * 1.35cqw); font-weight: 700; letter-spacing: .32em; text-transform: uppercase; color: var(--accent); }
         .cert .name { overflow-wrap: anywhere; line-height: 1.1; }
         .cert .course { overflow-wrap: anywhere; line-height: 1.2; }
-        .cert .sig-img { height: 6cqw; max-width: 22cqw; object-fit: contain; }
-        .cert .sig-line { width: 22cqw; border-top: .12cqw solid var(--ink); }
-        .cert .sig-name { font-size: 1.6cqw; font-weight: 700; margin-top: .7cqw; }
-        .cert .small { font-size: 1.25cqw; color: var(--muted); }
-        .cert .tiny { font-size: 1.05cqw; color: var(--muted); }
+        .cert .sig-img { height: calc(var(--k) * 6cqw); max-width: calc(var(--k) * 22cqw); object-fit: contain; }
+        .cert .sig-line { width: calc(var(--k) * 22cqw); border-top: calc(var(--k) * .12cqw) solid var(--ink); }
+        .cert .sig-name { font-size: calc(var(--k) * 1.6cqw); font-weight: 700; margin-top: calc(var(--k) * .7cqw); }
+        .cert .small { font-size: calc(var(--k) * 1.25cqw); color: var(--muted); }
+        .cert .tiny { font-size: calc(var(--k) * 1.05cqw); color: var(--muted); }
         .cert .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
         /* radd / sample ka watermark — poore sheet pe tirchha */
         .cert .stamp { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 5; }
@@ -46,7 +48,7 @@
         .cert .stamp.sample span { color: rgba(20, 20, 27, .06); }
 
         @media print {
-            @page { size: A4 landscape; margin: 0; }
+            @page { size: A4 {{ $portrait ? 'portrait' : 'landscape' }}; margin: 0; }
             body { background: #fff; }
             .toolbar { display: none; }
             .page { max-width: none; margin: 0; padding: 0; }

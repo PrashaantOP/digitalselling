@@ -90,11 +90,38 @@ class CoursePreviewTest extends TestCase
         $this->getJson("/c/design-basics/preview/{$free->uuid}")->assertNotFound();
     }
 
-    public function test_quiz_and_assignment_previews_carry_no_content(): void
+    public function test_quizzes_and_assignments_are_never_a_free_preview(): void
     {
+        // purana data: flag on pada ho to bhi bahar nahi khulta, na badge dikhta hai
         $quiz = $this->lesson('quiz', true);
+        $assignment = $this->lesson('assignment', true);
 
-        $this->getJson("/c/design-basics/preview/{$quiz->uuid}")->assertOk()->assertJsonPath('lesson.type', 'quiz')->assertJsonPath('lesson.content', null);
+        $this->getJson("/c/design-basics/preview/{$quiz->uuid}")->assertNotFound();
+        $this->getJson("/c/design-basics/preview/{$assignment->uuid}")->assertNotFound();
+
+        $this->get('/c/design-basics')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('product.course.modules.0.lessons.0.is_free_preview', false)
+            ->where('product.course.modules.0.lessons.0.uuid', null)
+            ->where('product.course.modules.0.lessons.1.is_free_preview', false)
+        );
+    }
+
+    public function test_creator_cannot_turn_free_preview_on_for_a_quiz_or_assignment(): void
+    {
+        $creator = $this->course->creator;
+        $quiz = $this->lesson('quiz', false);
+        $video = $this->lesson('video', false);
+
+        $this->actingAs($creator)->putJson("/dashboard/lessons/{$quiz->uuid}", ['is_free_preview' => true])->assertUnprocessable()->assertJsonValidationErrors('is_free_preview');
+        $this->actingAs($creator)->putJson("/dashboard/lessons/{$quiz->uuid}", ['is_free_preview' => false, 'is_published' => false])->assertOk(); // band karna / baaki badlav chalte hain
+        $this->actingAs($creator)->putJson("/dashboard/lessons/{$video->uuid}", ['is_free_preview' => true])->assertOk();
+
+        $this->actingAs($creator)->postJson("/dashboard/modules/{$this->module->uuid}/lessons", ['title' => 'Homework', 'type' => 'assignment', 'is_free_preview' => true])
+            ->assertUnprocessable()->assertJsonValidationErrors('is_free_preview');
+
+        $this->assertFalse($quiz->fresh()->is_free_preview);
+        $this->assertTrue($video->fresh()->is_free_preview);
+        $this->assertSame(0, CourseLesson::where('type', 'assignment')->count());
     }
 
     public function test_preview_notes_files_download_only_when_the_creator_allows_it(): void

@@ -12,7 +12,8 @@ interface CourseRow {
     completed_at: string | null;
     access_expires_at: string | null;
     expired: boolean;
-    has_certificate: boolean;
+    /** course poora + certificate bana ho tabhi */
+    certificate_uuid: string | null;
 }
 
 const date = (v: string) => new Date(v).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -55,46 +56,76 @@ function CourseCard({ course }: { course: CourseRow }) {
     const done = course.progress_percent >= 100;
 
     return (
-        <Link href={`/me/courses/${course.uuid}/learn`} className="group flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/5 transition hover:shadow-md">
-            <div className="relative aspect-video bg-[#EEF0FF]">
-                {course.cover && !broken ? (
-                    <img src={`/assets/${course.cover}`} alt="" loading="lazy" onError={() => setBroken(true)} className="absolute inset-0 size-full object-cover" />
-                ) : (
-                    <span className="absolute inset-0 flex items-center justify-center text-[#4F46E5]/40">
-                        <GraduationCap className="size-10" />
-                    </span>
-                )}
-                {course.expired && <span className="absolute top-2 left-2 rounded-full bg-[#14141B]/80 px-2 py-0.5 text-[11px] font-bold text-white">Access ended</span>}
-            </div>
-
-            <div className="flex flex-1 flex-col gap-3 p-4">
-                <div>
-                    <p className="line-clamp-2 text-sm font-bold">{course.title}</p>
-                    <p className="mt-0.5 text-xs text-[#8A8A96]">by {course.creator.name}</p>
+        <div className="relative flex">
+            <Link
+                href={`/me/courses/${course.uuid}/learn`}
+                className="group flex w-full flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/5 transition hover:shadow-md"
+            >
+                <div className="relative aspect-video bg-[#EEF0FF]">
+                    {course.cover && !broken ? (
+                        <img
+                            src={`/assets/${course.cover}`}
+                            alt=""
+                            loading="lazy"
+                            onError={() => setBroken(true)}
+                            className="absolute inset-0 size-full object-cover"
+                        />
+                    ) : (
+                        <span className="absolute inset-0 flex items-center justify-center text-[#4F46E5]/40">
+                            <GraduationCap className="size-10" />
+                        </span>
+                    )}
+                    {course.expired && (
+                        <span className="absolute top-2 left-2 rounded-full bg-[#14141B]/80 px-2 py-0.5 text-[11px] font-bold text-white">
+                            Access ended
+                        </span>
+                    )}
                 </div>
 
-                <div className="mt-auto">
-                    <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-[#4B4B57]">{done ? 'Completed' : `${course.progress_percent}% complete`}</span>
-                        {course.has_certificate && (
-                            <span className="flex items-center gap-1 font-semibold text-[#B46E00]">
-                                <Award className="size-3.5" /> Certificate
-                            </span>
-                        )}
+                <div className="flex flex-1 flex-col gap-3 p-4">
+                    <div>
+                        <p className="line-clamp-2 text-sm font-bold">{course.title}</p>
+                        <p className="mt-0.5 text-xs text-[#8A8A96]">by {course.creator.name}</p>
                     </div>
-                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#F0EFEA]">
-                        <span className="block h-full rounded-full bg-[#4F46E5]" style={{ width: `${Math.min(100, course.progress_percent)}%` }} />
-                    </div>
-                    <div className="mt-3 flex items-center justify-between text-xs text-[#8A8A96]">
-                        <span>{course.expired ? 'Buy again to continue' : course.access_expires_at ? `Access till ${date(course.access_expires_at)}` : 'Lifetime access'}</span>
-                        {!course.expired && (
-                            <span className="flex items-center gap-1 font-semibold text-[#4F46E5]">
-                                <PlayCircle className="size-4" /> {course.progress_percent > 0 && !done ? 'Continue' : done ? 'Review' : 'Start'}
+
+                    <div className="mt-auto">
+                        <div className="flex items-center justify-between text-xs">
+                            <span className="font-semibold text-[#4B4B57]">{done ? 'Completed' : `${course.progress_percent}% complete`}</span>
+                        </div>
+                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#F0EFEA]">
+                            <span
+                                className="block h-full rounded-full bg-[#4F46E5]"
+                                style={{ width: `${Math.min(100, course.progress_percent)}%` }}
+                            />
+                        </div>
+                        <div className="mt-3 flex items-center justify-between text-xs text-[#8A8A96]">
+                            <span>
+                                {course.expired
+                                    ? 'Buy again to continue'
+                                    : course.access_expires_at
+                                      ? `Access till ${date(course.access_expires_at)}`
+                                      : 'Lifetime access'}
                             </span>
-                        )}
+                            {!course.expired && (
+                                <span className="flex items-center gap-1 font-semibold text-[#4F46E5]">
+                                    <PlayCircle className="size-4" /> {course.progress_percent > 0 && !done ? 'Continue' : done ? 'Review' : 'Start'}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
-        </Link>
+            </Link>
+            {/* card khud ek link hai — certificate ka link uske bahar, cover ke upar */}
+            {course.certificate_uuid && (
+                <a
+                    href={`/me/certificates/${course.certificate_uuid}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-bold text-[#B46E00] shadow-sm ring-1 ring-black/5 transition hover:bg-[#FFF7E6]"
+                >
+                    <Award className="size-3.5" /> View certificate
+                </a>
+            )}
+        </div>
     );
 }

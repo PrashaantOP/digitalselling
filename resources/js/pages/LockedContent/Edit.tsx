@@ -185,7 +185,7 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
     const [removingFileId, setRemovingFileId] = useState<number | null>(null);
     const [fileError, setFileError] = useState<string | null>(null);
 
-    const { status: saveStatus, errorFor, queue: queueSave, flush: flushSave } = useAutoSave(`${BASE}/${item.uuid}`);
+    const { status: saveStatus, errorFor, queue: queueSave, flush: flushSave, afterSave, leave } = useAutoSave(`${BASE}/${item.uuid}`);
 
     useEffect(() => {
         setImages(detail?.images ?? []);
@@ -288,7 +288,7 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
     }
 
     function publish() {
-        publishProduct(`${BASE}/${item.uuid}/publish`, flushSave, setPublishing, setPublishError);
+        publishProduct(`${BASE}/${item.uuid}/publish`, afterSave, setPublishing, setPublishError);
     }
 
     // ----- preview data (live) ---------------------------------------
@@ -324,7 +324,7 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
             headTitle={`${item.title || 'Untitled locked content'} · Edit locked content`}
             title={item.title || 'Untitled locked content'}
             status={item.status}
-            backHref={BASE}
+            onBack={() => leave(BASE)}
             backLabel="Back to locked content"
             heading="Write or upload content you'd like to sell"
             publishError={publishError}

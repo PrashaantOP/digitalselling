@@ -1,7 +1,7 @@
 import { AddonsField } from '@/components/product-editor/ui';
+import { useAutoSave, type SaveStatus } from '@/components/product-editor/use-auto-save';
 import { Button } from '@/components/ui/button';
 import { cn, formatCurrency } from '@/lib/utils';
-import type { RequestPayload } from '@inertiajs/core';
 import { Head, router } from '@inertiajs/react';
 import { assetUrl, firstError } from '@/components/course-editor/api';
 import { VideoEmbed } from '@/components/public/video-embed';
@@ -23,7 +23,7 @@ import {
     Video,
     X,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type EventMode = 'online' | 'in_person';
 type PricingType = 'fixed' | 'customer_decides' | 'free';
@@ -130,75 +130,6 @@ function localInputToIso(value: string): string | null {
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return null;
     return d.toISOString();
-}
-
-/* ------------------------------------------------------------------ */
-/*  AUTO-SAVE HOOK                                                     */
-/* ------------------------------------------------------------------ */
-
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
-
-function useAutoSave(url: string) {
-    const [status, setStatus] = useState<SaveStatus>('idle');
-    const [errors, setErrors] = useState<Record<string, string>>({});
-    const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const latest = useRef<RequestPayload | null>(null);
-    const inflight = useRef(false);
-
-    const send = useCallback(
-        (data: RequestPayload, opts?: { silent?: boolean }) => {
-            if (inflight.current) {
-                // queue latest and try again after current finishes
-                latest.current = data;
-                return;
-            }
-            inflight.current = true;
-            setStatus('saving');
-            router.put(url, data, {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    setErrors({});
-                    if (!opts?.silent) setStatus('saved');
-                    window.setTimeout(() => setStatus((s) => (s === 'saved' ? 'idle' : s)), 1800);
-                },
-                onError: (validationErrors) => {
-                    setErrors(validationErrors as Record<string, string>);
-                    setStatus('error');
-                },
-                onFinish: () => {
-                    inflight.current = false;
-                    if (latest.current) {
-                        const next = latest.current;
-                        latest.current = null;
-                        // small debounce so we don't ping the server in a tight loop
-                        window.setTimeout(() => send(next), 50);
-                    }
-                },
-            });
-        },
-        [url],
-    );
-
-    const queue = useCallback(
-        (data: RequestPayload) => {
-            latest.current = data;
-            if (timer.current) clearTimeout(timer.current);
-            timer.current = setTimeout(() => send(data), 700);
-        },
-        [send],
-    );
-
-    const flush = useCallback(() => {
-        if (timer.current) clearTimeout(timer.current);
-        if (latest.current) send(latest.current);
-    }, [send]);
-
-    useEffect(() => () => {
-        if (timer.current) clearTimeout(timer.current);
-    }, []);
-
-    return { status, errors, queue, flush, send };
 }
 
 /* ------------------------------------------------------------------ */
@@ -409,7 +340,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
     const [addingCoupon, setAddingCoupon] = useState(false);
     const [removingCouponId, setRemovingCouponId] = useState<number | null>(null);
 
-    const { status: saveStatus, errors: saveErrors, queue: queueSave, flush: flushSave } = useAutoSave(`/dashboard/events/${item.uuid}`);
+    const { status: saveStatus, errors: saveErrors, queue: queueSave, flush: flushSave, afterSave, leave } = useAutoSave(`/dashboard/events/${item.uuid}`);
 
     useEffect(() => setCoverImages(item.cover_images ?? []), [item.cover_images]);
 
@@ -473,11 +404,10 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
     // ----- publish / unpublish -------------------------------------
 
     function publish() {
-        // ensure latest form is saved before validating
-        flushSave();
         setPublishError(null);
         setPublishing(true);
-        router.post(
+        // pehle bacha hua save — warna publish wala visit use kaat deta aur purana data validate hota
+        afterSave(() => router.post(
             `/dashboard/events/${item.uuid}/publish`,
             { status: 'published' },
             {
@@ -490,7 +420,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                 },
                 onFinish: () => setPublishing(false),
             },
-        );
+        ));
     }
 
     function saveDraft() {
@@ -584,7 +514,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                         <div className="flex min-w-0 items-center gap-3">
                             <button
                                 type="button"
-                                onClick={() => router.visit('/dashboard/events')}
+                                onClick={() => leave('/dashboard/events')}
                                 aria-label="Back to events"
                                 className="rounded-lg p-1 text-[#8A8A96] transition hover:bg-[#F6F5F2] hover:text-[#14141B]"
                             >

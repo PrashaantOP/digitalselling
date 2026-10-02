@@ -22,7 +22,7 @@ export function EditorShell({
     headTitle,
     title,
     status,
-    backHref,
+    onBack,
     backLabel,
     heading,
     children,
@@ -40,7 +40,8 @@ export function EditorShell({
     headTitle: string;
     title: string;
     status: Status;
-    backHref: string;
+    /** editor band karna — useAutoSave().leave(), taaki bacha hua save pehle poora ho */
+    onBack: () => void;
     backLabel: string;
     heading: string;
     children: ReactNode;
@@ -70,7 +71,7 @@ export function EditorShell({
                         <div className="flex min-w-0 items-center gap-3">
                             <button
                                 type="button"
-                                onClick={() => router.visit(backHref)}
+                                onClick={onBack}
                                 aria-label={backLabel}
                                 className="rounded-lg p-1 text-[#8A8A96] transition hover:bg-[#F6F5F2] hover:text-[#14141B]"
                             >
@@ -169,11 +170,11 @@ export function EditorShell({
 }
 
 /** Save ko flush karke publish endpoint hit karo; server ke validation messages se pehla dikhao. */
-export function publishProduct(url: string, flush: () => void, setPublishing: (v: boolean) => void, setError: (msg: string | null) => void) {
-    flush();
+export function publishProduct(url: string, afterSave: (run: () => void) => void, setPublishing: (v: boolean) => void, setError: (msg: string | null) => void) {
     setError(null);
     setPublishing(true);
-    router.post(
+    // pehle bacha hua save — warna publish wala visit use kaat deta aur purana data validate hota
+    afterSave(() => router.post(
         url,
         { status: 'published' },
         {
@@ -184,5 +185,5 @@ export function publishProduct(url: string, flush: () => void, setPublishing: (v
             },
             onFinish: () => setPublishing(false),
         },
-    );
+    ));
 }

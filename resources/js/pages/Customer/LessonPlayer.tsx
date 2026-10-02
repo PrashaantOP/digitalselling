@@ -1,11 +1,12 @@
 import { GHOST, PRIMARY } from '@/components/customer/code-input';
+import { PdfViewer, TextFileViewer } from '@/components/customer/pdf-viewer';
 import { VideoEmbed } from '@/components/public/video-embed';
 import CustomerLayout from '@/layouts/customer-layout';
 import { firstError, postJson, xsrf } from '@/lib/razorpay';
 import { cn } from '@/lib/utils';
 import { Link, router } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, Award, BookOpen, Check, CheckCircle2, ClipboardCheck, Download, FileText, Headphones, ListChecks, Loader2, Menu, Video, X, type LucideIcon } from 'lucide-react';
-import { useEffect, useState, type FormEvent } from 'react';
+import { ArrowLeft, ArrowRight, Award, BookOpen, Check, CheckCircle2, ClipboardCheck, Download, Eye, FileText, Headphones, ListChecks, Loader2, Menu, RotateCcw, Video, X, type LucideIcon } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 
 type LessonType = 'video' | 'text_image' | 'audio' | 'notes_pdf' | 'assignment' | 'quiz';
 
@@ -24,12 +25,21 @@ interface QuizQuestion {
     options: { id: number; option_text: string | null; option_image_path: string | null }[];
 }
 
+/** Submit ho chuke attempt ka result — sahi jawab sirf isi me aate hain (QuizAttempt::result) */
+interface QuizResult {
+    score: number;
+    total_questions: number;
+    correct_answers: number;
+    attempted_at: string;
+    review: { question_id: number; selected: number[]; correct: number[]; is_correct: boolean }[];
+}
+
 interface Lesson extends LessonLink {
     // shape lesson.type pe depend karta hai (LessonPlayerController::lessonPayload)
     content: Record<string, unknown> | null;
     extra: {
         submission?: { submission_text: string | null; status: string; grade_feedback: string | null; submitted_at: string } | null;
-        last_attempt?: { score: string | number; total_questions: number; correct_answers: number } | null;
+        last_attempt?: QuizResult | null;
     };
 }
 
@@ -151,7 +161,7 @@ export default function LessonPlayer({ enrollment, modules, completedLessonIds, 
                         <>
                             <h2 className="text-xl font-bold tracking-tight">{lesson.title}</h2>
                             <div className="mt-5">
-                                <LessonBody lesson={lesson} onPassed={() => void markComplete(false)} />
+                                <LessonBody key={lesson.uuid} lesson={lesson} onPassed={() => void markComplete(false)} />
                             </div>
 
                             <div className="mt-8 flex flex-col gap-3 border-t border-[#E4E2DA] pt-5 sm:flex-row sm:items-center sm:justify-between">
@@ -240,26 +250,8 @@ function LessonBody({ lesson, onPassed }: { lesson: Lesson; onPassed: () => void
                 </>
             );
 
-        case 'notes_pdf': {
-            const files = (content.files as { name: string | null; url: string }[]) ?? [];
-
-            return (
-                <>
-                    {typeof content.description === 'string' && content.description && <p className="text-[15px] leading-relaxed whitespace-pre-line text-[#4B4B57]">{content.description}</p>}
-                    <div className="mt-4 flex flex-col gap-2">
-                        {files.map((file) => (
-                            <a key={file.url} href={file.url} className="flex items-center justify-between gap-3 rounded-lg border border-[#E4E2DA] p-3 text-sm transition hover:bg-[#F6F5F2]">
-                                <span className="flex min-w-0 items-center gap-2.5 font-medium">
-                                    <FileText className="size-4 shrink-0 text-[#4F46E5]" /> <span className="truncate">{file.name ?? 'Download'}</span>
-                                </span>
-                                <Download className="size-4 shrink-0 text-[#8A8A96]" />
-                            </a>
-                        ))}
-                        {files.length === 0 && <p className="text-sm text-[#8A8A96]">{content.allow_download ? 'No files added yet.' : 'Downloads are turned off for these notes.'}</p>}
-                    </div>
-                </>
-            );
-        }
+        case 'notes_pdf':
+            return <Notes content={content as unknown as NotesContent} />;
 
         case 'assignment':
             return <Assignment lesson={lesson} />;
@@ -270,6 +262,69 @@ function LessonBody({ lesson, onPassed }: { lesson: Lesson; onPassed: () => void
         default:
             return null;
     }
+}
+
+interface NoteFile {
+    uuid: string;
+    name: string;
+    /** browser me kaise dikhe — null: doc/ppt/xls/zip, in-app nahi dikh sakte */
+    kind: 'pdf' | 'text' | null;
+    view_url: string | null;
+    /** sirf jab creator ne downloads on rakhe hon */
+    download_url: string | null;
+}
+
+interface NotesContent {
+    description: string | null;
+    allow_download: boolean;
+    files: NoteFile[];
+}
+
+/** Notes: PDF / txt yahin page me padhe jaate hain; download ka button sirf jab creator ne allow kiya ho. */
+function Notes({ content }: { content: NotesContent }) {
+    const files = content.files ?? [];
+    // pehli padhne layak file apne aap khuli rahe
+    const [openUuid, setOpenUuid] = useState<string | null>(() => files.find((f) => f.view_url)?.uuid ?? null);
+    const open = files.find((f) => f.uuid === openUuid && f.view_url) ?? null;
+
+    return (
+        <>
+            {content.description && <p className="text-[15px] leading-relaxed whitespace-pre-line text-[#4B4B57]">{content.description}</p>}
+
+            <div className="mt-4 flex flex-col gap-2">
+                {files.map((file) => {
+                    const active = open?.uuid === file.uuid;
+
+                    return (
+                        <div key={file.uuid} className={cn('flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border p-3 text-sm', active ? 'border-[#4F46E5] bg-[#EEF0FF]' : 'border-[#E4E2DA]')}>
+                            <span className="flex min-w-0 flex-1 basis-40 items-center gap-2.5 font-medium">
+                                <FileText className="size-4 shrink-0 text-[#4F46E5]" /> <span className="truncate">{file.name}</span>
+                            </span>
+                            <span className="flex shrink-0 items-center gap-2">
+                                {file.view_url && (
+                                    <button type="button" onClick={() => setOpenUuid(active ? null : file.uuid)} aria-expanded={active} className={cn(GHOST, 'h-8 px-2.5 text-xs')}>
+                                        <Eye className="size-3.5" /> {active ? 'Close' : 'Read'}
+                                    </button>
+                                )}
+                                {file.download_url && (
+                                    <a href={file.download_url} className={cn(GHOST, 'h-8 px-2.5 text-xs')}>
+                                        <Download className="size-3.5" /> Download
+                                    </a>
+                                )}
+                                {!file.view_url && !file.download_url && <span className="text-xs text-[#8A8A96]">Can’t be opened here</span>}
+                            </span>
+                        </div>
+                    );
+                })}
+                {files.length === 0 && <p className="text-sm text-[#8A8A96]">No files added yet.</p>}
+                {files.some((f) => !f.view_url && !f.download_url) && (
+                    <p className="text-xs text-[#8A8A96]">Some files can only be read as a PDF and downloads are turned off for these notes. Ask your instructor for a PDF copy.</p>
+                )}
+            </div>
+
+            {open && <div className="mt-4">{open.kind === 'pdf' ? <PdfViewer url={open.view_url!} title={open.name} /> : <TextFileViewer url={open.view_url!} />}</div>}
+        </>
+    );
 }
 
 function Assignment({ lesson }: { lesson: Lesson }) {
@@ -345,30 +400,78 @@ function Assignment({ lesson }: { lesson: Lesson }) {
     );
 }
 
+/** Submit se pehle ke jawab — refresh pe na udein. Storage band ho (private window) to bas yaad nahi rehta. */
+const draftStore = {
+    key: (quizUuid: string) => `quiz-draft:${quizUuid}`,
+    read(quizUuid: string): Record<number, number[]> {
+        try {
+            const raw = JSON.parse(window.localStorage.getItem(this.key(quizUuid)) ?? '{}');
+            return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+        } catch {
+            return {};
+        }
+    },
+    write(quizUuid: string, answers: Record<number, number[]>) {
+        try {
+            if (Object.keys(answers).length === 0) window.localStorage.removeItem(this.key(quizUuid));
+            else window.localStorage.setItem(this.key(quizUuid), JSON.stringify(answers));
+        } catch {
+            // storage nahi hai — koi baat nahi
+        }
+    },
+};
+
 function Quiz({ lesson, onPassed }: { lesson: Lesson; onPassed: () => void }) {
     const content = lesson.content as { uuid: string; title: string | null; questions: QuizQuestion[] };
-    const [answers, setAnswers] = useState<Record<number, number[]>>({});
-    const [busy, setBusy] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [result, setResult] = useState<{ score: number; correct: number; total: number } | null>(
-        lesson.extra.last_attempt ? { score: Number(lesson.extra.last_attempt.score), correct: lesson.extra.last_attempt.correct_answers, total: lesson.extra.last_attempt.total_questions } : null,
-    );
-    // submit ke baad hi server sahi jawab bhejta hai
-    const [review, setReview] = useState<Record<number, { correct: number[]; is_correct: boolean }>>({});
+    const questions = content.questions;
 
-    const multiple = (q: QuizQuestion) => /multi/i.test(q.type);
+    // result server se aata hai (submit ke baad ya page khulte hi) — sahi jawab sirf usi me hote hain
+    const [result, setResult] = useState<QuizResult | null>(lesson.extra.last_attempt ?? null);
+    const [answers, setAnswers] = useState<Record<number, number[]>>(() => {
+        if (lesson.extra.last_attempt) return {};
+
+        // purane draft me se sirf wahi jo aaj bhi is quiz me hai (creator ne sawaal badle ho sakte hain)
+        const draft = draftStore.read(content.uuid);
+        const kept: Record<number, number[]> = {};
+        for (const q of questions) {
+            const ids = (Array.isArray(draft[q.id]) ? draft[q.id] : []).filter((id) => q.options.some((o) => o.id === id));
+            if (ids.length > 0) kept[q.id] = ids;
+        }
+
+        return kept;
+    });
+    const [busy, setBusy] = useState(false);
+    const [resetting, setResetting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const top = useRef<HTMLDivElement>(null);
+
+    const review = useMemo(() => Object.fromEntries((result?.review ?? []).map((r) => [r.question_id, r])), [result]);
+    const multiple = (q: QuizQuestion) => q.type === 'multiple_choice';
+    const selectedFor = (q: QuizQuestion) => (result ? (review[q.id]?.selected ?? []) : (answers[q.id] ?? []));
+
+    const answered = questions.filter((q) => (answers[q.id] ?? []).length > 0).length;
+    const remaining = questions.length - answered;
+
+    useEffect(() => {
+        if (!result) draftStore.write(content.uuid, answers);
+    }, [answers, result, content.uuid]);
 
     function toggle(q: QuizQuestion, optionId: number) {
+        setError(null);
         setAnswers((all) => {
             const current = all[q.id] ?? [];
-            if (!multiple(q)) return { ...all, [q.id]: [optionId] };
+            const next = multiple(q) ? (current.includes(optionId) ? current.filter((id) => id !== optionId) : [...current, optionId]) : [optionId];
+            const rest = { ...all };
+            if (next.length > 0) rest[q.id] = next;
+            else delete rest[q.id];
 
-            return { ...all, [q.id]: current.includes(optionId) ? current.filter((id) => id !== optionId) : [...current, optionId] };
+            return rest;
         });
     }
 
     async function submit(e: FormEvent) {
         e.preventDefault();
+        if (result || busy) return;
         setBusy(true);
         setError(null);
 
@@ -377,13 +480,15 @@ function Quiz({ lesson, onPassed }: { lesson: Lesson; onPassed: () => void }) {
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                setError(firstError(data, 'Could not submit the quiz. Answer at least one question.'));
+                setError(firstError(data, 'Could not submit the quiz. Please try again.'));
                 return;
             }
 
-            setResult({ score: Number(data.attempt.score), correct: data.attempt.correct_answers, total: data.attempt.total_questions });
-            setReview(Object.fromEntries((data.review as { question_id: number; correct: number[]; is_correct: boolean }[]).map((r) => [r.question_id, r])));
+            setResult(data.result as QuizResult);
+            setAnswers({});
+            draftStore.write(content.uuid, {});
             onPassed();
+            top.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } catch {
             setError('Could not reach the server. Please try again.');
         } finally {
@@ -391,60 +496,167 @@ function Quiz({ lesson, onPassed }: { lesson: Lesson; onPassed: () => void }) {
         }
     }
 
+    /** Quiz sirf yahin se khaali hota hai — refresh se nahi. */
+    async function reset() {
+        if (resetting) return;
+        setError(null);
+
+        // abhi submit nahi hua: sirf chune hue jawab hatane hain, server pe kuch hai hi nahi
+        if (!result) {
+            setAnswers({});
+            return;
+        }
+
+        setResetting(true);
+        try {
+            const res = await postJson(`/me/quiz/${content.uuid}/reset`, {});
+            if (!res.ok) {
+                setError('Could not reset the quiz. Please try again.');
+                return;
+            }
+
+            setResult(null);
+            setAnswers({});
+            top.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch {
+            setError('Could not reach the server. Please try again.');
+        } finally {
+            setResetting(false);
+        }
+    }
+
+    if (questions.length === 0) {
+        return <p className="text-sm text-[#8A8A96]">This quiz has no questions yet. Check back soon.</p>;
+    }
+
+    const resetButton = (label: string) => (
+        <button type="button" onClick={() => void reset()} disabled={resetting} className={cn(GHOST, 'shrink-0')}>
+            {resetting ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />} {label}
+        </button>
+    );
+
+    const perfect = result !== null && result.correct_answers === result.total_questions;
+
     return (
         <form onSubmit={submit} className="flex flex-col gap-5">
-            {result && (
-                <div className="rounded-xl bg-[#EEF0FF] p-4 text-sm">
-                    <p className="font-bold text-[#4338CA]">
-                        Your score: {result.correct} / {result.total} ({Math.round(result.score)}%)
-                    </p>
-                    <p className="mt-0.5 text-[#4B4B57]">You can try again as many times as you like.</p>
-                </div>
-            )}
-
-            {content.questions.map((q, i) => (
-                <fieldset key={q.id} className="rounded-xl border border-[#E4E2DA] p-4">
-                    <legend className="px-1 text-sm font-semibold">
-                        {i + 1}. {q.question_text}
-                        {multiple(q) && <span className="ml-1 text-xs font-normal text-[#8A8A96]">(choose all that apply)</span>}
-                    </legend>
-                    {q.question_image_path && <img src={asset(q.question_image_path)} alt="" className="mt-2 max-h-64 rounded-lg" />}
-                    <div className="mt-3 flex flex-col gap-2">
-                        {q.options.map((option) => {
-                            const checked = (answers[q.id] ?? []).includes(option.id);
-                            const reviewed = review[q.id];
-                            const isCorrect = reviewed?.correct.includes(option.id);
-
-                            return (
-                                <label
-                                    key={option.id}
-                                    className={cn(
-                                        'flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm transition',
-                                        reviewed ? (isCorrect ? 'border-[#059669] bg-[#E6F6EC]' : checked ? 'border-[#C2410C] bg-[#FFEDE8]' : 'border-[#E4E2DA]') : checked ? 'border-[#4F46E5] bg-[#EEF0FF]' : 'border-[#E4E2DA] hover:bg-[#F6F5F2]',
-                                    )}
-                                >
-                                    <input type={multiple(q) ? 'checkbox' : 'radio'} name={`q-${q.id}`} checked={checked} onChange={() => toggle(q, option.id)} className="size-4 shrink-0 accent-[#4F46E5]" />
-                                    <span className="min-w-0 flex-1">
-                                        {option.option_text}
-                                        {option.option_image_path && <img src={asset(option.option_image_path)} alt="" className="mt-2 max-h-40 rounded-lg" />}
-                                    </span>
-                                    {reviewed && isCorrect && <Check className="size-4 shrink-0 text-[#059669]" />}
-                                </label>
-                            );
-                        })}
+            <div ref={top} className="scroll-mt-24">
+                {result ? (
+                    <div role="status" className={cn('flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between', perfect ? 'bg-[#E6F6EC]' : 'bg-[#EEF0FF]')}>
+                        <div className="flex items-center gap-4">
+                            <span className={cn('flex size-16 shrink-0 flex-col items-center justify-center rounded-full bg-white text-lg font-bold tabular-nums', perfect ? 'text-[#059669]' : 'text-[#4338CA]')}>
+                                {Math.round(result.score)}%
+                            </span>
+                            <div className="min-w-0">
+                                <p className="text-base font-bold text-[#14141B]">
+                                    {result.correct_answers} of {result.total_questions} correct
+                                </p>
+                                <p className="mt-0.5 text-sm text-[#4B4B57]">
+                                    {perfect ? 'Perfect score — well done.' : 'The right answers are marked below. Reset the quiz to try again.'}
+                                </p>
+                                <p className="mt-1 text-xs text-[#8A8A96]">Submitted {new Date(result.attempted_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                            </div>
+                        </div>
+                        {resetButton('Reset quiz')}
                     </div>
-                </fieldset>
-            ))}
+                ) : (
+                    <div className="rounded-xl bg-[#F6F5F2] p-4">
+                        <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm font-semibold text-[#14141B]">
+                                {answered} of {questions.length} answered
+                            </p>
+                            {answered > 0 && resetButton('Reset')}
+                        </div>
+                        <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[#E4E2DA]">
+                            <span className="block h-full rounded-full bg-[#4F46E5] transition-all" style={{ width: `${(answered / questions.length) * 100}%` }} />
+                        </div>
+                        <p className="mt-2 text-xs text-[#8A8A96]">Your answers stay here if you leave or refresh. They are checked when you submit.</p>
+                    </div>
+                )}
+            </div>
+
+            {questions.map((q, i) => {
+                const reviewed = review[q.id];
+                const selected = selectedFor(q);
+
+                return (
+                    <fieldset key={q.id} disabled={result !== null || busy} className="min-w-0 rounded-xl border border-[#E4E2DA] p-4">
+                        <legend className="sr-only">Question {i + 1}</legend>
+                        <div className="flex items-start gap-3">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#F0EFEA] text-xs font-bold text-[#4B4B57] tabular-nums">{i + 1}</span>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[15px] leading-snug font-semibold text-[#14141B]">{q.question_text}</p>
+                                <p className="mt-0.5 text-xs text-[#8A8A96]">{multiple(q) ? 'Choose all that apply' : 'Choose one'}</p>
+                            </div>
+                            {reviewed && (
+                                <span className={cn('inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold', reviewed.is_correct ? 'bg-[#E6F6EC] text-[#059669]' : 'bg-[#FFEDE8] text-[#C2410C]')}>
+                                    {reviewed.is_correct ? <Check className="size-3.5" /> : <X className="size-3.5" />} {reviewed.is_correct ? 'Correct' : 'Incorrect'}
+                                </span>
+                            )}
+                        </div>
+                        {q.question_image_path && <img src={asset(q.question_image_path)} alt="" className="mt-3 max-h-64 max-w-full rounded-lg" />}
+
+                        <div className="mt-3 flex flex-col gap-2">
+                            {q.options.map((option) => {
+                                const checked = selected.includes(option.id);
+                                const isCorrect = reviewed?.correct.includes(option.id) ?? false;
+                                const tone = reviewed
+                                    ? isCorrect
+                                        ? 'border-[#059669] bg-[#E6F6EC]'
+                                        : checked
+                                          ? 'border-[#C2410C] bg-[#FFEDE8]'
+                                          : 'border-[#E4E2DA] opacity-70'
+                                    : checked
+                                      ? 'cursor-pointer border-[#4F46E5] bg-[#EEF0FF]'
+                                      : 'cursor-pointer border-[#E4E2DA] hover:bg-[#F6F5F2]';
+
+                                return (
+                                    <label key={option.id} className={cn('flex items-center gap-3 rounded-lg border p-3 text-sm transition', tone)}>
+                                        <input type={multiple(q) ? 'checkbox' : 'radio'} name={`q-${q.id}`} checked={checked} onChange={() => toggle(q, option.id)} className="size-4 shrink-0 accent-[#4F46E5]" />
+                                        <span className="min-w-0 flex-1 break-words">
+                                            {option.option_text}
+                                            {option.option_image_path && <img src={asset(option.option_image_path)} alt="" className="mt-2 max-h-40 max-w-full rounded-lg" />}
+                                        </span>
+                                        {reviewed && isCorrect && (
+                                            <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#059669]">
+                                                <Check className="size-4" /> {checked ? 'Your answer' : 'Right answer'}
+                                            </span>
+                                        )}
+                                        {reviewed && !isCorrect && checked && (
+                                            <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#C2410C]">
+                                                <X className="size-4" /> Your answer
+                                            </span>
+                                        )}
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </fieldset>
+                );
+            })}
 
             {error && (
-                <p role="alert" className="text-xs font-medium text-[#C2410C]">
+                <p role="alert" className="text-sm font-medium text-[#C2410C]">
                     {error}
                 </p>
             )}
 
-            <button type="submit" disabled={busy || Object.keys(answers).length === 0} className={cn(PRIMARY, 'w-fit')}>
-                {busy && <Loader2 className="size-4 animate-spin" />} {result ? 'Submit again' : 'Submit answers'}
-            </button>
+            {result ? (
+                <div className="flex flex-wrap items-center gap-3">
+                    {resetButton('Reset quiz & try again')}
+                    <span className="text-xs text-[#8A8A96]">Resetting clears your answers here. Your lesson progress stays.</span>
+                </div>
+            ) : (
+                <div className="flex flex-wrap items-center gap-3">
+                    <button type="submit" disabled={busy || remaining > 0} className={cn(PRIMARY, 'w-fit')}>
+                        {busy && <Loader2 className="size-4 animate-spin" />} Submit answers
+                    </button>
+                    {remaining > 0 && (
+                        <span className="text-xs font-medium text-[#8A8A96]">
+                            {remaining} {remaining === 1 ? 'question' : 'questions'} left to answer
+                        </span>
+                    )}
+                </div>
+            )}
         </form>
     );
 }

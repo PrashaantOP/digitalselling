@@ -39,7 +39,7 @@ class CertificateSettingController extends Controller
                 'has_signature' => (bool) $settings?->signature_path,
             ],
             'resolved' => $design,
-            'templates' => collect(CertificateSetting::TEMPLATES)->map(fn ($label, $key) => ['key' => $key, 'label' => $label])->values(),
+            'templates' => collect(CertificateSetting::TEMPLATES)->map(fn ($label, $key) => ['key' => $key, 'label' => $label, 'orientation' => CertificateSetting::orientation($key)])->values(),
             'previewUrl' => url('/dashboard/courses/certificate/preview'),
         ]);
     }

@@ -209,6 +209,85 @@ class SettlementController extends Controller
         return back()->with('status', "{$result['settlements']} settlement(s) created for {$result['orders']} order(s); {$result['blocked']} creator(s) blocked.");
     }
 
+    /**
+     * Custom settlement ka page. `?creator={uuid}` na ho to un creators ki list jinke orders abhi kisi settlement
+     * me nahi hain; ho to us creator ke saare unsettled orders + pending adjustments, chunne ke liye.
+     */
+    public function create(Request $request)
+    {
+        $creator = $request->query('creator')
+            ? User::where('role', 'creator')->where('uuid', $request->query('creator'))->with('kycVerification')->firstOrFail()
+            : null;
+
+        if (! $creator) {
+            $creatorIds = Order::where('status', 'success')->whereNull('settlement_id')->whereNotNull('paid_at')->distinct()->pluck('creator_id');
+
+            return Inertia::render('Admin/Settlements/Create', [
+                'creators' => User::whereIn('id', $creatorIds)->with('kycVerification')->orderBy('name')->get()->map(fn (User $c) => [
+                    'creator' => $c->only(['uuid', 'name', 'email']),
+                    'orders' => $this->settlements->unsettledOrders($c->id)->count(),
+                    'net' => (float) $this->settlements->unsettledOrders($c->id)->sum('net_payout_amount'),
+                    'blocked_reason' => $this->settlements->blockedReason($c),
+                ])->values(),
+                'selected' => null,
+            ]);
+        }
+
+        $cutoff = SettlementService::cutoffDate();
+        $method = $this->settlements->payoutMethodFor($creator);
+
+        return Inertia::render('Admin/Settlements/Create', [
+            'creators' => [],
+            'selected' => [
+                'creator' => $creator->only(['uuid', 'name', 'email']),
+                'blocked_reason' => $this->settlements->blockedReason($creator),
+                'payout' => $method ? ['type' => $method->type, 'destination' => $method->type === 'upi' ? $method->upi_id : "{$method->account_number} · {$method->ifsc}"] : null,
+                'hold_days' => SettlementService::HOLD_DAYS,
+                'min_hours' => SettlementService::CUSTOM_HOLD_HOURS,
+                'orders' => $this->settlements->unsettledOrders($creator->id)->with('product:id,title')->oldest('paid_at')->get()
+                    ->map(fn (Order $o) => [
+                        'uuid' => $o->uuid, 'order_number' => $o->order_number, 'product' => $o->product?->title,
+                        'buyer' => $o->buyer_name ?: $o->buyer_email, 'paid_at' => $o->paid_at?->toIso8601String(),
+                        'total_amount' => (float) $o->total_amount, 'platform_fee' => (float) $o->platform_fee, 'net' => (float) $o->net_payout_amount,
+                        // 24 ghante se naya — abhi chuna hi nahi ja sakta
+                        'too_new' => $o->paid_at->gt(now()->subHours(SettlementService::CUSTOM_HOLD_HOURS)),
+                        // cycle ka T+2 hold paar nahi hua — Razorpay ka paisa abhi aaya nahi hoga
+                        'on_hold' => $o->paid_at->copy()->startOfDay()->gt($cutoff),
+                    ]),
+                'adjustments' => $this->settlements->pendingAdjustments($creator->id)->oldest('id')->get()->map(fn ($a) => [
+                    'uuid' => $a->uuid, 'type' => $a->type, 'amount' => (float) $a->amount, 'reason' => $a->reason,
+                ]),
+            ],
+        ]);
+    }
+
+    /** Admin ke chune hue orders ka settlement. Baaki orders agli cycle ke liye chhoot jaate hain. */
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'creator' => ['required', 'uuid'],
+            'orders' => ['required', 'array', 'min:1', 'max:1000'],
+            'orders.*' => ['uuid', 'distinct'],
+            'adjustments' => ['sometimes', 'array', 'max:200'],
+            'adjustments.*' => ['uuid', 'distinct'],
+        ]);
+
+        $creator = User::where('role', 'creator')->where('uuid', $data['creator'])->with('kycVerification')->firstOrFail();
+
+        // uuid → id, sirf isi creator ke; jo na mile (kisi aur ka / settle ho chuka) wo count ke farq se pakda jaata hai
+        $orderIds = $this->settlements->unsettledOrders($creator->id)->whereIn('uuid', $data['orders'])->pluck('id')->all();
+        $adjustmentIds = $this->settlements->pendingAdjustments($creator->id)->whereIn('uuid', $data['adjustments'] ?? [])->pluck('id')->all();
+
+        if (count($orderIds) !== count($data['orders']) || count($adjustmentIds) !== count($data['adjustments'] ?? [])) {
+            return back()->withErrors(['orders' => 'Some of the selected items were just settled elsewhere. Reload and pick again.']);
+        }
+
+        $settlement = $this->settlements->settleCustom($creator, $orderIds, $adjustmentIds);
+        AdminAudit::log('settlement.created_custom', $settlement, ['orders' => $settlement->orders_count, 'amount' => (float) $settlement->net_amount]);
+
+        return redirect("/admin/settlements/{$settlement->uuid}")->with('status', "{$settlement->number} created for {$settlement->orders_count} order(s).");
+    }
+
     private function row(Settlement $s): array
     {
         $m = $s->payoutMethod;

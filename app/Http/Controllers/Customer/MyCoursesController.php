@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Enrollment;
+use App\Services\CertificateService;
 use Inertia\Inertia;
 
 class MyCoursesController extends Controller
 {
     use ResolvesCustomer;
 
-    public function index()
+    public function index(CertificateService $certificates)
     {
         $enrollments = Enrollment::with([
             'course.product:id,creator_id,title,slug',
@@ -20,6 +21,8 @@ class MyCoursesController extends Controller
             ->whereIn('customer_id', $this->customerIds())
             ->latest('created_at')->get()
             ->map(fn (Enrollment $e) => [
+                // poora kar chuka ho par certificate na bana ho (toggle baad me on hua) to yahin ban jaata hai
+                'certificate_uuid' => $certificates->ensure($e)?->uuid,
                 'id' => $e->id,
                 'uuid' => $e->uuid,
                 'title' => $e->course->product->title,
@@ -29,7 +32,6 @@ class MyCoursesController extends Controller
                 'completed_at' => $e->completed_at,
                 'access_expires_at' => $e->access_expires_at,
                 'expired' => (bool) ($e->access_expires_at && $e->access_expires_at->isPast()),
-                'has_certificate' => (bool) $e->certificate_issued_at,
             ]);
 
         return Inertia::render('Customer/MyCourses', ['courses' => $enrollments]);

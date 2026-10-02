@@ -30,7 +30,7 @@ class StoreSettingsController extends Controller
         $store = StoreController::storeFor($this->tid());
 
         $data = $request->validate([
-            'username' => ['sometimes', 'required', 'string', 'max:30', 'regex:/^[a-z0-9]+$/', Rule::notIn(CreatorProfileController::RESERVED_USERNAMES), Rule::unique('stores', 'username')->ignore($store->id), Rule::unique('users', 'username')->ignore($store->user_id)],
+            'username' => ['sometimes', 'required', 'string', CreatorProfileController::USERNAME_REGEX, Rule::notIn(CreatorProfileController::RESERVED_USERNAMES), Rule::unique('stores', 'username')->ignore($store->id), Rule::unique('users', 'username')->ignore($store->user_id)],
             'column_layout' => ['required', Rule::in(['single', 'double'])],
             'sensitive_content_warning' => ['sometimes', 'boolean'],
             'meta_title' => ['nullable', 'string', 'max:70'],

@@ -29,6 +29,17 @@ class CourseLesson extends Model
     ];
 
 
+    /**
+     * Free preview sirf inhi types ka ho sakta hai. Quiz aur assignment ke liye enrollment chahiye
+     * (attempt / submission usi se jude hain), isliye wo bina kharide kabhi nahi khulte.
+     */
+    public const PREVIEWABLE_TYPES = ['video', 'text_image', 'audio', 'notes_pdf'];
+
+    public static function previewable(string $type): bool
+    {
+        return in_array($type, self::PREVIEWABLE_TYPES, true);
+    }
+
     public function module()
     {
         return $this->belongsTo(CourseModule::class, 'module_id');

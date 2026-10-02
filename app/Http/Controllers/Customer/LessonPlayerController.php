@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Certificate;
 use App\Models\CourseLesson;
 use App\Models\Enrollment;
 use App\Models\LessonNoteFile;
@@ -49,7 +48,8 @@ class LessonPlayerController extends Controller
         return Inertia::render('Customer/LessonPlayer', [
             'enrollment' => $enrollment->only(['id', 'uuid', 'progress_percent', 'completed_at', 'certificate_issued_at']) + [
                 'course' => $enrollment->course->product->only(['title', 'slug']),
-                'certificate_uuid' => Certificate::where('enrollment_id', $enrollment->id)->value('uuid'),
+                // poora kar chuka ho par certificate na bana ho (toggle baad me on hua) to yahin ban jaata hai
+                'certificate_uuid' => app(CertificateService::class)->ensure($enrollment)?->uuid,
             ],
             'modules' => $modules,
             'completedLessonIds' => $completed,
@@ -79,12 +79,6 @@ class LessonPlayerController extends Controller
 
         if ($percent === 100 && ! $enrollment->completed_at) {
             $updates['completed_at'] = now();
-
-            if ($enrollment->course->certificate_enabled) {
-                // naam/course/creator ka snapshot yahin jamta hai
-                app(CertificateService::class)->issue($enrollment);
-                $updates['certificate_issued_at'] = now();
-            }
         }
 
         $enrollment->update($updates);
@@ -92,20 +86,51 @@ class LessonPlayerController extends Controller
         return response()->json([
             'progress_percent' => $percent,
             'course_completed' => $percent === 100,
-            'certificate_uuid' => Certificate::where('enrollment_id', $enrollment->id)->value('uuid'),
+            // naam/course/creator ka snapshot yahin jamta hai (course poora + certificate on ho tabhi)
+            'certificate_uuid' => app(CertificateService::class)->ensure($enrollment)?->uuid,
         ]);
     }
 
     /** GET /me/lesson-files/{fileUuid} — notes/PDF download (sirf jab creator ne allow_download on kiya ho) */
     public function noteFile(string $fileUuid)
     {
+        $file = $this->noteFileFor($fileUuid);
+
+        abort_unless($file->note->allow_download, 403, 'Downloads are disabled for these notes.');
+
+        return Storage::disk('local')->download($file->file_path, $file->original_name ?: basename($file->file_path));
+    }
+
+    /**
+     * GET /me/lesson-files/{fileUuid}/view — notes ko player ke andar padhne ke liye (inline, download nahi).
+     * Download band ho tab bhi chalta hai, par sirf un types ke liye jo browser me dikh sakte hain (PDF, txt) —
+     * warna ye route band download ka chor darwaza ban jaata.
+     */
+    public function viewNoteFile(string $fileUuid)
+    {
+        $file = $this->noteFileFor($fileUuid);
+        $kind = $file->viewKind();
+
+        abort_unless($kind, 404);
+
+        return response()->file(Storage::disk('local')->path($file->file_path), [
+            'Content-Type' => $kind === 'pdf' ? 'application/pdf' : 'text/plain; charset=UTF-8',
+            'Content-Disposition' => 'inline',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    /** Enrolled buyer ke published lesson ki file, jo disk pe maujood hai — warna 404. */
+    private function noteFileFor(string $fileUuid): LessonNoteFile
+    {
         $file = LessonNoteFile::with('note.lesson.module')->where('uuid', $fileUuid)->firstOrFail();
 
         $this->enrollmentForCourse($file->note->lesson->module->course_id);
-        abort_unless($file->note->allow_download, 403, 'Downloads are disabled for these notes.');
+        abort_unless($file->note->lesson->is_published, 404);
         abort_unless(Storage::disk('local')->exists($file->file_path), 404);
 
-        return Storage::disk('local')->download($file->file_path, $file->original_name ?: basename($file->file_path));
+        return $file;
     }
 
     private function lessonPayload(int $lessonId, Enrollment $enrollment): array
@@ -129,9 +154,14 @@ class LessonPlayerController extends Controller
                 $payload['content'] = $note ? [
                     'description' => $note->description,
                     'allow_download' => $note->allow_download,
-                    'files' => $note->allow_download ? $note->files->map(fn ($f) => [
-                        'name' => $f->original_name, 'url' => url("/me/lesson-files/{$f->uuid}"),
-                    ]) : [],
+                    // har file dikhti hai: padhne ka link (PDF/txt) hamesha, download ka sirf jab creator ne on rakha ho
+                    'files' => $note->files->sortBy('sort_order')->values()->map(fn ($f) => [
+                        'uuid' => $f->uuid,
+                        'name' => $f->original_name ?: 'File',
+                        'kind' => $f->viewKind(),
+                        'view_url' => $f->viewKind() ? url("/me/lesson-files/{$f->uuid}/view") : null,
+                        'download_url' => $note->allow_download ? url("/me/lesson-files/{$f->uuid}") : null,
+                    ]),
                 ] : null;
                 break;
             case 'assignment':
@@ -147,13 +177,14 @@ class LessonPlayerController extends Controller
                     'id' => $lesson->quiz->id,
                     'uuid' => $lesson->quiz->uuid,
                     'title' => $lesson->quiz->title,
-                    'questions' => $lesson->quiz->questions->sortBy('sort_order')->values()->map(fn ($q) => [
+                    'questions' => $lesson->quiz->questions->filter(fn ($q) => $q->options->isNotEmpty())->sortBy('sort_order')->values()->map(fn ($q) => [
                         'id' => $q->id, 'question_text' => $q->question_text, 'question_image_path' => $q->question_image_path, 'type' => $q->type,
                         'options' => $q->options->sortBy('sort_order')->values()->map->only(['id', 'option_text', 'option_image_path']),
                     ]),
                 ] : null;
+                // jo attempt reset nahi hua uska poora result — refresh ke baad bhi wahi dikhe
                 $payload['extra']['last_attempt'] = $lesson->quiz
-                    ? QuizAttempt::where('quiz_id', $lesson->quiz->id)->where('enrollment_id', $enrollment->id)->latest('attempted_at')->first(['id', 'score', 'total_questions', 'correct_answers', 'attempted_at'])
+                    ? QuizAttempt::current($lesson->quiz->id, $enrollment->id)?->result($lesson->quiz)
                     : null;
                 break;
         }

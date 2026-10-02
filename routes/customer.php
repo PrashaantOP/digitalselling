@@ -44,8 +44,10 @@ Route::middleware('auth:customer')->prefix('me')->group(function () {
     Route::get('courses/{enrollmentUuid}/learn/{lessonUuid?}', [LessonPlayerController::class, 'show'])->name('me.learn');
     Route::post('lessons/{lessonUuid}/complete', [LessonPlayerController::class, 'markComplete'])->name('me.lesson.complete');
     Route::get('lesson-files/{fileUuid}', [LessonPlayerController::class, 'noteFile'])->name('me.lesson.file');
+    Route::get('lesson-files/{fileUuid}/view', [LessonPlayerController::class, 'viewNoteFile'])->name('me.lesson.file.view');
 
     Route::post('quiz/{quizUuid}/attempt', [QuizAttemptController::class, 'store'])->name('me.quiz.attempt');
+    Route::post('quiz/{quizUuid}/reset', [QuizAttemptController::class, 'reset'])->name('me.quiz.reset');
     Route::post('assignments/{assignmentUuid}/submit', [AssignmentSubmissionController::class, 'store'])->name('me.assignment.submit');
     Route::get('certificates/{certificateUuid}', [CertificateController::class, 'download'])->name('me.certificate');
 
