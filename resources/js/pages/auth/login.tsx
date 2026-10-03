@@ -19,7 +19,7 @@ const field = 'h-11 rounded-xl bg-white px-4 shadow-none';
 
 export default function Login({ status, canResetPassword }: LoginProps) {
     return (
-        <AuthLayout title="Welcome back" description="Log in to manage your store, products and payouts.">
+        <AuthLayout title="Welcome back" description="Log in to manage your courses, students and payouts.">
             <Head title="Log in" />
 
             {status && (

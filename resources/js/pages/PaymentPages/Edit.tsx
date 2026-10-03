@@ -27,6 +27,7 @@ import {
     type Device,
 } from '@/components/product-editor/ui';
 import { useAutoSave } from '@/components/product-editor/use-auto-save';
+import { FilesNote } from '@/components/public/public-product-layout';
 import { VideoEmbed } from '@/components/public/video-embed';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
@@ -52,6 +53,8 @@ interface PaymentPageDetail {
     product_id: number;
     subtitle: string | null;
     whats_included: string[] | null;
+    /** pay ke baad buyer ko milne wale links (email + portal) */
+    delivery_files?: { label: string | null; url: string }[] | null;
     faqs: PaymentPageFaq[] | null;
     collect_full_name: boolean;
     collect_note: boolean;
@@ -101,6 +104,7 @@ function PreviewPane({ item, host, device }: { item: PaymentPageItem; host: stri
     const videoUrl = item.cover_video_url?.trim();
     const subtitle = item.payment_page_detail?.subtitle?.trim();
     const points = item.payment_page_detail?.whats_included ?? [];
+    const filesCount = (item.payment_page_detail?.delivery_files ?? []).filter((f) => f.url?.trim()).length;
     const faqs = item.payment_page_detail?.faqs ?? [];
     const collectNote = item.payment_page_detail?.collect_note ?? false;
     const collectName = item.payment_page_detail?.collect_full_name ?? true;
@@ -137,6 +141,8 @@ function PreviewPane({ item, host, device }: { item: PaymentPageItem; host: stri
                     <p className="text-[15px] leading-relaxed text-[#6B6B78]">Describe your page so buyers know what they're paying for.</p>
                 )}
             </div>
+
+            {filesCount > 0 && <FilesNote count={filesCount} accent={accent} />}
 
             {points.length > 0 && (
                 <div>
@@ -205,6 +211,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
             cover_video_url: item.cover_video_url ?? '',
             subtitle: item.payment_page_detail?.subtitle ?? '',
             whats_included: item.payment_page_detail?.whats_included ?? [],
+            delivery_files: (item.payment_page_detail?.delivery_files ?? []).map((f) => ({ label: f.label ?? '', url: f.url })),
             faqs: item.payment_page_detail?.faqs ?? [],
             collect_full_name: item.payment_page_detail?.collect_full_name ?? true,
             collect_note: item.payment_page_detail?.collect_note ?? false,
@@ -288,6 +295,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
             slug: f.slug,
             subtitle: f.subtitle || null,
             whats_included: f.whats_included,
+            delivery_files: f.delivery_files,
             faqs: f.faqs,
             collect_full_name: f.collect_full_name,
             collect_note: f.collect_note,
@@ -321,6 +329,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
                 product_id: item.id,
                 subtitle: form.subtitle || null,
                 whats_included: form.whats_included.filter((p) => p.trim()),
+                delivery_files: form.delivery_files.filter((f) => f.url.trim()),
                 faqs: form.faqs.filter((f) => f.question.trim()),
                 collect_full_name: form.collect_full_name,
                 collect_note: form.collect_note,
@@ -475,6 +484,50 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
                 )}
                 <p className={HINT_CLASS}>What buyers get — shown as a checklist</p>
                 <FieldError message={errorFor('whats_included')} />
+            </div>
+
+            {/* Files to deliver — pay ke baad buyer ko email + "My purchases" me */}
+            <div className="flex flex-col gap-1.5">
+                <label className={LABEL_CLASS}>Files to deliver</label>
+                {form.delivery_files.map((entry, index) => {
+                    const setEntry = (next: Partial<typeof entry>) =>
+                        patch({ delivery_files: form.delivery_files.map((f, i) => (i === index ? { ...f, ...next } : f)) });
+
+                    return (
+                        <div key={index} className="flex items-start gap-2 rounded-lg border border-[#E4E2DA] p-2">
+                            <div className="flex min-w-0 flex-1 flex-col gap-2">
+                                <input
+                                    value={entry.label}
+                                    maxLength={120}
+                                    onChange={(e) => setEntry({ label: e.target.value })}
+                                    placeholder={`File ${index + 1} name — e.g. Workbook (PDF)`}
+                                    className={INPUT_CLASS}
+                                />
+                                <input
+                                    type="url"
+                                    value={entry.url}
+                                    maxLength={2000}
+                                    autoFocus={entry.url === '' && index === form.delivery_files.length - 1}
+                                    onChange={(e) => setEntry({ url: e.target.value })}
+                                    placeholder="https://drive.google.com/…"
+                                    className={INPUT_CLASS}
+                                />
+                                <FieldError message={saveErrors[`delivery_files.${index}.url`] ? 'Enter a full link starting with https://' : undefined} />
+                            </div>
+                            <RemoveButton
+                                label={`Remove file ${index + 1}`}
+                                onClick={() => patch({ delivery_files: form.delivery_files.filter((_, i) => i !== index) })}
+                            />
+                        </div>
+                    );
+                })}
+                {form.delivery_files.length < 50 && (
+                    <button type="button" onClick={() => patch({ delivery_files: [...form.delivery_files, { label: '', url: '' }] })} className={ADD_BUTTON_CLASS}>
+                        + Add file link
+                    </button>
+                )}
+                <p className={HINT_CLASS}>For Google Drive, set sharing to “Anyone with the link”.</p>
+                <p className={HINT_CLASS}>Add unlimited download links — buyers get them by email right after payment, and in their purchases.</p>
             </div>
 
             {/* Pricing */}

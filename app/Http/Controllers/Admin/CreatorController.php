@@ -20,7 +20,8 @@ class CreatorController extends Controller
         $filters = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
             'plan' => ['nullable', Rule::in(['free', 'pro'])],
-            'status' => ['nullable', Rule::in(['active', 'suspended'])],
+            // 'deleted' = account khud delete kiya (soft) — sirf yahi filter unhe dikhata hai
+            'status' => ['nullable', Rule::in(['active', 'suspended', 'deleted'])],
             'kyc' => ['nullable', Rule::in(['not_started', 'pending', 'verified', 'rejected'])],
         ]);
 
@@ -32,7 +33,8 @@ class CreatorController extends Controller
                 ->where('name', 'like', "%{$v}%")->orWhere('email', 'like', "%{$v}%")
                 ->orWhere('username', 'like', "%{$v}%")->orWhere('phone', 'like', "%{$v}%")))
             ->when($filters['plan'] ?? null, fn ($q, $v) => $q->where('plan', $v))
-            ->when($filters['status'] ?? null, fn ($q, $v) => $q->where('status', $v))
+            ->when(($filters['status'] ?? null) === 'deleted', fn ($q) => $q->onlyTrashed())
+            ->when(in_array($filters['status'] ?? null, ['active', 'suspended'], true), fn ($q) => $q->where('status', $filters['status']))
             ->when($filters['kyc'] ?? null, fn ($q, $v) => $v === 'not_started'
                 ? $q->where(fn ($s) => $s->doesntHave('kycVerification')->orWhereHas('kycVerification', fn ($k) => $k->where('status', 'not_started')))
                 : $q->whereHas('kycVerification', fn ($k) => $k->where('status', $v)))
@@ -48,6 +50,7 @@ class CreatorController extends Controller
                 'kyc_status' => $u->kycVerification?->status ?? 'not_started',
                 'gross' => (float) ($u->gross ?? 0),
                 'joined_at' => $u->created_at?->toIso8601String(),
+                'deleted_at' => $u->deleted_at?->toIso8601String(),
             ]);
 
         return Inertia::render('Admin/Creators/Index', ['creators' => $creators, 'filters' => $filters]);
@@ -74,7 +77,10 @@ class CreatorController extends Controller
                 'email_verified' => $creator->email_verified_at !== null,
                 'joined_at' => $creator->created_at?->toIso8601String(),
                 'business_name' => $creator->payoutProfile?->business_name,
+                'deleted_at' => $creator->deleted_at?->toIso8601String(),
             ],
+            // delete hue creator ka bhi paisa baaki ho sakta hai — admin ko dikhe
+            'balance' => app(\App\Services\SettlementService::class)->balanceFor($creator),
             'kyc' => $creator->kycVerification ? $creator->kycVerification->only(['uuid', 'status', 'legal_name', 'submitted_at', 'verified_at', 'rejection_reason']) : null,
             'payoutMethods' => $creator->payoutMethods->map(fn ($m) => [
                 'uuid' => $m->uuid,
@@ -126,10 +132,23 @@ class CreatorController extends Controller
         return back()->with('status', 'Adjustment added — it applies to the next settlement.');
     }
 
+    /** Creator ne khud account delete kiya tha (soft) — wapas chalu. Email/password/store sab waise hi. */
+    public function restore(User $creator): RedirectResponse
+    {
+        abort_unless($creator->trashed(), 422, 'This account is not deleted.');
+
+        $creator->restore();
+        AdminAudit::log('creator.restored', $creator);
+
+        return back()->with('status', 'Account restored — the creator can log in again.');
+    }
+
     /** Store band + saare chalu sessions (creator + uske sub-admins) turant khatam. */
     public function suspend(Request $request, User $creator): RedirectResponse
     {
         $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
+
+        abort_if($creator->trashed(), 422, 'This account is deleted. Restore it first.');
 
         abort_if($creator->status === 'suspended', 422, 'This creator is already suspended.');
 
@@ -147,6 +166,7 @@ class CreatorController extends Controller
 
     public function activate(User $creator): RedirectResponse
     {
+        abort_if($creator->trashed(), 422, 'This account is deleted. Restore it first.');
         abort_if($creator->status === 'active', 422, 'This creator is already active.');
 
         $creator->forceFill(['status' => 'active'])->save();
@@ -162,6 +182,7 @@ class CreatorController extends Controller
     public function resetTwoFactor(Request $request, User $creator): RedirectResponse
     {
         $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
+        abort_if($creator->trashed(), 422, 'This account is deleted. Restore it first.');
         abort_unless($creator->two_factor_enabled, 422, 'Two-step verification is not on for this creator.');
 
         $creator->forceFill(['two_factor_enabled' => false])->save();

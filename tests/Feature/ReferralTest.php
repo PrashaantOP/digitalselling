@@ -147,7 +147,7 @@ class ReferralTest extends TestCase
 
     public function test_credit_converts_into_pro_months_and_keeps_the_remainder(): void
     {
-        $this->fund(3); // ₹600
+        $this->fund(6); // 6 × ₹100 = ₹600
 
         $this->actingAs($this->referrer)
             ->post('/dashboard/refer-earn/redeem', ['months' => 1])
@@ -164,7 +164,7 @@ class ReferralTest extends TestCase
 
     public function test_redeeming_while_already_on_pro_extends_the_existing_expiry(): void
     {
-        $this->fund(3);
+        $this->fund(6);
         $this->referrer->forceFill(['plan' => 'pro', 'plan_expires_at' => now()->addDays(60)])->save();
 
         $this->referrals->redeem($this->referrer->fresh(), 1);
@@ -175,7 +175,7 @@ class ReferralTest extends TestCase
 
     public function test_redeem_is_rejected_without_enough_credit(): void
     {
-        $this->fund(1); // sirf ₹200
+        $this->fund(1); // sirf ₹100
 
         $this->actingAs($this->referrer)
             ->post('/dashboard/refer-earn/redeem', ['months' => 1])
@@ -186,7 +186,7 @@ class ReferralTest extends TestCase
 
     public function test_paid_subscribers_cannot_redeem_but_keep_their_credit(): void
     {
-        $this->fund(3);
+        $this->fund(6);
 
         $plan = SubscriptionPlan::where('slug', 'pro')->first();
         Subscription::create(['user_id' => $this->referrer->id, 'plan_id' => $plan->id, 'status' => 'active', 'gateway' => 'razorpay']);
@@ -208,7 +208,7 @@ class ReferralTest extends TestCase
         $this->actingAs($this->referrer)->get('/dashboard/refer-earn')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Referral/Index')
             ->where('reward', ReferralService::REWARD)
-            ->where('balance.balance', 200)
+            ->where('balance.balance', ReferralService::REWARD)
             ->where('balance.months_available', 0)
             ->has('referrals', 1)
             ->where('referrals.0.status', 'earning')

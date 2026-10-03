@@ -1,3 +1,4 @@
+import { CreateProductModal } from '@/components/dashboard/create-product-modal';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { RevenueChart } from '@/components/dashboard/revenue-chart';
 import { TopProducts } from '@/components/dashboard/top-products';
@@ -11,6 +12,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowRight,
     Banknote,
+    Bug,
     BookOpen,
     CalendarDays,
     Check,
@@ -22,6 +24,7 @@ import {
     Lightbulb,
     Package,
     Percent,
+    Plus,
     RefreshCw,
     Rocket,
     ShoppingBag,
@@ -143,6 +146,7 @@ export default function DashboardIndex({
     const { auth } = usePage<SharedData>().props;
     const { can, isOwner, storeOwner } = useCan();
     const [loading, setLoading] = useState(false);
+    const [creating, setCreating] = useState(false);
 
     const firstName = auth.user.name.trim().split(/\s+/)[0] || 'there';
     const hour = new Date().getHours();
@@ -244,7 +248,14 @@ export default function DashboardIndex({
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setCreating(true)}
+                                    className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-primary shadow-sm transition hover:bg-white/90 dark:text-[#1e2a6b]"
+                                >
+                                    <Plus className="size-4" /> Create a product
+                                </button>
                                 <div className="inline-flex rounded-xl bg-white/15 p-1 backdrop-blur">
                                     {periods.map((p) => (
                                         <button
@@ -284,6 +295,9 @@ export default function DashboardIndex({
 
                         <div className="grid items-start gap-6 xl:grid-cols-12">
                             <div className="min-w-0 space-y-6 xl:col-span-8">
+                                {/* payout / KYC checklist sirf store owner ke kaam ka — Performance ke upar, usi ki chaudai me */}
+                                {isOwner && profileCompletion.percent < 100 && <ProfileCard profileCompletion={profileCompletion} />}
+
                                 {canSeeSales && (
                                     <>
                                         <RevenueChart data={chart} days={days} />
@@ -294,9 +308,6 @@ export default function DashboardIndex({
                                         </div>
                                     </>
                                 )}
-
-                                {/* payout / KYC checklist sirf store owner ke kaam ka */}
-                                {isOwner && profileCompletion.percent < 100 && <ProfileCard profileCompletion={profileCompletion} />}
 
                                 <section className="rounded-2xl border bg-card p-5 shadow-sm">
                                     <h2 className="font-semibold">Start selling</h2>
@@ -321,6 +332,19 @@ export default function DashboardIndex({
                                             </Link>
                                         ))}
                                     </div>
+                                </section>
+
+                                <section className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center">
+                                    <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
+                                        <Bug className="size-6" />
+                                    </span>
+                                    <div className="min-w-0 flex-1">
+                                        <h2 className="font-semibold">Bug Report or Feature Request</h2>
+                                        <p className="mt-0.5 text-xs text-muted-foreground">Let us know what can make your experience even better.</p>
+                                    </div>
+                                    <Link href="/dashboard/feedback" className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border px-5 text-sm font-semibold transition hover:border-primary/40 hover:text-primary">
+                                        Report
+                                    </Link>
                                 </section>
                             </div>
 
@@ -432,6 +456,7 @@ export default function DashboardIndex({
                     </div>
                 </main>
             </div>
+            <CreateProductModal open={creating} onClose={() => setCreating(false)} />
         </AppLayout>
     );
 }
@@ -493,7 +518,7 @@ function ProfileCard({ profileCompletion }: { profileCompletion: ProfileCompleti
                     </div>
                 </div>
             </div>
-            <div className="mt-4 grid gap-2 border-t border-amber-200/70 pt-4 sm:grid-cols-2 lg:grid-cols-4 dark:border-amber-900/60">
+            <div className="mt-4 grid gap-2 border-t border-amber-200/70 pt-4 sm:grid-cols-2 2xl:grid-cols-4 dark:border-amber-900/60">
                 {checklist.map((item, index) => {
                     const done = profileCompletion.items[item.key];
                     return (

@@ -16,7 +16,8 @@ class MyCoursesController extends Controller
         $enrollments = Enrollment::with([
             'course.product:id,creator_id,title,slug',
             'course.product.coverImages:id,product_id,image_path,sort_order',
-            'course.product.creator:id,name,username',
+            // creator account delete ho jaye to bhi student ka course chalta rahe
+            'course.product.creator' => fn ($q) => $q->withTrashed()->select('id', 'name', 'username'),
         ])
             ->whereIn('customer_id', $this->customerIds())
             ->latest('created_at')->get()
@@ -26,7 +27,7 @@ class MyCoursesController extends Controller
                 'id' => $e->id,
                 'uuid' => $e->uuid,
                 'title' => $e->course->product->title,
-                'creator' => $e->course->product->creator->only(['name', 'username']),
+                'creator' => $e->course->product->creator?->only(['name', 'username']),
                 'cover' => $e->course->product->coverImages->sortBy('sort_order')->first()?->image_path,
                 'progress_percent' => $e->progress_percent,
                 'completed_at' => $e->completed_at,

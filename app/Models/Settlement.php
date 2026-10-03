@@ -45,9 +45,10 @@ class Settlement extends Model
         'processed_at' => 'datetime',
     ];
 
+    /** Creator account delete (soft) ho jaye tab bhi — invoice / settlement batayein kiska tha. */
     public function creator()
     {
-        return $this->belongsTo(User::class, 'creator_id');
+        return $this->belongsTo(User::class, 'creator_id')->withTrashed();
     }
 
     public function payoutMethod()

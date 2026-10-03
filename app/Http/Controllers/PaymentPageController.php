@@ -33,6 +33,10 @@ class PaymentPageController extends BaseProductController
             'subtitle' => ['nullable', 'string', 'max:150'],
             'whats_included' => ['nullable', 'array', 'max:20'],
             'whats_included.*' => ['nullable', 'string', 'max:150'],
+            // file links jo pay ke baad buyer ko milte hain (Drive / Dropbox / koi bhi https link)
+            'delivery_files' => ['nullable', 'array', 'max:' . PaymentPageDetail::MAX_FILES],
+            'delivery_files.*.label' => ['nullable', 'string', 'max:120'],
+            'delivery_files.*.url' => ['nullable', 'string', 'max:2000', 'url:http,https'],
             'faqs' => ['nullable', 'array', 'max:20'],
             'faqs.*.question' => ['nullable', 'string', 'max:200'],
             'faqs.*.answer' => ['nullable', 'string', 'max:1000'],
@@ -47,6 +51,16 @@ class PaymentPageController extends BaseProductController
         if (array_key_exists('whats_included', $detailData)) {
             $points = collect($detailData['whats_included'] ?? [])->map(fn ($p) => trim((string) $p))->filter()->values();
             $detailData['whats_included'] = $points->isEmpty() ? null : $points->all();
+        }
+
+        // link ke bina row (creator abhi type kar raha hai) save nahi hoti
+        if (array_key_exists('delivery_files', $detailData)) {
+            $files = collect($detailData['delivery_files'] ?? [])
+                ->map(fn ($f) => ['label' => trim((string) ($f['label'] ?? '')), 'url' => trim((string) ($f['url'] ?? ''))])
+                ->filter(fn ($f) => $f['url'] !== '')
+                ->map(fn ($f) => ['label' => $f['label'] !== '' ? $f['label'] : null, 'url' => $f['url']])
+                ->values();
+            $detailData['delivery_files'] = $files->isEmpty() ? null : $files->all();
         }
 
         if (array_key_exists('faqs', $detailData)) {

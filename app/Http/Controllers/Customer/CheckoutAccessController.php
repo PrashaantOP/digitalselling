@@ -53,6 +53,10 @@ class CheckoutAccessController extends Controller
                 'creator' => $order->product?->creator?->name,
                 'total' => (float) $order->total_amount,
                 'message' => $order->product?->post_purchase_message,
+                // payment page ki files — sirf paid order pe (ye page waise bhi sirf kharidne wale browser ko khulta hai)
+                'files' => $order->status === 'success' && $order->product?->type === 'payment_page'
+                    ? ($order->product->paymentPageDetail?->deliveryFiles() ?? [])
+                    : [],
             ],
             'contact' => $buyer ? [
                 'email' => AdminAuthController::maskEmail($buyer->email),
@@ -143,7 +147,7 @@ class CheckoutAccessController extends Controller
     /** Order sirf tab jab ye browser use bana chuka ho. */
     private function order(string $uuid): ?Order
     {
-        $order = Order::with(['product:id,title,type,creator_id,post_purchase_message', 'product.creator:id,name', 'customer.buyer'])
+        $order = Order::with(['product:id,title,type,creator_id,post_purchase_message', 'product.creator' => fn ($q) => $q->withTrashed()->select('id', 'name'), 'customer.buyer'])
             ->where('uuid', $uuid)->first();
 
         return $order && CheckoutSession::has($order) ? $order : null;

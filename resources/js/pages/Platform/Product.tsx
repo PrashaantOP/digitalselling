@@ -40,7 +40,7 @@ export default function ProductPage({ type, trialDays }: Props) {
                                 Home
                             </Link>
                             <span className="mx-2">/</span>
-                            <a href="/#products" className="hover:text-blue-700">
+                            <a href="/#course-features" className="hover:text-blue-700">
                                 Products
                             </a>
                             <span className="mx-2">/</span>

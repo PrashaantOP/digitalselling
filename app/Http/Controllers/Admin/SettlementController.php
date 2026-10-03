@@ -216,14 +216,15 @@ class SettlementController extends Controller
     public function create(Request $request)
     {
         $creator = $request->query('creator')
-            ? User::where('role', 'creator')->where('uuid', $request->query('creator'))->with('kycVerification')->firstOrFail()
+            ? User::withTrashed()->where('role', 'creator')->where('uuid', $request->query('creator'))->with('kycVerification')->firstOrFail()
             : null;
 
         if (! $creator) {
             $creatorIds = Order::where('status', 'success')->whereNull('settlement_id')->whereNotNull('paid_at')->distinct()->pluck('creator_id');
 
             return Inertia::render('Admin/Settlements/Create', [
-                'creators' => User::whereIn('id', $creatorIds)->with('kycVerification')->orderBy('name')->get()->map(fn (User $c) => [
+                // delete hue creator ka bacha paisa bhi haath se nikal sake
+                'creators' => User::withTrashed()->whereIn('id', $creatorIds)->with('kycVerification')->orderBy('name')->get()->map(fn (User $c) => [
                     'creator' => $c->only(['uuid', 'name', 'email']),
                     'orders' => $this->settlements->unsettledOrders($c->id)->count(),
                     'net' => (float) $this->settlements->unsettledOrders($c->id)->sum('net_payout_amount'),
@@ -272,7 +273,7 @@ class SettlementController extends Controller
             'adjustments.*' => ['uuid', 'distinct'],
         ]);
 
-        $creator = User::where('role', 'creator')->where('uuid', $data['creator'])->with('kycVerification')->firstOrFail();
+        $creator = User::withTrashed()->where('role', 'creator')->where('uuid', $data['creator'])->with('kycVerification')->firstOrFail();
 
         // uuid → id, sirf isi creator ke; jo na mile (kisi aur ka / settle ho chuka) wo count ke farq se pakda jaata hai
         $orderIds = $this->settlements->unsettledOrders($creator->id)->whereIn('uuid', $data['orders'])->pluck('id')->all();

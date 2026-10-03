@@ -12,7 +12,7 @@ interface AuthLayoutProps {
 const TRIAL_DAYS = 90;
 
 const BENEFITS = [
-    'Sell courses, eBooks, events, locked content & 1:1 sessions',
+    'Sell online courses with live classes, quizzes & certificates',
     'Your own store link — live in minutes, no code',
     'Payouts straight to your bank after KYC',
 ];

@@ -2,13 +2,13 @@ import { CodeInput, FIELD, GHOST, PRIMARY } from '@/components/customer/code-inp
 import { CustomerCard } from '@/layouts/customer-layout';
 import { cn } from '@/lib/utils';
 import { router, useForm } from '@inertiajs/react';
-import { ArrowRight, CheckCircle2, Loader2, Mail, MessageSquare } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Download, Loader2, Mail, MessageSquare } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 
 type Channel = 'email' | 'sms';
 
 interface Props {
-    order: { uuid: string; number: string; status: string; title: string | null; type: string | null; creator: string | null; total: number; message: string | null };
+    order: { uuid: string; number: string; status: string; title: string | null; type: string | null; creator: string | null; total: number; message: string | null; files: { label: string; url: string }[] };
     contact: { email: string; phone: string | null } | null;
     channels: Channel[];
     canFixEmail: boolean;
@@ -108,6 +108,23 @@ export default function CheckoutDone({ order, contact, channels, canFixEmail, op
                     </dl>
 
                     {order.message && <p className="mt-4 rounded-xl border border-[#E4E2DA] p-3.5 text-sm text-[#4B4B57]">{order.message}</p>}
+
+                    {/* payment page ki files — turant, aur email me bhi gayi hain */}
+                    {(order.files ?? []).length > 0 && (
+                        <div className="mt-4 rounded-xl border border-[#E4E2DA] p-3.5">
+                            <p className="text-sm font-bold">Your files</p>
+                            <p className="mt-0.5 text-xs text-[#8A8A96]">We've also emailed these links to you.</p>
+                            <ul className="mt-3 flex flex-col gap-2">
+                                {order.files.map((file) => (
+                                    <li key={file.url}>
+                                        <a href={file.url} target="_blank" rel="noopener noreferrer" className={cn(GHOST, 'w-full justify-start border-[#4F46E5] text-[#4F46E5]')}>
+                                            <Download className="size-4 shrink-0" /> <span className="truncate">{file.label}</span>
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
 
                     {status && <div className="mt-4 rounded-lg bg-[#E6F6EC] px-3 py-2 text-xs font-semibold text-[#059669]">{status}</div>}
 

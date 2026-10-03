@@ -26,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Referral ka ₹200 order success hote hi credit ho jaata hai (checkout pipeline jo bhi use set kare)
+        // Referral ka reward (ReferralService::REWARD) order success hote hi credit ho jaata hai (checkout pipeline jo bhi use set kare)
         \App\Models\Order::observe(\App\Observers\OrderObserver::class);
 
         // Register / reset / password change sab yahi rule use karte hain (Rules\Password::defaults()).

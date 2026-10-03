@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * Refer & Earn ka pura logic.
  *
- * Niyam: 1 referral = ₹200, par credit tabhi milta hai jab referred creator apni
+ * Niyam: 1 referral = ₹100, par credit tabhi milta hai jab referred creator apni
  * PEHLI successful sale kare (sirf signup pe nahi — warna fake emails se paisa ban jaata).
  * Ye credit bank me withdraw nahi hota — sirf Pro subscription me redeem hota hai
  * (₹499 = 1 mahina), aur wo bhi maujooda `plan_expires_at` mechanism se, Razorpay ko chhue bina.
@@ -23,7 +23,7 @@ use Illuminate\Validation\ValidationException;
 class ReferralService
 {
     /** Har successful referral pe referrer ko itna credit. */
-    public const REWARD = 200;
+    public const REWARD = 100;
 
     private const FALLBACK_MONTHLY_PRICE = 499.0;
 
@@ -73,7 +73,7 @@ class ReferralService
     }
 
     /**
-     * Referred creator ki pehli successful sale → referrer ko ₹200.
+     * Referred creator ki pehli successful sale → referrer ko ₹100.
      * Idempotent: dobara call ho, ya us creator ki aur sales aayein, credit sirf ek baar milta hai.
      */
     public function creditFirstSale(Order $order): ?ReferralCredit

@@ -1,6 +1,6 @@
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Download } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 /* Public product pages (Book / Locked content) ka common frame: accent strip, creator header, 2-column body, footer. */
@@ -16,6 +16,23 @@ export function SectionLabel({ accent, children }: { accent: string; children: R
         <h3 className="mb-3 text-[11px] font-bold tracking-[0.14em] uppercase" style={{ color: accent }}>
             {children}
         </h3>
+    );
+}
+
+/** "Pay ke baad itni files milengi" — payment page pe (links khud kabhi public nahi). */
+export function FilesNote({ count, accent }: { count: number; accent: string }) {
+    return (
+        <div className="flex items-start gap-3 rounded-xl border border-[#E4E2DA] bg-[#FAFAF8] p-4">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
+                <Download className="size-4" />
+            </span>
+            <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#14141B]">
+                    {count} downloadable {count === 1 ? 'file' : 'files'}
+                </p>
+                <p className="mt-0.5 text-[13px] text-[#6B6B78]">Delivered to your email right after payment.</p>
+            </div>
+        </div>
     );
 }
 

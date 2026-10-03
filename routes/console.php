@@ -123,6 +123,13 @@ Artisan::command('settlements:mark-failed {settlement : STL-… number} {reason}
 
 Schedule::command('settlements:run')->dailyAt('02:00');
 
+// "Weekly digest" switch wale creators ko pichhle hafte ka hisaab
+Artisan::command('notifications:weekly-digest', function (\App\Services\WeeklyDigest $digest) {
+    $this->info($digest->sendAll() . ' weekly digest(s) sent.');
+})->purpose('Email last week\'s summary to creators who turned on the weekly digest');
+
+Schedule::command('notifications:weekly-digest')->weeklyOn(1, '09:00')->timezone('Asia/Kolkata');
+
 /*
  | Payout methods — settlement sirf verified method pe jaata hai. Abhi verification manual hai
  | (UPI/bank check karke yahan approve karo); aage gateway ka penny-drop / VPA validation yahin plug hoga.

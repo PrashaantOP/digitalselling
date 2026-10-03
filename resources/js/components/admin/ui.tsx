@@ -35,6 +35,7 @@ const BADGE_TONES: Record<string, string> = {
     processing: 'bg-sky-50 text-sky-700 ring-sky-200',
     unverified: 'bg-amber-50 text-amber-700 ring-amber-200',
     suspended: 'bg-rose-50 text-rose-700 ring-rose-200',
+    deleted: 'bg-rose-100 text-rose-800 ring-rose-300',
     rejected: 'bg-rose-50 text-rose-700 ring-rose-200',
     failed: 'bg-rose-50 text-rose-700 ring-rose-200',
     refunded: 'bg-slate-100 text-slate-600 ring-slate-200',

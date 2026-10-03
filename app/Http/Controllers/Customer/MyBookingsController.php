@@ -14,7 +14,7 @@ class MyBookingsController extends Controller
     public function index()
     {
         $bookings = SlotService::confirmed(Booking::query())
-            ->with(['service.product:id,title', 'creator:id,name,username', 'responses'])
+            ->with(['service.product:id,title', 'creator' => fn ($q) => $q->withTrashed()->select('id', 'name', 'username'), 'responses'])
             ->whereIn('customer_id', $this->customerIds())
             ->orderByDesc('scheduled_at')->get();
 

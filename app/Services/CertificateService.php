@@ -22,7 +22,8 @@ class CertificateService
     /** Course poora hua — certificate do (pehle se ho to wahi). Snapshot yahin jamta hai. */
     public function issue(Enrollment $enrollment): Certificate
     {
-        $enrollment->loadMissing(['customer.buyer', 'course.product:id,title,creator_id', 'course.product.creator:id,name']);
+        // creator account delete ho chuka ho tab bhi certificate bane / khule
+        $enrollment->loadMissing(['customer.buyer', 'course.product:id,title,creator_id', 'course.product.creator' => fn ($q) => $q->withTrashed()->select('id', 'name')]);
 
         return Certificate::firstOrCreate(
             ['enrollment_id' => $enrollment->id],
@@ -61,7 +62,7 @@ class CertificateService
     /** Blade (certificates.show) ke liye sab kuch. */
     public function viewData(Certificate $certificate): array
     {
-        $certificate->loadMissing('enrollment.course.product.creator');
+        $certificate->loadMissing(['enrollment.course.product.creator' => fn ($q) => $q->withTrashed()]);
         $creator = $certificate->enrollment->course->product->creator;
 
         return [

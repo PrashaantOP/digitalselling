@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Mail\CourseCompletedMail;
+use App\Models\NotificationPreference;
+use Illuminate\Support\Facades\Mail;
 use App\Models\CourseLesson;
 use App\Models\Enrollment;
 use App\Models\LessonNoteFile;
@@ -77,11 +80,27 @@ class LessonPlayerController extends Controller
         $percent = $total ? (int) min(100, floor($done / $total * 100)) : 0;
         $updates = ['progress_percent' => $percent];
 
-        if ($percent === 100 && ! $enrollment->completed_at) {
+        $justCompleted = $percent === 100 && ! $enrollment->completed_at;
+
+        if ($justCompleted) {
             $updates['completed_at'] = now();
         }
 
         $enrollment->update($updates);
+
+        // pehli baar poora hua — creator ko khabar (agar "Course completion" on hai). Mail fail se progress nahi rukta.
+        if ($justCompleted) {
+            $enrollment->loadMissing(['course.product.creator.notificationPreference', 'customer.buyer']);
+            $creator = $enrollment->course?->product?->creator;
+
+            try {
+                if (NotificationPreference::wants($creator, 'course_completion')) {
+                    Mail::to($creator->email)->send(new CourseCompletedMail($enrollment));
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
 
         return response()->json([
             'progress_percent' => $percent,

@@ -20,7 +20,10 @@ interface Props {
         email_verified: boolean;
         joined_at: string | null;
         business_name: string | null;
+        /** creator ne khud account delete kiya (soft) — login band */
+        deleted_at: string | null;
     };
+    balance: { clearing: number; ready: number; in_transit: number; adjustments: number };
     kyc: { uuid: string; status: string; legal_name: string; submitted_at: string | null; verified_at: string | null; rejection_reason: string | null } | null;
     payoutMethods: { uuid: string; type: string; destination: string; holder: string | null; is_default: boolean; verified_at: string | null }[];
     totals: { orders: number; gross: number; commission: number; net: number; settled: number };
@@ -30,7 +33,9 @@ interface Props {
     recentSettlements: { uuid: string; number: string; net_amount: string | number; status: string; reference_number: string | null; created_at: string | null }[];
 }
 
-export default function AdminCreatorShow({ creator, kyc, payoutMethods, totals, recentOrders, recentSettlements, pendingAdjustments, planPurchases }: Props) {
+export default function AdminCreatorShow({ creator, kyc, payoutMethods, totals, recentOrders, recentSettlements, pendingAdjustments, planPurchases, balance }: Props) {
+    const [restoreOpen, setRestoreOpen] = useState(false);
+    const unpaid = balance.clearing + balance.ready + balance.in_transit;
     const [adjustment, setAdjustment] = useState({ type: 'manual_debit', amount: '', reason: '' });
     const [savingAdjustment, setSavingAdjustment] = useState(false);
     const [adjustmentError, setAdjustmentError] = useState<string | null>(null);
@@ -73,7 +78,11 @@ export default function AdminCreatorShow({ creator, kyc, payoutMethods, totals, 
                 title={creator.name}
                 description={`${creator.email}${creator.username ? ` · @${creator.username}` : ''}`}
                 action={
-                    creator.status === 'active' ? (
+                    creator.deleted_at ? (
+                        <button onClick={() => setRestoreOpen(true)} className={BUTTON.primary}>
+                            Restore account
+                        </button>
+                    ) : creator.status === 'active' ? (
                         <button onClick={() => setSuspendOpen(true)} className={BUTTON.danger}>
                             Suspend creator
                         </button>
@@ -84,6 +93,15 @@ export default function AdminCreatorShow({ creator, kyc, payoutMethods, totals, 
                     )
                 }
             />
+
+            {creator.deleted_at && (
+                <div role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-800 ring-1 ring-rose-200">
+                    <p className="font-semibold">Account deleted on {dateTime(creator.deleted_at)} — the creator can’t log in and the store is hidden.</p>
+                    <p className="mt-0.5 text-rose-700">
+                        Buyers keep what they bought. {unpaid > 0 ? `${money(unpaid)} is still waiting to be paid out — settlements keep running for this account.` : 'Nothing is waiting to be paid out.'}
+                    </p>
+                </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
                 {[
@@ -304,6 +322,14 @@ export default function AdminCreatorShow({ creator, kyc, payoutMethods, totals, 
                 </ul>
             </Card>
 
+            <ConfirmAction
+                open={restoreOpen}
+                onClose={() => setRestoreOpen(false)}
+                title={`Restore ${creator.name}'s account?`}
+                body="They can log in again with the same email and password. Their store, products and orders come back as they were. This is recorded in the audit log."
+                url={`/admin/creators/${creator.uuid}/restore`}
+                confirmLabel="Restore"
+            />
             <ConfirmAction
                 open={resetOpen}
                 onClose={() => setResetOpen(false)}

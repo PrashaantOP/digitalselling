@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Mail\SettlementStatusMail;
 use App\Models\Admin;
+use App\Models\NotificationPreference;
 use App\Models\Order;
 use App\Models\PayoutMethod;
 use App\Models\Settlement;
@@ -120,7 +121,7 @@ class SettlementService
 
         return DB::transaction(function () use ($creator, $method) {
             // Creator row pe lock — do parallel run (cron + manual) double settlement na banayein.
-            User::whereKey($creator->id)->lockForUpdate()->first();
+            User::withTrashed()->whereKey($creator->id)->lockForUpdate()->first();
 
             // ids transaction ke andar hi lo, warna beech me aaya naya order chhoot ya dobara aa sakta hai
             $orders = $this->eligibleOrders($creator->id)
@@ -181,7 +182,7 @@ class SettlementService
         $method = $this->payoutMethodFor($creator);
 
         return DB::transaction(function () use ($creator, $method, $orderIds, $adjustmentIds) {
-            User::whereKey($creator->id)->lockForUpdate()->first();
+            User::withTrashed()->whereKey($creator->id)->lockForUpdate()->first();
 
             $orders = $this->unsettledOrders($creator->id)->whereIn('id', $orderIds)->lockForUpdate()
                 ->get(['id', 'paid_at', 'total_amount', 'platform_fee', 'net_payout_amount']);
@@ -254,7 +255,8 @@ class SettlementService
             ->merge(SettlementAdjustment::whereNull('settlement_id')->distinct()->pluck('creator_id'))
             ->unique();
 
-        foreach (User::whereIn('id', $creatorIds)->with('kycVerification')->cursor() as $creator) {
+        // delete hue creator ka bacha paisa bhi settle ho — chupchaap atke nahi
+        foreach (User::withTrashed()->whereIn('id', $creatorIds)->with('kycVerification')->cursor() as $creator) {
             if ($this->blockedReason($creator) !== null) {
                 $result['blocked']++;
 
@@ -377,7 +379,7 @@ class SettlementService
         try {
             $creator = $settlement->creator;
 
-            if (! $creator || $creator->notificationPreference?->payment_received === false) {
+            if (! NotificationPreference::wants($creator, 'payment_received')) {
                 return;
             }
 

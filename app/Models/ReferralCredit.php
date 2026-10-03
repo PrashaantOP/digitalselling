@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Referral credit ledger ki ek line — ya to ₹200 mila (`earned`), ya Pro me laga (`redeemed`).
+ * Referral credit ledger ki ek line — ya to reward mila (ReferralService::REWARD) (`earned`), ya Pro me laga (`redeemed`).
  * Balance kahin store nahi hota, inhi rows se nikalta hai.
  */
 class ReferralCredit extends Model

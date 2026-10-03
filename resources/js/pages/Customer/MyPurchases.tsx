@@ -9,6 +9,8 @@ interface Item {
     title: string;
     type: string;
     download_url: string | null;
+    /** payment page ki "Files to deliver" */
+    files: { label: string; url: string }[];
     learn_url: string | null;
     event: { starts_at: string; ends_at: string | null; mode: 'online' | 'in_person'; join_link: string | null; venue_address: string | null } | null;
 }
@@ -86,6 +88,17 @@ export default function MyPurchases({ orders }: { orders: OrderRow[] }) {
                                                         {meta.label}
                                                         {i > 0 && ' · add-on'}
                                                     </p>
+                                                    {(item.files ?? []).length > 0 && (
+                                                        <ul className="mt-2 flex flex-col gap-1.5">
+                                                            {(item.files ?? []).map((file) => (
+                                                                <li key={file.url}>
+                                                                    <a href={file.url} target="_blank" rel="noopener noreferrer" className="inline-flex max-w-full items-center gap-1.5 text-sm font-semibold text-[#4F46E5] hover:underline">
+                                                                        <Download className="size-3.5 shrink-0" /> <span className="truncate">{file.label}</span>
+                                                                    </a>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    )}
                                                     {item.event && (
                                                         <div className="mt-2 flex flex-col gap-1 text-xs text-[#4B4B57]">
                                                             <span className="flex items-center gap-1.5">

@@ -12,6 +12,8 @@ interface CreatorRow {
     kyc_status: string;
     gross: number;
     joined_at: string | null;
+    /** creator ne khud account delete kiya (soft) */
+    deleted_at: string | null;
 }
 
 type Filters = { q?: string | null; plan?: string | null; status?: string | null; kyc?: string | null };
@@ -38,6 +40,7 @@ export default function AdminCreators({ creators, filters }: { creators: Paginat
                     <option value="">Any status</option>
                     <option value="active">Active</option>
                     <option value="suspended">Suspended</option>
+                    <option value="deleted">Deleted</option>
                 </select>
                 <select aria-label="KYC" value={filters.kyc ?? ''} onChange={(e) => setFilter('kyc', e.target.value)} className={SELECT}>
                     <option value="">Any KYC</option>
@@ -76,7 +79,14 @@ export default function AdminCreators({ creators, filters }: { creators: Paginat
                                         <Badge value={c.plan} />
                                     </td>
                                     <td className={TD}>
-                                        <Badge value={c.status} />
+                                        {c.deleted_at ? (
+                                            <>
+                                                <Badge value="deleted" label="Deleted" />
+                                                <p className="mt-0.5 text-[11px] text-slate-500">{dateOnly(c.deleted_at)}</p>
+                                            </>
+                                        ) : (
+                                            <Badge value={c.status} />
+                                        )}
                                     </td>
                                     <td className={TD}>
                                         <Badge value={c.kyc_status} />

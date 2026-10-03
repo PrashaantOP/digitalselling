@@ -86,7 +86,7 @@ const CREATOR_STEPS: Step[] = [
         points: [
             'Custom checkout questions (text, number, email, dropdown) with GSTIN capture',
             'Coupon codes for launches and festive offers',
-            'Add-ons — upsell a workbook or 1:1 call at checkout',
+            'Add-ons — upsell a workbook or bonus course at checkout',
             'A thank-you message shown right after purchase',
         ],
     },
@@ -104,7 +104,7 @@ const CREATOR_STEPS: Step[] = [
         icon: BarChart3,
         title: 'Track & get paid',
         summary: 'Watch views, sales and students grow — and withdraw earnings to your bank.',
-        points: ['Orders, revenue and page views per product', 'Enrollments with each student’s progress', 'Payouts to your bank after one-time KYC'],
+        points: ['Orders, revenue and page views per course', 'Enrollments with each student’s progress', 'Payouts to your bank after one-time KYC'],
     },
 ];
 

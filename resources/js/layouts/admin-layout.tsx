@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { BadgeCheck, Banknote, CreditCard, FileClock, LayoutDashboard, LogOut, Menu, Receipt, ShieldCheck, Users, Wallet, X } from 'lucide-react';
+import { BadgeCheck, Banknote, CreditCard, FileClock, LayoutDashboard, LogOut, Menu, MessageSquareWarning, Receipt, ShieldCheck, Users, Wallet, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 type AdminShared = { admin: { uuid: string; name: string; email: string } | null; flash?: { status?: string | null } };
@@ -13,6 +13,7 @@ const NAV = [
     { href: '/admin/settlements', label: 'Settlements', icon: Banknote },
     { href: '/admin/billing', label: 'Billing', icon: CreditCard },
     { href: '/admin/orders', label: 'Orders', icon: Receipt },
+    { href: '/admin/feedback', label: 'Feedback', icon: MessageSquareWarning },
     { href: '/admin/audit', label: 'Audit log', icon: FileClock },
 ];
 

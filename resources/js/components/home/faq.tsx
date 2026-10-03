@@ -19,7 +19,7 @@ const pricingFaqs = (trialDays: number): FaqItem[] => [
 const FAQS: FaqItem[] = [
     {
         q: 'Do I need a website or any technical skills?',
-        a: 'No. Sign up, pick a username and your store is live at your own link. Every product gets its own page and checkout automatically — no code, hosting or plugins.',
+        a: 'No. Sign up, pick a username and your store is live at your own link. Every course gets its own page and checkout automatically — no code, hosting or plugins.',
     },
     {
         q: 'How do my students pay, and when do I receive the money?',
@@ -42,12 +42,8 @@ const FAQS: FaqItem[] = [
         a: 'Yes. Choose lifetime access or access for a fixed number of days per course.',
     },
     {
-        q: 'Can I sell things other than courses?',
-        a: 'Absolutely — events and webinars, eBooks and downloads, locked content, payment pages for services or donations, and paid 1:1 booking sessions.',
-    },
-    {
         q: 'Can I offer discounts or collect GST details?',
-        a: 'Create coupon codes per product, add upsell add-ons, and ask custom checkout questions. Buyers can also enter their GSTIN at checkout.',
+        a: 'Create coupon codes per course, add upsell add-ons, and ask custom checkout questions. Buyers can also enter their GSTIN at checkout.',
     },
     {
         q: 'Can my team help me manage the store?',

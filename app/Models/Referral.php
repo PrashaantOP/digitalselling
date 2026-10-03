@@ -29,7 +29,7 @@ class Referral extends Model
     ];
 
 
-    /** ₹200 mil chuka hai ya nahi. */
+    /** Reward mil chuka hai ya nahi. */
     public function isRewarded(): bool
     {
         return $this->rewarded_at !== null;

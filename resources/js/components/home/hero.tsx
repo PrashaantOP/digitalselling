@@ -12,7 +12,7 @@ const compact = (n: number) => new Intl.NumberFormat('en-IN', { notation: 'compa
 function statsStrip(stats: HomeStats) {
     const live = [
         { value: stats.creators, label: 'Creators selling' },
-        { value: stats.products, label: 'Products live' },
+        { value: stats.courses, label: 'Courses live' },
         { value: stats.lessons, label: 'Lessons published' },
         { value: stats.learners, label: 'Learners enrolled' },
     ]
@@ -20,8 +20,8 @@ function statsStrip(stats: HomeStats) {
         .map((s) => ({ value: `${compact(s.value)}+`, label: s.label }));
 
     const facts = [
-        { value: '6', label: 'Product types' },
         { value: '6', label: 'Lesson formats' },
+        { value: 'Live', label: '+ recorded classes' },
         { value: '0', label: 'Code needed' },
         { value: '24×7', label: 'Your store is open' },
     ];
@@ -50,7 +50,7 @@ export function Hero({ stats, trialDays }: { stats: HomeStats; trialDays: number
                 <div className="text-center lg:text-left">
                     <Reveal>
                         <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3.5 py-1.5 text-xs font-semibold text-blue-700 shadow-sm ring-1 ring-blue-100 backdrop-blur">
-                            <Sparkles className="size-3.5" /> The all-in-one store for Indian creators
+                            <Sparkles className="size-3.5" /> The course platform for Indian creators
                         </span>
                     </Reveal>
                     <Reveal delay={80}>
@@ -63,7 +63,7 @@ export function Hero({ stats, trialDays }: { stats: HomeStats; trialDays: number
                     </Reveal>
                     <Reveal delay={160}>
                         <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg lg:mx-0">
-                            Build video courses, run live classes, sell eBooks, events, 1:1 sessions and locked content — all from one link. Checkout,
+                            Build video courses with live classes, quizzes, assignments and notes — and sell them from your own link. Checkout,
                             payments, certificates and payouts are handled for you.
                         </p>
                     </Reveal>

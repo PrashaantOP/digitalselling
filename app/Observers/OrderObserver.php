@@ -6,7 +6,7 @@ use App\Models\Order;
 use App\Services\ReferralService;
 
 /**
- * Referral ka ₹200 order ke `success` hone pe milta hai.
+ * Referral ka reward (ReferralService::REWARD) order ke `success` hone pe milta hai.
  *
  * Hook jaan-bujh ke observer me hai, kisi controller/job me nahi — checkout pipeline
  * (OrderService / ProcessSuccessfulOrder) abhi bana nahi hai, aur jis din bane, ye

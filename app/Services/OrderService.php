@@ -11,6 +11,7 @@ use App\Models\Customer;
 use App\Models\Enrollment;
 use App\Models\EventRegistration;
 use App\Models\LockedContentUnlock;
+use App\Models\NotificationPreference;
 use App\Models\Order;
 use App\Models\OrderAddonItem;
 use App\Models\OrderCheckoutAnswer;
@@ -448,7 +449,10 @@ class OrderService
         }
 
         try {
-            if ($creator && $creator->notificationPreference?->payment_received !== false) {
+            // course ki sale = naya enrollment → "Course enrollment" switch; baaki sab → "Payment received"
+            $key = $order->product?->type === 'course' ? 'course_enrollment' : 'payment_received';
+
+            if (NotificationPreference::wants($creator, $key)) {
                 Mail::to($creator->email)->send(new NewSaleMail($order));
             }
         } catch (\Throwable $e) {

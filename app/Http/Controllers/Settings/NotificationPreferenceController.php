@@ -8,25 +8,27 @@ use App\Models\NotificationPreference;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
+/** Dashboard → Settings → Notifications: creator kaun se emails paaye. */
 class NotificationPreferenceController extends Controller
 {
     use RespondsFlexibly;
 
-    private const KEYS = ['course_enrollment', 'course_completion', 'new_messages', 'payment_received', 'weekly_digest'];
-
     public function edit(Request $request)
     {
+        $prefs = NotificationPreference::firstOrCreate(['user_id' => $request->user()->id]);
+
         return Inertia::render('settings/notifications', [
-            'preferences' => NotificationPreference::firstOrCreate(['user_id' => $request->user()->id]),
+            'preferences' => collect(NotificationPreference::DEFAULTS)->map(fn ($default, $key) => (bool) ($prefs->{$key} ?? $default)),
+            'email' => $request->user()->email,
         ]);
     }
 
     public function update(Request $request)
     {
-        $data = $request->validate(array_fill_keys(self::KEYS, ['sometimes', 'boolean']));
+        $data = $request->validate(array_fill_keys(array_keys(NotificationPreference::DEFAULTS), ['sometimes', 'boolean']));
 
-        $prefs = NotificationPreference::updateOrCreate(['user_id' => $request->user()->id], $data);
+        NotificationPreference::updateOrCreate(['user_id' => $request->user()->id], $data);
 
-        return $this->done($request, 'Preferences saved.', ['preferences' => $prefs]);
+        return $this->done($request, 'Notification preferences saved.');
     }
 }

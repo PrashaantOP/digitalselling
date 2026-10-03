@@ -39,6 +39,7 @@ use App\Http\Controllers\QuizAiGenerateController;
 use App\Http\Controllers\QuizImportController;
 use App\Http\Controllers\QuizQuestionController;
 use App\Http\Controllers\ReferralController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\Settings\BillingController;
 use App\Http\Controllers\Settings\NotificationPreferenceController;
@@ -303,6 +304,12 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
     Route::put('/dashboard/autodm/{rule}', [AutodmRuleController::class, 'update'])->name('autodm.update')->middleware('perm:autodm.edit');
     Route::delete('/dashboard/autodm/{rule}', [AutodmRuleController::class, 'destroy'])->name('autodm.destroy')->middleware('perm:autodm.delete');
 
+    // ---- Bug report / feature request — store ka koi bhi member bhej sakta hai ----
+    Route::get('/dashboard/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
+    Route::post('/dashboard/feedback', [FeedbackController::class, 'store'])->name('feedback.store')->middleware('throttle:10,1');
+    Route::get('/dashboard/feedback/{reportUuid}/screenshot', [FeedbackController::class, 'screenshot'])->name('feedback.screenshot')
+        ->where('reportUuid', '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}');
+
     // ---- 15. Account settings ----
     Route::prefix('dashboard/settings')->group(function () {
         Route::get('profile', [ProfileController::class, 'edit'])->name('settings.profile');
@@ -314,10 +321,11 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
             Route::post('billing/checkout', [BillingController::class, 'checkout'])->name('settings.billing.checkout')->middleware(['verified', 'throttle:10,1']);
             Route::post('billing/verify', [BillingController::class, 'verify'])->name('settings.billing.verify')->middleware('throttle:20,1');
             Route::get('billing/invoices/{billingInvoice}', [BillingController::class, 'invoice'])->name('settings.billing.invoice');
-        });
 
-        Route::get('notifications', [NotificationPreferenceController::class, 'edit'])->name('settings.notifications');
-        Route::put('notifications', [NotificationPreferenceController::class, 'update'])->name('settings.notifications.update');
+            // emails creator ko hi jaate hain — team member ke liye ye screen nahi
+            Route::get('notifications', [NotificationPreferenceController::class, 'edit'])->name('settings.notifications');
+            Route::put('notifications', [NotificationPreferenceController::class, 'update'])->name('settings.notifications.update');
+        });
     });
 });
 

@@ -250,7 +250,8 @@ class CheckoutTest extends TestCase
         $creator = $this->seller();
         NotificationPreference::create(['user_id' => $creator->id, 'payment_received' => false]);
 
-        $this->buy($this->product($creator));
+        // course ki sale "Course enrollment" switch pe chalti hai (NotificationPreferencesTest) — yahan e-book
+        $this->buy($this->product($creator, 'book'));
 
         Mail::assertNotSent(NewSaleMail::class);
         Mail::assertSent(OrderReceiptMail::class);

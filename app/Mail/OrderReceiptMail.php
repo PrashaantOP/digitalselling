@@ -33,6 +33,8 @@ class OrderReceiptMail extends Mailable
             'amount' => (float) $order->total_amount > 0 ? '₹' . number_format((float) $order->total_amount, 2) : 'Free',
             'orderNumber' => $order->order_number,
             'note' => $order->product?->post_purchase_message,
+            // payment page ki files seedha mail me — buyer ko login kiye bina mil jaayein
+            'files' => $order->product?->type === 'payment_page' ? ($order->product->paymentPageDetail?->deliveryFiles() ?? []) : [],
             'openUrl' => url('/me/login?email=' . urlencode((string) $order->buyer_email)),
         ]);
     }

@@ -32,10 +32,10 @@ export function CtaBand() {
                                     {auth.user ? 'Go to dashboard' : 'Create my free store'} <ArrowRight className="size-4" />
                                 </Link>
                                 <a
-                                    href="#products"
+                                    href="#course-features"
                                     className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-semibold text-white ring-1 ring-white/30 transition hover:bg-white/10"
                                 >
-                                    Explore products
+                                    Explore course features
                                 </a>
                             </div>
                         </div>

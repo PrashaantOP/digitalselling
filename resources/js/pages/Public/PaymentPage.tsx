@@ -1,5 +1,5 @@
 import { CheckoutCard, type CheckoutPricing, type CheckoutQuestion } from '@/components/public/checkout-card';
-import { assetPath, PoliciesSection, PublicProductLayout, resolvePublicAccent, SectionLabel, type PublicCreator } from '@/components/public/public-product-layout';
+import { assetPath, FilesNote, PoliciesSection, PublicProductLayout, resolvePublicAccent, SectionLabel, type PublicCreator } from '@/components/public/public-product-layout';
 import { VideoEmbed } from '@/components/public/video-embed';
 import { Check, ChevronDown, ShieldCheck, Zap } from 'lucide-react';
 import { useState } from 'react';
@@ -22,6 +22,8 @@ type Product = CheckoutPricing & {
     payment_page: {
         subtitle: string | null;
         whats_included: string[];
+        /** kitni files pay ke baad milengi — links kabhi public nahi */
+        files_count: number;
         faqs: { question: string; answer: string }[];
         collect_full_name: boolean;
         collect_note: boolean;
@@ -96,6 +98,8 @@ export default function PaymentPage({ product, creator, checkoutUrl }: Props) {
                     />
                 </div>
             )}
+
+            {page.files_count > 0 && <FilesNote count={page.files_count} accent={accent} />}
 
             {page.whats_included.length > 0 && (
                 <div>

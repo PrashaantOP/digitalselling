@@ -8,7 +8,7 @@ import { Container, Logo, primaryBtn } from './primitives';
 
 // "/#id" — home pe same-page scroll, legal pages se home pe wapas le jaata hai
 export const NAV_LINKS = [
-    { label: 'Products', href: '/#products' },
+    { label: 'Courses', href: '/#course-features' },
     { label: 'How it works', href: '/#course-workflow' },
     { label: 'Features', href: '/#growth' },
     { label: 'Calculator', href: '/#calculator' },

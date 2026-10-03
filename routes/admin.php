@@ -13,12 +13,14 @@ use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CreatorController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FeedbackController;
 use App\Http\Controllers\Admin\BillingController;
 use App\Http\Controllers\Admin\KycController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PayoutMethodController;
 use App\Http\Controllers\Admin\SettlementController;
 use App\Models\BillingInvoice;
+use App\Models\FeedbackReport;
 use App\Models\KycVerification;
 use App\Models\Order;
 use App\Models\PayoutMethod;
@@ -28,16 +30,18 @@ use Illuminate\Support\Facades\Route;
 
 $uuid = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
 
-foreach (['creator', 'kyc', 'payoutMethod', 'adminSettlement', 'adminOrder', 'adminInvoice'] as $param) {
+foreach (['creator', 'kyc', 'payoutMethod', 'adminSettlement', 'adminOrder', 'adminInvoice', 'adminFeedback'] as $param) {
     Route::pattern($param, $uuid);
 }
 
-Route::bind('creator', fn ($v) => User::where('role', 'creator')->where('uuid', $v)->firstOrFail());
+// delete hue (soft) creator bhi khulein — admin unhe dekh aur restore kar sake
+Route::bind('creator', fn ($v) => User::withTrashed()->where('role', 'creator')->where('uuid', $v)->firstOrFail());
 Route::bind('kyc', fn ($v) => KycVerification::where('uuid', $v)->firstOrFail());
 Route::bind('payoutMethod', fn ($v) => PayoutMethod::where('uuid', $v)->firstOrFail());
 Route::bind('adminSettlement', fn ($v) => Settlement::where('uuid', $v)->firstOrFail());
 Route::bind('adminInvoice', fn ($v) => BillingInvoice::where('uuid', $v)->firstOrFail());
 Route::bind('adminOrder', fn ($v) => Order::where('uuid', $v)->firstOrFail());
+Route::bind('adminFeedback', fn ($v) => FeedbackReport::where('uuid', $v)->firstOrFail());
 
 Route::prefix('admin')->name('admin.')->group(function () {
     // ---- login (password → email OTP) ----
@@ -58,6 +62,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('creators/{creator}', [CreatorController::class, 'show'])->name('creators.show');
         Route::post('creators/{creator}/suspend', [CreatorController::class, 'suspend'])->name('creators.suspend');
         Route::post('creators/{creator}/activate', [CreatorController::class, 'activate'])->name('creators.activate');
+        Route::post('creators/{creator}/restore', [CreatorController::class, 'restore'])->name('creators.restore');
         Route::put('creators/{creator}/plan', [CreatorController::class, 'updatePlan'])->name('creators.plan');
         Route::post('creators/{creator}/adjustments', [CreatorController::class, 'addAdjustment'])->name('creators.adjustments');
         Route::post('creators/{creator}/two-factor-reset', [CreatorController::class, 'resetTwoFactor'])->name('creators.two-factor-reset');
@@ -90,5 +95,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('billing/invoices/{adminInvoice}', [BillingController::class, 'invoice'])->name('billing.invoice');
 
         Route::get('audit', [AuditController::class, 'index'])->name('audit.index');
+
+        Route::get('feedback', [FeedbackController::class, 'index'])->name('feedback.index');
+        Route::put('feedback/{adminFeedback}', [FeedbackController::class, 'update'])->name('feedback.update');
+        Route::get('feedback/{adminFeedback}/screenshot', [FeedbackController::class, 'screenshot'])->name('feedback.screenshot');
     });
 });

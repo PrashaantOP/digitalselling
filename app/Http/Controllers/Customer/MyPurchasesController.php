@@ -23,7 +23,7 @@ class MyPurchasesController extends Controller
         $registrations = EventRegistration::whereIn('customer_id', $customerIds)->with('event')->get()->keyBy(fn ($r) => $r->event?->product_id);
 
         $orders = Order::with([
-            'product:id,uuid,title,type,slug,creator_id', 'product.creator:id,name,username',
+            'product:id,uuid,title,type,slug,creator_id', 'product.creator' => fn ($q) => $q->withTrashed()->select('id', 'name', 'username'), 'product.paymentPageDetail',
             'addonItems.addonProduct:id,uuid,title,type', 'lockedContentUnlocks.lockedContent',
         ])
             ->whereIn('customer_id', $customerIds)->where('status', 'success')
@@ -45,6 +45,8 @@ class MyPurchasesController extends Controller
                             'title' => $p->title,
                             'type' => $p->type,
                             'download_url' => $p->type === 'book' ? url("/me/books/{$p->uuid}/download") : null,
+                            // payment page ke "Files to deliver"
+                            'files' => $p->type === 'payment_page' ? ($p->paymentPageDetail?->deliveryFiles() ?? []) : [],
                             'learn_url' => $p->type === 'course' && $enrollments->has($p->id) ? url("/me/courses/{$enrollments->get($p->id)->uuid}/learn") : null,
                             // event ka join link / pata sirf register hue buyer ko
                             'event' => $event ? [

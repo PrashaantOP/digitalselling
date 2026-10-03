@@ -1,12 +1,16 @@
 import { Link } from '@inertiajs/react';
 import { Mail, ShieldCheck } from 'lucide-react';
 import { Container, Logo } from './primitives';
-import { PRODUCTS, productUrl } from './products';
+import { productUrl } from './products';
 
 const COLUMNS = [
     {
-        title: 'Products',
-        links: PRODUCTS.map((p) => ({ label: p.name, href: productUrl(p.key) })),
+        title: 'Courses',
+        links: [
+            { label: 'Online courses', href: productUrl('course') },
+            { label: 'Course features', href: '/#course-features' },
+            { label: 'Certificates', href: '/certificates' },
+        ],
     },
     {
         title: 'Platform',
@@ -43,7 +47,7 @@ export function HomeFooter() {
                     <div className="max-w-sm">
                         <Logo tone="light" />
                         <p className="mt-4 text-sm leading-relaxed text-blue-100/70">
-                            The all-in-one platform for creators to sell courses, events, eBooks, locked content, services and 1:1 sessions — from a
+                            The course platform for creators to build, sell and run online courses — from a
                             single link.
                         </p>
                         <div className="mt-6 flex flex-col gap-2 text-sm">

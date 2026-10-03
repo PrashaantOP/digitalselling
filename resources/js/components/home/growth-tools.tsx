@@ -5,12 +5,12 @@ const TOOLS: { icon: LucideIcon; title: string; body: string }[] = [
     {
         icon: Link2,
         title: 'Link-in-bio store',
-        body: 'One /username link that lists all your products — with your photo, bio, social links and header buttons.',
+        body: 'One /username link that lists all your courses — with your photo, bio, social links and header buttons.',
     },
     {
         icon: Globe,
         title: 'Full webapp website',
-        body: 'A complete marketing website for your brand, generated from the same products. No hosting needed.',
+        body: 'A complete marketing website for your brand, generated from the same courses. No hosting needed.',
     },
     {
         icon: Instagram,
@@ -19,7 +19,7 @@ const TOOLS: { icon: LucideIcon; title: string; body: string }[] = [
     },
     { icon: BadgePercent, title: 'Coupons & add-ons', body: 'Run launch discounts and upsell extras at checkout to grow every order’s value.' },
     { icon: Share2, title: 'Referrals', body: 'Turn happy buyers into promoters with referral codes that track every signup.' },
-    { icon: BarChart3, title: 'Analytics', body: 'Store page views, link clicks, product views, sales and revenue — all in one dashboard.' },
+    { icon: BarChart3, title: 'Analytics', body: 'Store page views, link clicks, course views, sales and revenue — all in one dashboard.' },
     { icon: UsersRound, title: 'Audience & team', body: 'Every buyer in one customer list. Invite sub-admins with role-based permissions.' },
     { icon: Landmark, title: 'Payouts & KYC', body: 'Complete KYC once, add your bank or UPI and withdraw your earnings anytime.' },
 ];
@@ -35,7 +35,7 @@ export function GrowthTools() {
                             Everything after “publish” is <span className="text-blue-600">already handled</span>
                         </>
                     }
-                    description="No plugins, no zaps, no five different subscriptions. Marketing, payments and operations live in the same place as your products."
+                    description="No plugins, no zaps, no five different subscriptions. Marketing, payments and operations live in the same place as your courses."
                 />
 
                 <div className="mt-14 grid gap-px overflow-hidden rounded-3xl bg-blue-100 ring-1 ring-blue-100 sm:grid-cols-2 lg:grid-cols-4">

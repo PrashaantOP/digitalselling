@@ -1,6 +1,7 @@
 import { type SharedData } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import {
+    Bell,
     BookOpen,
     CalendarDays,
     ChevronDown,
@@ -99,7 +100,7 @@ export function AppSidebar() {
         <div className="relative space-y-3 border-t border-[#E4E2DA] p-3">
             {auth.plan && <PlanCard plan={auth.plan} canUpgrade={Boolean(auth.isOwner)} />}
             <button type="button" onClick={() => setUserMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg p-2 text-left transition hover:bg-[#F0EFEA]"><span className="flex min-w-0 items-center gap-2.5"><span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#4F46E5]/20 bg-[#EEF0FF] text-sm font-bold text-[#4F46E5]">{initials(auth.user.name)}</span><span className="min-w-0"><span className="block truncate text-sm font-bold text-[#14141B]">{auth.user.name}</span><span className="block truncate text-[11px] text-[#8A8A96]">{auth.isOwner ? 'Creator' : 'Team member'}{auth.plan ? ` · ${auth.plan.effective === 'pro' ? 'Pro' : 'Free'} Plan` : ''}</span></span></span><ChevronDown className="size-4 text-[#8A8A96]" /></button>
-            {userMenuOpen && <div className="absolute bottom-14 left-3 right-3 z-20 rounded-xl border border-[#E4E2DA] bg-white p-1.5 shadow-lg"><p className="border-b border-[#E4E2DA] px-2.5 py-1.5 text-xs text-[#8A8A96]">{auth.user.email}</p><Link href="/dashboard/settings/profile" className="mt-1 flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-[#4B4B57] hover:bg-[#F0EFEA]"><Settings className="size-4" />Profile settings</Link><Link href="/dashboard/settings/billing" className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-[#4B4B57] hover:bg-[#F0EFEA]"><CreditCard className="size-4" />Billing & payouts</Link><button onClick={() => router.post('/logout')} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-red-600 hover:bg-red-50"><FileLock2 className="size-4" />Log out</button></div>}
+            {userMenuOpen && <div className="absolute bottom-14 left-3 right-3 z-20 rounded-xl border border-[#E4E2DA] bg-white p-1.5 shadow-lg"><p className="border-b border-[#E4E2DA] px-2.5 py-1.5 text-xs text-[#8A8A96]">{auth.user.email}</p><Link href="/dashboard/settings/profile" className="mt-1 flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-[#4B4B57] hover:bg-[#F0EFEA]"><Settings className="size-4" />Profile settings</Link><Link href="/dashboard/settings/billing" className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-[#4B4B57] hover:bg-[#F0EFEA]"><CreditCard className="size-4" />Billing & payouts</Link>{auth.isOwner && <Link href="/dashboard/settings/notifications" className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-[#4B4B57] hover:bg-[#F0EFEA]"><Bell className="size-4" />Notifications</Link>}<button onClick={() => router.post('/logout')} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-red-600 hover:bg-red-50"><FileLock2 className="size-4" />Log out</button></div>}
         </div>
     </aside>;
 }
