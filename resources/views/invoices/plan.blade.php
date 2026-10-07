@@ -98,7 +98,7 @@
                 <div class="label">Payment</div>
                 <span class="chip">Paid</span>
                 @if ($issuedAt)<div class="small" style="margin-top:6px">{{ $issuedAt->format('d M Y, h:i A') }}</div>@endif
-                @if ($invoice->purchase?->gateway_payment_id)<div class="small muted">Ref {{ $invoice->purchase->gateway_payment_id }}</div>@endif
+                @if ($ref = $invoice->gateway_payment_id ?? $invoice->purchase?->gateway_payment_id)<div class="small muted">Ref {{ $ref }}</div>@endif
             </div>
         </div>
 

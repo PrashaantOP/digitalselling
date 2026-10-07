@@ -64,7 +64,7 @@ function keyParts(key: string) {
 
 function priceLabel(s: Service) {
     if (s.pricing_type === 'free') return 'Free';
-    if (s.pricing_type === 'customer_decides') return 'Pay what you want';
+    if (s.pricing_type === 'customer_decides') return `Pay what you want · from ${money(Math.max(1, Number(s.price) || 0))}`;
     const discounted = s.has_discount && Number(s.discounted_price) > 0 && Number(s.discounted_price) < Number(s.price);
     return money(discounted ? Number(s.discounted_price) : Number(s.price));
 }

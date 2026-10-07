@@ -9,6 +9,7 @@ use App\Models\KycVerification;
 use App\Models\PayoutProfile;
 use App\Models\PlanPurchase;
 use App\Models\ReferralCredit;
+use App\Models\Subscription;
 use App\Models\User;
 use App\Services\BillingService;
 use App\Support\InvoiceNumber;
@@ -16,10 +17,15 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-/** Pro plan ki prepaid billing — Razorpay hamesha Http::fake() se, asli API ko koi call nahi jaati. */
+/**
+ * Pro billing ka hisaab: GST, invoices, referral credit, reminders, aur purani PREPAID kharid (PlanPurchase) —
+ * naya checkout auto-renew hai (ProSubscriptionTest), par beech me atki prepaid kharid webhook se ab bhi poori hoti hai.
+ * Razorpay hamesha Http::fake() se, asli API ko koi call nahi jaati.
+ */
 class BillingTest extends TestCase
 {
     use RefreshDatabase;
@@ -42,12 +48,15 @@ class BillingTest extends TestCase
             'services.razorpay.key_id' => 'rzp_test_key',
             'services.razorpay.key_secret' => self::SECRET,
             'services.razorpay.webhook_secret' => self::WEBHOOK_SECRET,
+            'services.razorpay.pro_plan_id' => 'plan_T1',
             'billing.seller.gstin' => '10ABCDE1234F1Z5', // 10 = Bihar
             'billing.seller.state' => 'Bihar',
         ]);
 
         Mail::fake();
         Http::fake(['api.razorpay.com/v1/orders' => fn () => Http::response(['id' => 'order_T' . (++$this->orders), 'status' => 'created'])]);
+        config(['inertia.ssr.enabled' => false]); // SSR ka localhost call stray request na bane
+        Http::preventStrayRequests();
 
         $this->billing = app(BillingService::class);
         $this->creator = User::factory()->createOne(['role' => 'creator', 'username' => 'ria', 'plan' => 'free', 'plan_expires_at' => null]);
@@ -59,18 +68,10 @@ class BillingTest extends TestCase
         ReferralCredit::create(['user_id' => $this->creator->id, 'type' => 'earned', 'amount' => $amount, 'description' => 'Test credit']);
     }
 
-    private function checkout(int $months = 1, array $extra = [])
+    /** Purani prepaid kharid shuru (ab sirf service se — UI auto-renew hai). */
+    private function purchase(int $months = 1, bool $useCredit = false): PlanPurchase
     {
-        return $this->actingAs($this->creator)->postJson('/dashboard/settings/billing/checkout', ['months' => $months] + $extra);
-    }
-
-    private function verifyPayload(string $orderId, string $paymentId = 'pay_1'): array
-    {
-        return [
-            'razorpay_order_id' => $orderId,
-            'razorpay_payment_id' => $paymentId,
-            'razorpay_signature' => hash_hmac('sha256', "{$orderId}|{$paymentId}", self::SECRET),
-        ];
+        return $this->billing->start($this->creator->fresh(), $months, $useCredit);
     }
 
     private function webhook(string $event, string $orderId, int $paise, string $paymentId = 'pay_1')
@@ -117,25 +118,26 @@ class BillingTest extends TestCase
         $this->assertSame('27ABCDE1234F1Z5', $profile['gstin']);
     }
 
-    // ---------------------------------------------------------------- checkout → verify
+    // ---------------------------------------------------------------- prepaid kharid (purani) — webhook se poori
 
-    public function test_checkout_creates_a_pending_purchase_and_a_gateway_order(): void
+    public function test_a_prepaid_purchase_is_pending_until_razorpay_confirms_it(): void
     {
-        $this->checkout(3)->assertCreated()->assertJson(['paid' => false, 'order_id' => 'order_T1', 'amount' => 149700, 'key' => 'rzp_test_key']);
+        $purchase = $this->purchase(3);
 
-        $this->assertDatabaseHas('plan_purchases', ['user_id' => $this->creator->id, 'months' => 3, 'amount_payable' => 1497, 'status' => 'pending', 'gateway_order_id' => 'order_T1']);
+        $this->assertDatabaseHas('plan_purchases', ['id' => $purchase->id, 'months' => 3, 'amount_payable' => 1497, 'status' => 'pending', 'gateway_order_id' => 'order_T1']);
         $this->assertSame('free', $this->creator->fresh()->plan);
     }
 
-    public function test_valid_payment_signature_activates_pro_and_issues_a_tax_invoice(): void
+    public function test_webhook_activates_pro_and_issues_a_tax_invoice(): void
     {
-        $this->checkout(1);
+        $this->purchase(1);
 
-        $this->actingAs($this->creator)->postJson('/dashboard/settings/billing/verify', $this->verifyPayload('order_T1'))->assertOk()->assertJson(['paid' => true]);
+        $this->webhook('payment.captured', 'order_T1', 49900)->assertOk()->assertJson(['status' => 'ok']);
 
         $user = $this->creator->fresh();
         $this->assertSame('pro', $user->plan);
         $this->assertEqualsWithDelta(30, (int) now()->diffInDays($user->plan_expires_at), 2);
+        $this->assertSame('pay_1', PlanPurchase::first()->gateway_payment_id);
 
         $invoice = BillingInvoice::firstOrFail();
         $this->assertSame('INV-' . InvoiceNumber::financialYear() . '-000001', $invoice->invoice_number);
@@ -144,61 +146,27 @@ class BillingTest extends TestCase
         $this->assertSame('38.06', $invoice->cgst_amount);
         $this->assertSame('Ria Sharma', $invoice->billing_name);
         $this->assertSame('10ABCDE1234F1Z5', $invoice->seller['gstin']);
+        $this->assertSame('pay_1', $invoice->gateway_payment_id);
 
         Mail::assertSent(PlanPurchasedMail::class, fn ($mail) => $mail->hasTo($this->creator->email));
     }
 
-    public function test_wrong_signature_is_rejected_and_nothing_changes(): void
+    public function test_the_same_payment_twice_gives_the_months_only_once(): void
     {
-        $this->checkout(1);
+        $this->purchase(1);
 
-        $payload = ['razorpay_signature' => 'forged'] + $this->verifyPayload('order_T1');
-        $this->actingAs($this->creator)->postJson('/dashboard/settings/billing/verify', $payload)->assertUnprocessable();
-
-        $this->assertSame('free', $this->creator->fresh()->plan);
-        $this->assertSame(0, BillingInvoice::count());
-    }
-
-    public function test_another_creator_cannot_verify_someone_elses_order(): void
-    {
-        $this->checkout(1);
-        $other = User::factory()->createOne(['role' => 'creator', 'username' => 'other']);
-
-        $this->actingAs($other)->postJson('/dashboard/settings/billing/verify', $this->verifyPayload('order_T1'))->assertNotFound();
-
-        $this->assertSame('free', $this->creator->fresh()->plan);
-    }
-
-    public function test_verify_and_webhook_together_give_the_months_only_once(): void
-    {
-        $this->checkout(1);
-
-        $this->actingAs($this->creator)->postJson('/dashboard/settings/billing/verify', $this->verifyPayload('order_T1'))->assertOk();
+        $this->webhook('payment.captured', 'order_T1', 49900)->assertOk();
         $expiry = $this->creator->fresh()->plan_expires_at;
-
-        $this->webhook('payment.captured', 'order_T1', 49900)->assertOk()->assertJson(['status' => 'ok']);
+        $this->webhook('order.paid', 'order_T1', 49900)->assertOk();
 
         $this->assertTrue($expiry->equalTo($this->creator->fresh()->plan_expires_at));
         $this->assertSame(1, BillingInvoice::count());
         Mail::assertSent(PlanPurchasedMail::class, 1);
     }
 
-    // ---------------------------------------------------------------- webhook
-
-    public function test_webhook_alone_activates_pro_when_the_browser_never_came_back(): void
-    {
-        $this->checkout(1);
-
-        $this->webhook('payment.captured', 'order_T1', 49900)->assertOk();
-
-        $this->assertSame('pro', $this->creator->fresh()->plan);
-        $this->assertSame('paid', PlanPurchase::first()->status);
-        $this->assertSame('pay_1', PlanPurchase::first()->gateway_payment_id);
-    }
-
     public function test_webhook_with_a_different_amount_is_not_fulfilled(): void
     {
-        $this->checkout(1);
+        $this->purchase(1);
 
         $this->webhook('payment.captured', 'order_T1', 100)->assertOk()->assertJson(['status' => 'amount_mismatch']);
 
@@ -207,9 +175,12 @@ class BillingTest extends TestCase
 
     public function test_webhook_with_a_bad_signature_is_refused(): void
     {
-        $this->checkout(1);
-
         $this->postJson('/webhooks/razorpay', ['event' => 'payment.captured'], ['X-Razorpay-Signature' => 'nope'])->assertStatus(400);
+    }
+
+    public function test_the_old_prepaid_checkout_route_is_gone(): void
+    {
+        $this->actingAs($this->creator)->postJson('/dashboard/settings/billing/checkout', ['months' => 1])->assertNotFound();
     }
 
     // ---------------------------------------------------------------- expiry maths
@@ -218,8 +189,8 @@ class BillingTest extends TestCase
     {
         $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => now()->addDays(40)])->save();
 
-        $this->checkout(1);
-        $this->actingAs($this->creator)->postJson('/dashboard/settings/billing/verify', $this->verifyPayload('order_T1'))->assertOk();
+        $this->purchase(1);
+        $this->webhook('payment.captured', 'order_T1', 49900)->assertOk();
 
         // 40 din ka trial + 1 mahina — trial ke din zaya nahi hue
         $this->assertEqualsWithDelta(70, (int) now()->diffInDays($this->creator->fresh()->plan_expires_at), 3);
@@ -229,8 +200,8 @@ class BillingTest extends TestCase
     {
         $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => now()->subDays(20)])->save();
 
-        $this->checkout(1);
-        $this->actingAs($this->creator)->postJson('/dashboard/settings/billing/verify', $this->verifyPayload('order_T1'))->assertOk();
+        $this->purchase(1);
+        $this->webhook('payment.captured', 'order_T1', 49900)->assertOk();
 
         $this->assertEqualsWithDelta(30, (int) now()->diffInDays($this->creator->fresh()->plan_expires_at), 2);
     }
@@ -239,9 +210,13 @@ class BillingTest extends TestCase
     {
         $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => null])->save();
 
-        $this->checkout(1)->assertUnprocessable()->assertJsonValidationErrors('months');
+        $this->expectException(ValidationException::class);
 
-        $this->assertSame(0, PlanPurchase::count());
+        try {
+            $this->purchase(1);
+        } finally {
+            $this->assertSame(0, PlanPurchase::count());
+        }
     }
 
     // ---------------------------------------------------------------- referral credit
@@ -250,12 +225,13 @@ class BillingTest extends TestCase
     {
         $this->fund(200);
 
-        $this->checkout(1, ['use_credit' => true])->assertCreated()->assertJson(['amount' => 29900]);
+        $purchase = $this->purchase(1, true);
+        $this->assertSame('299.00', $purchase->amount_payable);
 
         // payment se pehle credit jyon ka tyon — checkout chhod de to kuch nahi kata
         $this->assertSame(0, ReferralCredit::where('type', 'redeemed')->count());
 
-        $this->actingAs($this->creator)->postJson('/dashboard/settings/billing/verify', $this->verifyPayload('order_T1'))->assertOk();
+        $this->webhook('payment.captured', 'order_T1', 29900)->assertOk();
 
         $this->assertEquals(200, ReferralCredit::where('type', 'redeemed')->sum('amount'));
         $invoice = BillingInvoice::firstOrFail();
@@ -267,7 +243,7 @@ class BillingTest extends TestCase
     {
         $this->fund(600);
 
-        $this->checkout(1, ['use_credit' => true])->assertOk()->assertJson(['paid' => true]);
+        $this->assertSame('paid', $this->purchase(1, true)->status);
 
         Http::assertNothingSent();
         $this->assertSame('pro', $this->creator->fresh()->plan);
@@ -276,50 +252,49 @@ class BillingTest extends TestCase
         $this->assertEqualsWithDelta(101, 600 - (float) ReferralCredit::where('type', 'redeemed')->sum('amount'), 0.01);
     }
 
+    public function test_referral_credit_cannot_be_redeemed_while_auto_renew_is_on(): void
+    {
+        $this->fund(600);
+        Subscription::create(['user_id' => $this->creator->id, 'plan_id' => $this->billing->plan()->id, 'status' => 'active', 'gateway' => 'razorpay', 'gateway_subscription_id' => 'sub_X']);
+
+        $this->actingAs($this->creator)->post('/dashboard/refer-earn/redeem', ['months' => 1])->assertSessionHasErrors('months');
+        $this->assertSame(0, ReferralCredit::where('type', 'redeemed')->count());
+
+        // auto-renew band (mahine ke ant tak chalega) — ab credit lag sakta hai
+        Subscription::query()->update(['cancel_at_period_end' => true]);
+        $this->actingAs($this->creator)->post('/dashboard/refer-earn/redeem', ['months' => 1])->assertSessionHasNoErrors();
+        $this->assertSame(1, ReferralCredit::where('type', 'redeemed')->count());
+    }
+
     // ---------------------------------------------------------------- access
 
-    public function test_state_is_required_before_the_first_purchase_and_is_remembered(): void
-    {
-        $this->creator->payoutProfile->delete();
-        $this->creator = $this->creator->fresh();
-
-        $this->checkout(1)->assertUnprocessable()->assertJsonValidationErrors('state');
-        $this->checkout(1, ['state' => 'Kerala'])->assertCreated();
-
-        $this->assertDatabaseHas('payout_profiles', ['user_id' => $this->creator->id, 'state' => 'Kerala']);
-    }
-
-    public function test_unknown_duration_is_rejected(): void
-    {
-        $this->checkout(2)->assertUnprocessable()->assertJsonValidationErrors('months');
-    }
-
-    public function test_checkout_explains_itself_when_razorpay_keys_are_missing(): void
-    {
-        config(['services.razorpay.key_id' => null]);
-
-        $this->checkout(1)->assertUnprocessable()->assertJsonValidationErrors('months');
-        $this->assertSame(0, PlanPurchase::count());
-    }
-
-    public function test_billing_page_shows_plan_quotes_and_invoices(): void
+    public function test_billing_page_shows_the_monthly_price_and_invoices(): void
     {
         $this->actingAs($this->creator)->get('/dashboard/settings/billing')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('settings/billing')
             ->where('plan.effective', 'free')
             ->where('pro.monthly_price', 499)
-            ->has('quotes', 4)
-            ->where('quotes.0.plain.payable', 499)
+            ->where('price.amount', 499)
+            ->where('price.gst', 76.12)
+            ->where('price.first_charge_at', null)
+            ->where('subscription', null)
             ->where('billing.state', 'Bihar')
             ->where('paymentsReady', true)
             ->has('invoices', 0)
         );
     }
 
+    public function test_payments_are_not_ready_without_the_razorpay_plan_id(): void
+    {
+        config(['services.razorpay.pro_plan_id' => null]);
+
+        $this->actingAs($this->creator)->get('/dashboard/settings/billing')->assertInertia(fn (Assert $page) => $page->where('paymentsReady', false));
+    }
+
     public function test_invoice_opens_for_its_owner_only_and_never_by_numeric_id(): void
     {
-        $this->checkout(1);
-        $this->actingAs($this->creator)->postJson('/dashboard/settings/billing/verify', $this->verifyPayload('order_T1'));
+        $this->purchase(1);
+        $this->webhook('payment.captured', 'order_T1', 49900);
         $invoice = BillingInvoice::firstOrFail();
         $other = User::factory()->createOne(['role' => 'creator', 'username' => 'other']);
 
@@ -328,12 +303,13 @@ class BillingTest extends TestCase
         $this->actingAs($other)->get("/dashboard/settings/billing/invoices/{$invoice->uuid}")->assertNotFound();
     }
 
-    public function test_sub_admins_cannot_open_billing_or_buy(): void
+    public function test_sub_admins_cannot_open_billing_or_subscribe(): void
     {
         $member = User::factory()->createOne(['role' => 'sub_admin', 'parent_creator_id' => $this->creator->id, 'username' => 'helper']);
 
         $this->actingAs($member)->get('/dashboard/settings/billing')->assertForbidden();
-        $this->actingAs($member)->postJson('/dashboard/settings/billing/checkout', ['months' => 1])->assertForbidden();
+        $this->actingAs($member)->postJson('/dashboard/settings/billing/subscribe')->assertForbidden();
+        $this->actingAs($member)->postJson('/dashboard/settings/billing/cancel')->assertForbidden();
     }
 
     // ---------------------------------------------------------------- numbering / commands
@@ -341,8 +317,8 @@ class BillingTest extends TestCase
     public function test_invoice_numbers_run_in_sequence_within_the_financial_year(): void
     {
         foreach ([1, 2] as $n) {
-            $this->checkout(1);
-            $this->actingAs($this->creator)->postJson('/dashboard/settings/billing/verify', $this->verifyPayload("order_T{$n}", "pay_{$n}"))->assertOk();
+            $this->purchase(1);
+            $this->webhook('payment.captured', "order_T{$n}", 49900, "pay_{$n}")->assertOk();
         }
 
         $fy = InvoiceNumber::financialYear();
@@ -355,7 +331,7 @@ class BillingTest extends TestCase
 
     public function test_abandoned_checkouts_are_closed_after_the_ttl(): void
     {
-        $this->checkout(1);
+        $this->purchase(1);
         PlanPurchase::query()->update(['created_at' => now()->subHour()]);
 
         $this->artisan('billing:expire-pending')->assertSuccessful();
@@ -363,14 +339,18 @@ class BillingTest extends TestCase
         $this->assertSame('failed', PlanPurchase::first()->status);
     }
 
-    public function test_reminder_goes_only_to_creators_expiring_on_a_reminder_day(): void
+    public function test_reminder_goes_only_to_creators_expiring_on_a_reminder_day_without_auto_renew(): void
     {
         $soon = User::factory()->createOne(['role' => 'creator', 'username' => 'soon', 'plan' => 'pro', 'plan_expires_at' => now('Asia/Kolkata')->addDays(3)->setTime(12, 0)]);
         $later = User::factory()->createOne(['role' => 'creator', 'username' => 'later', 'plan' => 'pro', 'plan_expires_at' => now('Asia/Kolkata')->addDays(5)->setTime(12, 0)]);
+        // usi din khatam, par auto-renew chalu — "ends soon" mail galat hoga
+        $renewing = User::factory()->createOne(['role' => 'creator', 'username' => 'renews', 'plan' => 'pro', 'plan_expires_at' => now('Asia/Kolkata')->addDays(3)->setTime(12, 0)]);
+        Subscription::create(['user_id' => $renewing->id, 'plan_id' => $this->billing->plan()->id, 'status' => 'active', 'gateway' => 'razorpay', 'gateway_subscription_id' => 'sub_R']);
 
         $this->artisan('billing:remind')->assertSuccessful();
 
         Mail::assertSent(PlanExpiringMail::class, fn ($mail) => $mail->hasTo($soon->email) && $mail->daysLeft === 3);
         Mail::assertNotSent(PlanExpiringMail::class, fn ($mail) => $mail->hasTo($later->email));
+        Mail::assertNotSent(PlanExpiringMail::class, fn ($mail) => $mail->hasTo($renewing->email));
     }
 }

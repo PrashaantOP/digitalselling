@@ -73,7 +73,7 @@ class OrderController extends Controller
 
         // pay-what-you-want me amount abhi khaali ho sakta hai — tab minimum pe hisaab dikhao
         if ($checkoutProduct->pricing_type === 'customer_decides' && empty($data['amount'])) {
-            $data['amount'] = max(1, OrderService::unitPrice($checkoutProduct));
+            $data['amount'] = OrderService::minimumAmount($checkoutProduct);
         }
 
         $quote = $orders->quote($checkoutProduct, $data);
@@ -105,7 +105,31 @@ class OrderController extends Controller
             throw ValidationException::withMessages(['payment' => 'We could not verify this payment. If money was deducted, your access will be emailed to you in a few minutes.']);
         }
 
-        $orders->fulfil($order, $data['razorpay_payment_id']);
+        // signature sahi — phir bhi Razorpay se pucho: isi order ki, poori rakam ki, aur pakki (captured) hai?
+        try {
+            $state = $razorpay->confirmPayment($data['razorpay_payment_id'], $order->gateway_order_id, (int) round((float) $order->total_amount * 100));
+        } catch (\Illuminate\Http\Client\RequestException|\Illuminate\Http\Client\ConnectionException $e) {
+            report($e);
+            // Razorpay se baat nahi hui — webhook thodi der me access de dega
+            throw ValidationException::withMessages(['payment' => 'We are confirming your payment. If money was deducted, your access will be emailed to you in a few minutes.']);
+        }
+
+        if ($state === 'mismatch') {
+            report(new \RuntimeException("Razorpay payment {$data['razorpay_payment_id']} does not match order {$order->order_number}"));
+
+            throw ValidationException::withMessages(['payment' => 'We could not verify this payment. Please contact support with your order details.']);
+        }
+
+        if ($state !== 'captured') {
+            throw ValidationException::withMessages(['payment' => 'The payment has not completed yet. If money was deducted, your access will be emailed to you in a few minutes.']);
+        }
+
+        $order = $orders->fulfil($order, $data['razorpay_payment_id']);
+
+        if ($order->status === 'refunded') {
+            // der se aayi session payment — slot chala gaya, paisa wapas
+            throw ValidationException::withMessages(['payment' => 'Sorry — that time slot was booked by someone else while you were paying. Your money has been refunded.']);
+        }
 
         return response()->json(['paid' => true, 'redirect' => url("/checkout/done/{$order->uuid}")]);
     }

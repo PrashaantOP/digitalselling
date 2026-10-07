@@ -50,6 +50,7 @@ class Order extends Model
         'platform_fee' => 'decimal:2',
         'net_payout_amount' => 'decimal:2',
         'paid_at' => 'datetime',
+        'refunded_at' => 'datetime',
     ];
 
 

@@ -14,7 +14,7 @@ Hi {{ $name }}, thanks — your Pro plan is active.
 @endif
 </x-mail::panel>
 
-Pro does not renew on its own. We will remind you before it ends.
+This purchase does not renew on its own. We will remind you before it ends — or turn on auto-renew from Billing.
 
 <x-mail::button :url="$invoiceUrl">
 View invoice

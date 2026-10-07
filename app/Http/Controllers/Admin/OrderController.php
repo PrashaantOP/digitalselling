@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\RefundService;
+use App\Support\AdminAudit;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -52,7 +55,7 @@ class OrderController extends Controller
         $o = $adminOrder->load(['product:id,title,type', 'creator:id,uuid,name,email,username', 'coupon:id,code', 'settlement:id,uuid,number,status', 'addonItems.addonProduct:id,title', 'checkoutAnswers.question:id,label']);
 
         return Inertia::render('Admin/Orders/Show', [
-            'order' => $o->only(['uuid', 'order_number', 'status', 'buyer_name', 'buyer_email', 'buyer_phone', 'buyer_state', 'buyer_gstin', 'buyer_note', 'payment_gateway', 'gateway_order_id', 'gateway_payment_id'])
+            'order' => $o->only(['uuid', 'order_number', 'status', 'buyer_name', 'buyer_email', 'buyer_phone', 'buyer_state', 'buyer_gstin', 'buyer_note', 'payment_gateway', 'gateway_order_id', 'gateway_payment_id', 'refund_id', 'refund_status', 'refund_reason'])
                 + [
                     'base_amount' => (float) $o->base_amount,
                     'discount_amount' => (float) $o->discount_amount,
@@ -63,6 +66,7 @@ class OrderController extends Controller
                     'net_payout_amount' => (float) $o->net_payout_amount,
                     'created_at' => $o->created_at?->toIso8601String(),
                     'paid_at' => $o->paid_at?->toIso8601String(),
+                    'refunded_at' => $o->refunded_at?->toIso8601String(),
                     'product' => $o->product?->only(['title', 'type']),
                     'creator' => $o->creator?->only(['uuid', 'name', 'email', 'username']),
                     'coupon' => $o->coupon?->code,
@@ -71,5 +75,17 @@ class OrderController extends Controller
                     'answers' => $o->checkoutAnswers->map(fn ($a) => ['question' => $a->question?->label, 'answer' => $a->answer]),
                 ],
         ]);
+    }
+
+    /** Poora refund — Razorpay pe paisa wapas, access band, creator ki kamai / settlement theek (RefundService). */
+    public function refund(Request $request, Order $adminOrder, RefundService $refunds): RedirectResponse
+    {
+        $data = $request->validate(['reason' => ['required', 'string', 'max:255']]);
+        abort_unless($adminOrder->status === 'success', 422, 'Only paid orders can be refunded.');
+
+        $refunds->refund($adminOrder, $data['reason'], $request->user('admin'));
+        AdminAudit::log('order.refunded', $adminOrder, ['amount' => (float) $adminOrder->total_amount, 'reason' => $data['reason']]);
+
+        return back()->with('status', "{$adminOrder->order_number} refunded — the buyer gets the money back in 5–7 working days.");
     }
 }

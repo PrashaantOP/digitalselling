@@ -318,8 +318,9 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
         Route::middleware('owner')->group(function () {
             Route::get('billing', [BillingController::class, 'edit'])->name('settings.billing');
             // paisa lene wale actions verified email pe hi (payout method jaisa)
-            Route::post('billing/checkout', [BillingController::class, 'checkout'])->name('settings.billing.checkout')->middleware(['verified', 'throttle:10,1']);
+            Route::post('billing/subscribe', [BillingController::class, 'subscribe'])->name('settings.billing.subscribe')->middleware(['verified', 'throttle:10,1']);
             Route::post('billing/verify', [BillingController::class, 'verify'])->name('settings.billing.verify')->middleware('throttle:20,1');
+            Route::post('billing/cancel', [BillingController::class, 'cancel'])->name('settings.billing.cancel')->middleware('throttle:10,1');
             Route::get('billing/invoices/{billingInvoice}', [BillingController::class, 'invoice'])->name('settings.billing.invoice');
 
             // emails creator ko hi jaate hain — team member ke liye ye screen nahi

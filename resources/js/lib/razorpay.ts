@@ -20,8 +20,12 @@ export interface PaymentPayload {
     message?: string;
     key?: string;
     order_id?: string;
+    /** Pro auto-renew — order ki jagah Razorpay subscription (mandate + har mahine charge) */
+    subscription_id?: string;
     amount?: number;
     name?: string;
+    /** Razorpay window me logo (creator ka store avatar) */
+    image?: string | null;
     description?: string;
     prefill?: { name?: string | null; email?: string | null; contact?: string | null };
 }
@@ -72,10 +76,9 @@ export async function completePayment(payload: PaymentPayload, verifyUrl: string
     return new Promise((resolve) => {
         const checkout = new window.Razorpay!({
             key: payload.key,
-            order_id: payload.order_id,
-            amount: payload.amount,
-            currency: 'INR',
+            ...(payload.subscription_id ? { subscription_id: payload.subscription_id } : { order_id: payload.order_id, amount: payload.amount, currency: 'INR' }),
             name: payload.name,
+            ...(payload.image ? { image: payload.image } : {}),
             description: payload.description,
             prefill: payload.prefill,
             theme: { color },

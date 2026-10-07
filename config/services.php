@@ -29,6 +29,8 @@ return [
         'key_id' => env('RAZORPAY_KEY_ID'),
         'key_secret' => env('RAZORPAY_KEY_SECRET'),
         'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
+        // Pro plan auto-renew ka Razorpay plan id — `php artisan billing:razorpay-plan` se banta hai
+        'pro_plan_id' => env('RAZORPAY_PRO_PLAN_ID'),
     ],
 
     // Customer portal ka mobile login OTP. driver: log (local/test — SMS log me) | msg91

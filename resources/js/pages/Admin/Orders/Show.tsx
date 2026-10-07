@@ -1,7 +1,8 @@
-import { Badge, Card, dateTime, Field, money, PageHeader } from '@/components/admin/ui';
+import { Badge, BUTTON, Card, ConfirmAction, dateTime, Field, money, PageHeader } from '@/components/admin/ui';
 import AdminLayout from '@/layouts/admin-layout';
 import { Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
 
 interface Props {
     order: {
@@ -17,6 +18,10 @@ interface Props {
         payment_gateway: string | null;
         gateway_order_id: string | null;
         gateway_payment_id: string | null;
+        refund_id: string | null;
+        refund_status: string | null;
+        refund_reason: string | null;
+        refunded_at: string | null;
         base_amount: number;
         discount_amount: number;
         addon_amount: number;
@@ -36,12 +41,24 @@ interface Props {
 }
 
 export default function AdminOrderShow({ order: o }: Props) {
+    const [refundOpen, setRefundOpen] = useState(false);
+
     return (
         <AdminLayout title={o.order_number}>
             <Link href="/admin/orders" className="flex w-fit items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900">
                 <ArrowLeft className="size-3.5" /> All orders
             </Link>
-            <PageHeader title={o.order_number} description={o.product ? `${o.product.title} (${o.product.type.replace(/_/g, ' ')})` : 'Deleted product'} />
+            <PageHeader
+                title={o.order_number}
+                description={o.product ? `${o.product.title} (${o.product.type.replace(/_/g, ' ')})` : 'Deleted product'}
+                action={
+                    o.status === 'success' && (
+                        <button onClick={() => setRefundOpen(true)} className={BUTTON.danger}>
+                            Refund {money(o.total_amount)}
+                        </button>
+                    )
+                }
+            />
 
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <Card title="Payment">
@@ -63,6 +80,20 @@ export default function AdminOrderShow({ order: o }: Props) {
                         </Field>
                         <Field label="Created">{dateTime(o.created_at)}</Field>
                         <Field label="Paid">{dateTime(o.paid_at)}</Field>
+                        {o.status === 'refunded' && (
+                            <>
+                                <Field label="Refunded">{dateTime(o.refunded_at)}</Field>
+                                <Field label="Refund ID">
+                                    <span className="font-mono text-xs">{o.refund_id ?? '—'}</span>
+                                </Field>
+                                {o.refund_reason && <Field label="Reason">{o.refund_reason}</Field>}
+                            </>
+                        )}
+                        {o.refund_status === 'failed' && (
+                            <Field label="Refund">
+                                <span className="font-semibold text-rose-600">Failed at Razorpay — check the Razorpay dashboard</span>
+                            </Field>
+                        )}
                         <Field label="Settlement">
                             {o.settlement ? (
                                 <Link href={`/admin/settlements/${o.settlement.uuid}`} className="text-indigo-600 hover:underline">
@@ -110,6 +141,21 @@ export default function AdminOrderShow({ order: o }: Props) {
                     )}
                 </div>
             </div>
+            <ConfirmAction
+                open={refundOpen}
+                onClose={() => setRefundOpen(false)}
+                title={`Refund ${money(o.total_amount)} to the buyer?`}
+                body={
+                    <>
+                        The full amount goes back through Razorpay (5–7 working days). The buyer loses access to this purchase and its add-ons.{' '}
+                        {o.settlement ? `This order was already settled, so ${money(o.net_payout_amount)} is deducted from the creator's next settlement.` : 'It is removed from the creator\'s next settlement.'} This can't be undone.
+                    </>
+                }
+                url={`/admin/orders/${o.uuid}/refund`}
+                fields={[{ name: 'reason', label: 'Reason (shown in the audit log)', required: true, multiline: true }]}
+                confirmLabel="Refund"
+                tone="danger"
+            />
         </AdminLayout>
     );
 }

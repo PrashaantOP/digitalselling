@@ -153,7 +153,12 @@ class ReferralService
      */
     public function blockedReason(User $user): ?string
     {
-        return $user->plan === 'pro' && $user->plan_expires_at === null ? 'paid_subscription' : null;
+        if ($user->plan === 'pro' && $user->plan_expires_at === null) {
+            return 'paid_subscription';
+        }
+
+        // auto-renew chalu hai — credit ke mahine jodne ke baad bhi Razorpay agle mahine kaat leta (do baar paisa)
+        return app(SubscriptionService::class)->renewing($user) ? 'auto_renew' : null;
     }
 
     /** Credit → Pro. Poore mahine hi (₹499 = 1 mahina); bacha hua balance wallet me rehta hai. */
@@ -163,9 +168,17 @@ class ReferralService
             throw ValidationException::withMessages(['months' => 'Choose at least one month.']);
         }
 
-        if ($this->blockedReason($user) === 'paid_subscription') {
+        $blocked = $this->blockedReason($user);
+
+        if ($blocked === 'paid_subscription') {
             throw ValidationException::withMessages([
                 'months' => 'Your account already has Pro with no end date, so there is nothing to add this credit to.',
+            ]);
+        }
+
+        if ($blocked === 'auto_renew') {
+            throw ValidationException::withMessages([
+                'months' => 'Pro auto-renew is on. Turn it off in Billing first, then use your credit for Pro months.',
             ]);
         }
 

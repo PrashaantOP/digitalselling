@@ -48,9 +48,33 @@ class OrderService
         }
 
         $price = (float) $product->price;
-        $discounted = $product->has_discount && $product->discounted_price !== null && (float) $product->discounted_price < $price;
+        // discount tabhi jab 0 se zyada aur daam se kam ho — ₹0 / ulta discount kabhi muft ya mehenga nahi banata
+        $discounted = $product->has_discount && $product->discounted_price !== null
+            && (float) $product->discounted_price > 0 && (float) $product->discounted_price < $price;
 
         return $discounted ? (float) $product->discounted_price : $price;
+    }
+
+    /** Event khatam ho gaya (end time, warna start time beet chuka) — tab registration band. */
+    public static function eventEnded(Product $product): bool
+    {
+        if ($product->type !== 'event') {
+            return false;
+        }
+
+        $detail = $product->eventDetail;
+        $end = $detail?->ends_at ?? $detail?->starts_at;
+
+        return $end !== null && $end->isPast();
+    }
+
+    /**
+     * "Pay what you want" ka minimum — creator ka `price` (khaali / 0 ho to ₹1). Discount yahan nahi lagta:
+     * buyer khud daam chunta hai, aur page pe bhi yahi minimum dikhta hai.
+     */
+    public static function minimumAmount(Product $product): float
+    {
+        return max(1.0, round((float) $product->price, 2));
     }
 
     /**
@@ -61,14 +85,19 @@ class OrderService
      */
     public function quote(Product $product, array $options = []): array
     {
+        if (self::eventEnded($product)) {
+            throw ValidationException::withMessages(['product' => 'This event has already taken place.']);
+        }
+
         $base = self::unitPrice($product);
 
         // "Pay what you want": buyer ka amount, par creator ke minimum se kam nahi
         if ($product->pricing_type === 'customer_decides') {
             $amount = round((float) ($options['amount'] ?? 0), 2);
+            $minimum = self::minimumAmount($product);
 
-            if ($amount < max(1, $base)) {
-                throw ValidationException::withMessages(['amount' => 'The minimum amount is ₹' . number_format(max(1, $base), 2) . '.']);
+            if ($amount < $minimum) {
+                throw ValidationException::withMessages(['amount' => 'The minimum amount is ₹' . number_format($minimum, 2) . '.']);
             }
 
             $base = $amount;
@@ -169,11 +198,14 @@ class OrderService
             throw ValidationException::withMessages(['payment' => 'Online payments are not available right now. Please try again later.']);
         }
 
-        $order->loadMissing(['product:id,title,creator_id', 'product.creator:id,name']);
+        $order->loadMissing(['product:id,title,creator_id', 'product.creator:id,name', 'product.creator.store:id,user_id,display_name,avatar']);
+        $store = $order->product->creator->store;
 
         $gateway = $this->razorpay->createOrder((int) round((float) $order->total_amount * 100), $order->order_number, [
             'kind' => 'order',
             'order' => $order->uuid,
+            'order_number' => $order->order_number,
+            'product' => mb_substr((string) $order->product->title, 0, 200),
         ]);
 
         $order->forceFill(['gateway_order_id' => $gateway['id']])->save();
@@ -183,7 +215,9 @@ class OrderService
             'key' => $this->razorpay->keyId(),
             'order_id' => $gateway['id'],
             'amount' => (int) round((float) $order->total_amount * 100),
-            'name' => $order->product->creator->name,
+            // Razorpay window me creator ka brand
+            'name' => $store?->display_name ?: $order->product->creator->name,
+            'image' => $store?->avatar ? url('/assets/' . $store->avatar) : null,
             'description' => $order->product->title,
             'prefill' => ['name' => $order->buyer_name, 'email' => $order->buyer_email, 'contact' => $order->buyer_phone],
             'redirect' => $done,
@@ -245,10 +279,50 @@ class OrderService
         });
 
         if ($justPaid) {
+            // 1:1 session ki payment der se aayi aur slot ab kisi aur ka hai — paisa apne aap wapas, "booking confirmed" nahi
+            if ($this->bookingLost($order)) {
+                return app(RefundService::class)->applyRefundWithGateway($order, 'The time slot was no longer available when the payment arrived.');
+            }
+
             $this->notify($order);
         }
 
         return $order;
+    }
+
+    /**
+     * Paid session ka slot payment aate-aate bacha hai ya nahi. Pending order 30 min me band ho jaata hai (booking
+     * cancel) aur slot ka hold 15 min ka hai — uske baad payment aaye to dekho: slot khaali ho to booking wapas
+     * pakki, warna true (refund).
+     */
+    private function bookingLost(Order $order): bool
+    {
+        $booking = Booking::where('order_id', $order->id)->first();
+
+        if (! $booking) {
+            return false;
+        }
+
+        $start = $booking->scheduled_at;
+        $end = $start->copy()->addMinutes($booking->duration_minutes);
+
+        $taken = Booking::where('creator_id', $booking->creator_id)->whereKeyNot($booking->id)
+            ->whereIn('status', ['upcoming', 'completed'])
+            ->where('scheduled_at', '<', $end)
+            ->where('scheduled_at', '>', $start->copy()->subMinutes(480))
+            ->where(fn ($q) => $q->whereNull('order_id')->orWhereHas('order', fn ($o) => $o->where('status', 'success')))
+            ->get(['scheduled_at', 'duration_minutes'])
+            ->contains(fn (Booking $other) => $other->scheduled_at->copy()->addMinutes($other->duration_minutes)->gt($start));
+
+        if ($taken) {
+            return true;
+        }
+
+        if ($booking->status === 'cancelled') {
+            $booking->forceFill(['status' => 'upcoming'])->save();
+        }
+
+        return false;
     }
 
     public function fail(Order $order, string $reason): void

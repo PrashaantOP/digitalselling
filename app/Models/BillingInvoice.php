@@ -22,6 +22,7 @@ class BillingInvoice extends Model
         'user_id',
         'subscription_id',
         'plan_purchase_id',
+        'gateway_payment_id',
         'invoice_number',
         'amount',
         'taxable_amount',

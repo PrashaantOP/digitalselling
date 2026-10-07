@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Http\Controllers\Public\StorefrontController;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\OrderService;
 use Illuminate\Support\Collection;
 
 /**
@@ -15,13 +16,15 @@ class StorefrontCatalog
 {
     public static function for(User $creator): Collection
     {
-        return Product::with(['coverImages:id,product_id,image_path,sort_order', 'bookingServiceDetail'])
+        return Product::with(['coverImages:id,product_id,image_path,sort_order', 'bookingServiceDetail', 'eventDetail:id,product_id,starts_at,ends_at'])
             ->where('creator_id', $creator->id)->where('status', 'published')
             ->whereIn('type', array_merge(array_keys(StorefrontController::PREFIX), ['booking']))
             // band (inactive) session store pe nahi dikhna chahiye — booking page bhi use 404 karta hai
             ->where(fn ($q) => $q->where('type', '!=', 'booking')
                 ->orWhereHas('bookingServiceDetail', fn ($d) => $d->where('is_active', true)))
             ->latest('published_at')->get()
+            // khatam hua event bik nahi sakta (OrderService rokta hai) — store / web app pe "Buy now" ke saath na dikhe
+            ->reject(fn (Product $p) => OrderService::eventEnded($p))
             ->map(fn (Product $p) => [
                 'id' => $p->id,
                 'type' => $p->type,

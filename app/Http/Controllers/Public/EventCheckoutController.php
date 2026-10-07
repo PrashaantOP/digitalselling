@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Public;
 
 use App\Models\Product;
+use App\Services\OrderService;
 
 class EventCheckoutController extends BaseProductCheckoutController
 {
@@ -20,6 +21,8 @@ class EventCheckoutController extends BaseProductCheckoutController
             'starts_at' => $d->starts_at,
             'ends_at' => $d->ends_at,
             'venue_address' => $d->mode === 'in_person' ? $d->venue_address : null,
+            // khatam ho gaya to page "ended" dikhata hai (checkout bhi OrderService rokta hai)
+            'ended' => OrderService::eventEnded($product),
         ]];
     }
 }

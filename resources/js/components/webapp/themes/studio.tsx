@@ -1,5 +1,6 @@
 import { Check, Globe, Instagram, Menu, MessageCircle, Monitor, Sparkles, Star, Users, Video, Youtube } from 'lucide-react';
 import { type CSSProperties, useEffect, useMemo, useState } from 'react';
+import { priceLabel } from '@/components/store-page/types';
 import { type WebappData } from '../types';
 
 /*
@@ -50,9 +51,6 @@ type StorefrontProps = {
     ownerPreview?: boolean;
 };
 
-const formatCurrency = (value: number | string) =>
-    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(Number(value) || 0);
-
 const asset = (path: string | null) => (path ? `/assets/${path}` : '');
 
 const featureCards = [
@@ -88,13 +86,6 @@ const productTypeLabel = (type: string) => {
     }
 };
 
-const getPrice = (product: ProductCard) => {
-    if (product.pricing_type === 'free') return 'Free';
-    if (product.pricing_type === 'customer_decides') return 'Pay what you want';
-
-    const selected = product.has_discount && product.discounted_price != null ? product.discounted_price : product.price;
-    return formatCurrency(selected);
-};
 
 const getPalette = (appearance?: StorefrontProps['appearance'] | null, isLight = false) => {
     const brand = appearance?.brand_color || '#ff5c48';
@@ -444,8 +435,9 @@ export function StudioTheme({ data }: { data: WebappData }) {
                                     <p>{product.description || 'A practical, project-based course designed to move you from idea to deployable work.'}</p>
                                     <div className="ccard-foot">
                                         <div>
-                                            {product.has_discount && product.discounted_price ? <span className="cprice-old">{formatCurrency(product.price)}</span> : null}
-                                            <span className="cprice">{getPrice(product)}</span>
+                                            {/* baaki themes jaisa — server ke niyam wala ek hi helper */}
+                                            {priceLabel(product).was && <span className="cprice-old">{priceLabel(product).was}</span>}
+                                            <span className="cprice">{priceLabel(product).now}</span>
                                         </div>
                                         <div className="carrow">→</div>
                                     </div>

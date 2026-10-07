@@ -77,7 +77,12 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
     const cover = product.cover_images?.[0];
     const modules = (course.modules ?? []).map((module) => ({ ...module, lessons: (module.lessons ?? []).filter((lesson) => lesson.title) }));
     const lessonCount = modules.reduce((sum, module) => sum + module.lessons.length, 0);
-    const price = product.pricing_type === 'free' ? 'Free' : product.pricing_type === 'customer_decides' ? 'Pay what you want' : money(product.has_discount && product.discounted_price ? product.discounted_price : product.price);
+    const payWhatYouWant = product.pricing_type === 'customer_decides';
+    // server ka OrderService::minimumAmount — creator ka price, kam se kam ₹1 (discount yahan nahi lagta)
+    const minimum = Math.max(1, Number(product.price) || 0);
+    // discount server (OrderService::unitPrice) jaisa: 0 se zyada aur daam se kam ho tabhi
+    const discounted = product.pricing_type === 'fixed' && product.has_discount && Number(product.discounted_price) > 0 && Number(product.discounted_price) < Number(product.price);
+    const price = product.pricing_type === 'free' ? 'Free' : payWhatYouWant ? 'Pay what you want' : money(discounted ? product.discounted_price! : product.price);
     const accessText = course.access_type === 'days' ? `${course.access_days ?? 0} days access` : 'Lifetime access';
     const descriptionText = product.description?.trim() || '<p>Tell learners what they will gain from this course, what they will miss if they don\'t enroll, and why now is the right time to join.</p>';
 
@@ -92,6 +97,10 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
     );
 
     const [fields, setFields] = useState({ name: '', email: '', phone: '', gstin: '', state: '' });
+    // pay-what-you-want: buyer ka amount, shuru me minimum
+    const [amount, setAmount] = useState(String(minimum));
+    const amountValue = Number(amount) || 0;
+    const amountTooLow = payWhatYouWant && amountValue < minimum;
     const [answers, setAnswers] = useState<Record<number, string>>({});
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -106,6 +115,10 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
 
     async function submit(event: FormEvent) {
         event.preventDefault();
+        if (amountTooLow) {
+            setError(`The minimum amount is ${money(minimum)}.`);
+            return;
+        }
         setSubmitting(true);
         setError(null);
 
@@ -113,7 +126,7 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
             const response = await fetch(checkoutUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-XSRF-TOKEN': cookie('XSRF-TOKEN') },
-                body: JSON.stringify({ ...fields, answers, ...extras }),
+                body: JSON.stringify({ ...fields, answers, ...extras, ...(payWhatYouWant ? { amount: amountValue } : {}) }),
             });
             const data = await response.json().catch(() => null);
 
@@ -392,10 +405,35 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
                             </div>
                         )}
 
-                        <p className="mt-6 text-3xl font-extrabold text-[#14141B]">{price}</p>
+                        <div className="mt-6 flex items-baseline gap-2">
+                            <p className="text-3xl font-extrabold text-[#14141B]">{price}</p>
+                            {discounted && <span className="text-sm text-[#8A8A96] line-through">{money(product.price)}</span>}
+                        </div>
+                        {payWhatYouWant && <p className="mt-1 text-xs text-[#6B6B78]">Minimum {money(minimum)} — pay more if you’d like to support the creator.</p>}
                         <p className="mt-2 text-xs text-[#6B6B78]">Access to this purchase will be sent to this email</p>
 
                         <form onSubmit={submit} className="mt-4 flex flex-col gap-3">
+                            {payWhatYouWant && (
+                                <div>
+                                    <div className={`flex h-11 items-center rounded-lg border bg-white pl-3 transition focus-within:ring-2 ${amountTooLow && amount !== '' ? 'border-[#C2410C] focus-within:ring-[#C2410C]/15' : 'border-[#DAD8D0] focus-within:border-[#4F46E5] focus-within:ring-[#4F46E5]/15'}`}>
+                                        <span className="border-r border-[#E4E2DA] pr-2 text-sm text-[#6B6B78]">₹</span>
+                                        <input
+                                            type="number"
+                                            inputMode="decimal"
+                                            value={amount}
+                                            onChange={(e) => setAmount(e.target.value)}
+                                            required
+                                            min={minimum}
+                                            step="0.01"
+                                            placeholder={String(minimum)}
+                                            aria-label="Amount you want to pay"
+                                            aria-invalid={amountTooLow}
+                                            className="h-full min-w-0 flex-1 rounded-r-lg px-3 text-sm font-semibold text-[#14141B] outline-none placeholder:text-[#8A8A96]"
+                                        />
+                                    </div>
+                                    {amountTooLow && amount !== '' && <p className="mt-1 text-xs font-medium text-[#C2410C]">Enter at least {money(minimum)}.</p>}
+                                </div>
+                            )}
                             <input value={fields.name} onChange={(e) => set('name', e.target.value)} required maxLength={150} placeholder="Full name" className={INPUT} />
                             <input type="email" value={fields.email} onChange={(e) => set('email', e.target.value)} required maxLength={150} placeholder="Email address" className={INPUT} />
                             <div className="flex h-11 items-center rounded-lg border border-[#DAD8D0] bg-white pl-3 transition focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/15">
@@ -454,6 +492,7 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
                                 addons={product.addons}
                                 accent={accent}
                                 showCoupon={product.pricing_type !== 'free'}
+                                amount={payWhatYouWant && !amountTooLow ? amountValue : undefined}
                                 onChange={setExtras}
                                 onTotal={setQuotedTotal}
                             />
@@ -462,16 +501,14 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
 
                             <button
                                 type="submit"
-                                disabled={submitting}
+                                disabled={submitting || amountTooLow}
                                 className="flex h-12 w-full items-center justify-between gap-2 rounded-xl px-4 text-sm font-bold tracking-wide text-white uppercase disabled:opacity-60"
                                 style={{ backgroundColor: accent }}
                             >
                                 <span className="truncate">{submitting ? 'Please wait…' : product.button_text || 'Enroll now'}</span>
-                                {product.pricing_type !== 'customer_decides' && (
-                                    <span className="flex shrink-0 items-center gap-1">
-                                        {quotedTotal !== null ? money(quotedTotal) : price} <ArrowRight className="size-4" />
-                                    </span>
-                                )}
+                                <span className="flex shrink-0 items-center gap-1">
+                                    {quotedTotal !== null ? money(quotedTotal) : payWhatYouWant ? money(Math.max(amountValue, minimum)) : price} <ArrowRight className="size-4" />
+                                </span>
                             </button>
                         </form>
 

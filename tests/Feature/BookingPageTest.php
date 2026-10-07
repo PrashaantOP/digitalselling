@@ -27,6 +27,8 @@ class BookingPageTest extends TestCase
     /** Monday 5 Oct 2026 — creator ke hours 10:00–13:00 IST (= 04:30–07:30 UTC). */
     private const MONDAY = '2026-10-05';
 
+    private int $gatewayOrders = 0;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -209,7 +211,21 @@ class BookingPageTest extends TestCase
     private function fakeRazorpay(): void
     {
         config(['services.razorpay.key_id' => 'rzp_test_key', 'services.razorpay.key_secret' => 'test_secret']);
-        Http::fake(['api.razorpay.com/v1/orders' => Http::response(['id' => 'order_S1', 'status' => 'created'])]);
+        Http::fake([
+            'api.razorpay.com/v1/orders' => fn () => Http::response(['id' => 'order_S' . (++$this->gatewayOrders), 'status' => 'created']),
+            'api.razorpay.com/v1/payments/*/refund' => Http::response(['id' => 'rfnd_s1', 'status' => 'processed']),
+            // verify Razorpay se pucchta hai: isi order ki, poori rakam ki, captured? (pay_sN → order_SN)
+            'api.razorpay.com/v1/payments/*' => function ($request) {
+                $orderId = 'order_S' . substr(basename(parse_url($request->url(), PHP_URL_PATH)), 5);
+
+                return Http::response([
+                    'id' => 'pay', 'order_id' => $orderId, 'status' => 'captured',
+                    'amount' => (int) round((float) Order::where('gateway_order_id', $orderId)->value('total_amount') * 100),
+                ]);
+            },
+        ]);
+        config(['inertia.ssr.enabled' => false]); // SSR ka localhost call stray request na bane
+        Http::preventStrayRequests();
     }
 
     private function payFor(string $gatewayOrderId, string $paymentId = 'pay_s1')
@@ -264,6 +280,54 @@ class BookingPageTest extends TestCase
 
         $this->assertSame('cancelled', Booking::first()->status);
         $this->assertSame(['10:00 am', '11:00 am', '12:00 pm'], $this->labels($creator, $service));
+    }
+
+    public function test_a_late_payment_still_gets_the_slot_when_nobody_took_it(): void
+    {
+        Mail::fake();
+        $this->fakeRazorpay();
+        $creator = $this->creator();
+        $service = $this->bookingSession($creator, ['pricing_type' => 'fixed', 'price' => 999]);
+
+        $this->book($creator, $service, '2026-10-05T04:30:00Z')->assertCreated();
+        Booking::first()->order->forceFill(['created_at' => now()->subHour()])->save();
+        $this->artisan('orders:expire-pending')->assertSuccessful();
+
+        // 30 min baad paisa aaya — slot abhi bhi khaali, to booking wapas pakki
+        $this->payFor('order_S1')->assertOk();
+
+        $this->assertSame('success', Booking::first()->order->status);
+        $this->assertSame('upcoming', Booking::first()->status);
+        Mail::assertSent(BookingConfirmedMail::class);
+        Http::assertNotSent(fn ($r) => str_ends_with($r->url(), '/refund'));
+    }
+
+    public function test_a_late_payment_for_a_slot_someone_else_booked_is_refunded(): void
+    {
+        Mail::fake();
+        $this->fakeRazorpay();
+        $creator = $this->creator();
+        $service = $this->bookingSession($creator, ['pricing_type' => 'fixed', 'price' => 999]);
+
+        $this->book($creator, $service, '2026-10-05T04:30:00Z')->assertCreated();
+        Booking::first()->order->forceFill(['created_at' => now()->subHour()])->save();
+        $this->artisan('orders:expire-pending')->assertSuccessful();
+
+        // slot khaali hua, Meera ne book karke pay bhi kar diya
+        $this->book($creator, $service, '2026-10-05T04:30:00Z', ['email' => 'meera@test.com', 'phone' => '9820144321'])->assertCreated();
+        $this->payFor('order_S2', 'pay_s2')->assertOk();
+
+        // ab Rohan ka paisa aaya — slot Meera ka hai, isliye Rohan ko poora refund
+        $this->payFor('order_S1')->assertUnprocessable()->assertJsonValidationErrors('payment');
+
+        $rohan = Order::where('gateway_order_id', 'order_S1')->firstOrFail();
+        $this->assertSame('refunded', $rohan->status);
+        $this->assertSame('rfnd_s1', $rohan->refund_id);
+        $this->assertSame('cancelled', Booking::where('order_id', $rohan->id)->value('status'));
+        $this->assertSame('upcoming', Booking::where('order_id', Order::where('gateway_order_id', 'order_S2')->value('id'))->value('status'));
+        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/payments/pay_s1/refund'));
+        Mail::assertSent(\App\Mail\OrderRefundedMail::class, fn ($m) => $m->hasTo('rohan@test.com'));
+        Mail::assertNotSent(BookingConfirmedMail::class, fn ($m) => $m->hasTo('rohan@test.com'));
     }
 
     public function test_inactive_and_unpublished_sessions_cannot_be_booked(): void

@@ -78,10 +78,14 @@ export function fontName(value?: string | null) {
 const inr = (value: number | string) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value) || 0);
 
-export function priceLabel(p: StoreProduct) {
+/**
+ * Store / web app ke product cards ka daam — server (OrderService) jaisa hi niyam, taaki jo dikhe wahi kate:
+ * discount tabhi jab 0 se zyada aur daam se kam; pay-what-you-want pe minimum (kam se kam ₹1).
+ */
+export function priceLabel(p: Pick<StoreProduct, 'pricing_type' | 'price' | 'has_discount' | 'discounted_price'>) {
     if (p.pricing_type === 'free') return { now: 'Free', was: null };
-    if (p.pricing_type === 'customer_decides') return { now: 'Pay what you want', was: null };
-    const discounted = p.has_discount && p.discounted_price != null && Number(p.discounted_price) < Number(p.price);
+    if (p.pricing_type === 'customer_decides') return { now: `Pay what you want · from ${inr(Math.max(1, Number(p.price) || 0))}`, was: null };
+    const discounted = p.has_discount && p.discounted_price != null && Number(p.discounted_price) > 0 && Number(p.discounted_price) < Number(p.price);
     return { now: inr(discounted ? p.discounted_price! : p.price), was: discounted ? inr(p.price) : null };
 }
 

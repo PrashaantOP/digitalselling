@@ -6,25 +6,29 @@ use App\Http\Controllers\Controller;
 use App\Models\BillingInvoice;
 use App\Models\Order;
 use App\Models\PayoutProfile;
-use App\Models\PlanPurchase;
 use App\Models\SubscriptionPlan;
 use App\Services\BillingService;
 use App\Services\RazorpayService;
 use App\Services\ReferralService;
+use App\Services\SubscriptionService;
 use App\Support\GstStates;
 use App\Support\PlanPricing;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 /**
  * Dashboard → Settings → Billing. Sirf owner creator (routes me `owner` middleware) —
- * sub-admin plan nahi kharid sakta. Pro prepaid hai: mahine chuno, ek baar pay karo.
+ * sub-admin plan nahi kharid sakta. Pro = monthly ₹499, auto-renew (Razorpay Subscription, SubscriptionService).
  */
 class BillingController extends Controller
 {
-    public function __construct(private BillingService $billing, private ReferralService $referrals, private RazorpayService $razorpay) {}
+    public function __construct(
+        private BillingService $billing,
+        private ReferralService $referrals,
+        private RazorpayService $razorpay,
+        private SubscriptionService $subscriptions,
+    ) {}
 
     public function edit(Request $request)
     {
@@ -38,6 +42,11 @@ class BillingController extends Controller
         $sales = (float) Order::where('creator_id', $user->id)->where('status', 'success')
             ->where('paid_at', '>=', now()->subDays(30))->sum('total_amount');
 
+        $subscription = $this->subscriptions->current($user);
+        $price = (float) $pro->monthly_price;
+        // trial / credit ka Pro chal raha ho to pehla charge uske baad (SubscriptionService::start jaisa hi)
+        $firstCharge = $effective === 'pro' && $user->plan_expires_at?->gt(now()->addHour()) ? $user->plan_expires_at : null;
+
         return Inertia::render('settings/billing', [
             'plan' => [
                 'effective' => $effective,
@@ -47,21 +56,25 @@ class BillingController extends Controller
             ],
             'pro' => [
                 'name' => $pro->name,
-                'monthly_price' => (float) $pro->monthly_price,
+                'monthly_price' => $price,
                 'commission_rate' => (float) $pro->commission_rate,
                 'features' => $pro->features ?? [],
             ],
             'freeRate' => $freeRate,
-            // har duration ka hisaab credit ke saath aur bina — page turant switch kar sake
-            'quotes' => collect($this->billing->durations())->map(fn (int $months) => [
-                'months' => $months,
-                'plain' => $this->billing->quote($user, $months, false),
-                'withCredit' => $this->billing->quote($user, $months, true),
-            ])->values(),
+            'price' => ['amount' => $price, 'first_charge_at' => $firstCharge] + $this->billing->taxSplit($price, $profile['gstin'], $profile['state']),
+            'subscription' => $subscription ? [
+                'status' => $subscription->status,
+                'renews' => $subscription->renews(),
+                // abhi tak koi charge nahi hua (trial ke baad shuru hogi) to agla charge = Pro khatam hone ka din
+                'next_charge_at' => $subscription->renews()
+                    ? ($subscription->status === 'authenticated' ? $user->plan_expires_at : $subscription->current_period_end)
+                    : null,
+                'failure_reason' => $subscription->failure_reason,
+            ] : null,
             'creditBalance' => $this->referrals->balanceFor($user)['balance'],
             'billing' => $profile,
             'states' => GstStates::names(),
-            'paymentsReady' => $this->razorpay->configured(),
+            'paymentsReady' => $this->subscriptions->ready(),
             'savings' => [
                 'sales_30d' => $sales,
                 'extra_commission' => round($sales * max(0, $freeRate - (float) $pro->commission_rate) / 100, 2),
@@ -81,17 +94,15 @@ class BillingController extends Controller
     }
 
     /**
-     * Pending kharid + Razorpay order banata hai aur Checkout.js ka payload deta hai (axios JSON).
-     * Poora amount referral credit se ho jaye to `paid: true` — gateway khulta hi nahi.
+     * Auto-renew shuru — Razorpay subscription banata hai aur Checkout.js ka payload deta hai (JSON).
+     * Mandate (card / UPI AutoPay) checkout me banta hai; phir har mahine Razorpay khud kaatta hai.
      */
-    public function checkout(Request $request)
+    public function subscribe(Request $request)
     {
         $user = $request->user();
         $profile = $this->billing->billingProfile($user);
 
         $data = $request->validate([
-            'months' => ['required', 'integer', Rule::in($this->billing->durations())],
-            'use_credit' => ['sometimes', 'boolean'],
             // state pata na ho to invoice pe CGST/SGST vs IGST tay nahi ho sakta
             'state' => [$profile['state'] ? 'nullable' : 'required', 'string', Rule::in(GstStates::names())],
         ]);
@@ -101,46 +112,47 @@ class BillingController extends Controller
             $user->unsetRelation('payoutProfile');
         }
 
-        $purchase = $this->billing->start($user, (int) $data['months'], (bool) ($data['use_credit'] ?? false));
-
-        if ($purchase->status === 'paid') {
-            return response()->json(['paid' => true, 'message' => 'Pro is active on your account.']);
-        }
+        $subscription = $this->subscriptions->start($user);
 
         return response()->json([
             'paid' => false,
             'key' => $this->razorpay->keyId(),
-            'order_id' => $purchase->gateway_order_id,
-            'amount' => (int) round((float) $purchase->amount_payable * 100),
+            'subscription_id' => $subscription->gateway_subscription_id,
             'name' => config('billing.seller.name'),
-            'description' => 'Pro plan — ' . $purchase->months . ' month' . ($purchase->months > 1 ? 's' : ''),
+            'description' => 'Pro plan — monthly, auto-renews',
             'prefill' => ['name' => $user->name, 'email' => $user->email, 'contact' => $user->phone],
         ], 201);
     }
 
     /**
-     * Checkout.js ka success handler yahan aata hai. Signature sahi ho tabhi Pro milta hai.
-     * Browser band ho jaye to bhi webhook (RazorpayWebhookController) yahi kaam kar deta hai.
+     * Checkout.js ka success handler. Signature sahi ho tabhi mandate maana jaata hai.
+     * Browser band ho jaye to bhi webhook (subscription.*) yahi kaam kar deta hai.
      */
     public function verify(Request $request)
     {
         $data = $request->validate([
-            'razorpay_order_id' => ['required', 'string', 'max:100'],
+            'razorpay_subscription_id' => ['required', 'string', 'max:100'],
             'razorpay_payment_id' => ['required', 'string', 'max:100'],
             'razorpay_signature' => ['required', 'string', 'max:200'],
         ]);
 
-        // apni hi kharid — kisi aur ka order id bhej ke uska plan activate na ho
-        $purchase = PlanPurchase::where('user_id', $request->user()->id)
-            ->where('gateway_order_id', $data['razorpay_order_id'])->firstOrFail();
+        // service apne hi user ki subscription dhoondhti hai — kisi aur ki id bhej ke uska Pro chalu nahi hota
+        $subscription = $this->subscriptions->verify($request->user(), $data['razorpay_payment_id'], $data['razorpay_subscription_id'], $data['razorpay_signature']);
 
-        if (! $this->razorpay->validPaymentSignature($data['razorpay_order_id'], $data['razorpay_payment_id'], $data['razorpay_signature'])) {
-            throw ValidationException::withMessages(['payment' => 'We could not verify this payment. If money was deducted, it will reflect here in a few minutes.']);
-        }
+        return response()->json([
+            'paid' => true,
+            'message' => $subscription->last_charged_at
+                ? 'Payment received — Pro is active and renews every month.'
+                : 'Auto-renew is on. Your first payment is taken when your current Pro period ends.',
+        ]);
+    }
 
-        $this->billing->fulfil($purchase, $data['razorpay_payment_id']);
+    /** Auto-renew band — jo mahina paid hai wo poora chalta hai. */
+    public function cancel(Request $request)
+    {
+        $this->subscriptions->cancel($request->user());
 
-        return response()->json(['paid' => true, 'message' => 'Payment received — Pro is active.']);
+        return back()->with('status', 'Auto-renew is off. Pro stays on until the end of the period you have paid for.');
     }
 
     /** Printable tax invoice — naye tab me khulta hai, browser ke "Save as PDF" se download. */

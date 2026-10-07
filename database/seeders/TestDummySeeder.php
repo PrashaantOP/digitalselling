@@ -111,13 +111,15 @@ class TestDummySeeder extends Seeder
                 'commission_rate' => 10.00,
                 'is_active' => true,
             ]);
+            // dummy id Razorpay me hai hi nahi — 'cancelled' rakho, warna billing page ise chalu auto-renew samajh ke cancel try karega
             $subscriptionId = $this->upsert('subscriptions', ['user_id' => $userId, 'plan_id' => $planId], [
-                'status' => 'active',
+                'status' => 'cancelled',
                 'gateway' => 'razorpay',
                 'gateway_subscription_id' => 'sub_TEST001',
                 'current_period_start' => $now->toDateString(),
                 'current_period_end' => $now->copy()->addMonth()->toDateString(),
-                'cancelled_at' => null,
+                'cancelled_at' => $now,
+                'cancel_at_period_end' => true,
             ]);
             // billing_invoices has only created_at (no updated_at)
             $this->upsert('billing_invoices', ['invoice_number' => 'INV-TEST-001'], [

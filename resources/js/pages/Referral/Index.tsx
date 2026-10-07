@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     BadgeCheck,
     Check,
@@ -53,7 +53,7 @@ interface Props {
     link: string;
     reward: number;
     balance: { earned: number; redeemed: number; balance: number; monthly_price: number; months_available: number };
-    blockedReason: 'paid_subscription' | null;
+    blockedReason: 'paid_subscription' | 'auto_renew' | null;
     planExpiresAt: string | null;
     stats: { total: number; active: number; rewarded: number };
     referrals: ReferralRow[];
@@ -305,6 +305,17 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                                     <div className="mt-4 flex items-start gap-2 rounded-lg bg-[#FFF4DB] p-3 text-[12px] font-medium text-[#B46E00]">
                                         <Info className="mt-px size-4 shrink-0" />
                                         Your account already has Pro with no end date, so there is nothing to add this credit to.
+                                    </div>
+                                ) : blockedReason === 'auto_renew' ? (
+                                    <div className="mt-4 flex items-start gap-2 rounded-lg bg-[#FFF4DB] p-3 text-[12px] font-medium text-[#B46E00]">
+                                        <Info className="mt-px size-4 shrink-0" />
+                                        <span>
+                                            Pro auto-renew is on, so credit can't be added right now (you would pay twice).{' '}
+                                            <Link href="/dashboard/settings/billing" className="font-semibold underline">
+                                                Turn off auto-renew
+                                            </Link>{' '}
+                                            to use it.
+                                        </span>
                                     </div>
                                 ) : (
                                     <>

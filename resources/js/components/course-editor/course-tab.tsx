@@ -379,11 +379,13 @@ export function CourseTab({
                 </div>
 
                 {form.pricing_type !== 'free' && (
-                    <Field label={form.pricing_type === 'fixed' ? 'Price' : 'Price (optional)'} htmlFor="course_price" required={form.pricing_type === 'fixed'} error={errors.price}>
+                    <Field label={form.pricing_type === 'fixed' ? 'Price' : 'Minimum amount'} htmlFor="course_price" required={form.pricing_type === 'fixed'} error={errors.price}>
                         <div className="relative">
                             <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-[#8A8A96]">₹</span>
-                            <input id="course_price" inputMode="decimal" value={form.price} onChange={(e) => setField('price', e.target.value.replace(/[^\d.]/g, ''))} placeholder="499" className={cn(INPUT, 'pl-7', invalid(errors.price))} />
+                            <input id="course_price" inputMode="decimal" value={form.price} onChange={(e) => setField('price', e.target.value.replace(/[^\d.]/g, ''))} placeholder={form.pricing_type === 'fixed' ? '499' : '99'} className={cn(INPUT, 'pl-7', invalid(errors.price))} />
                         </div>
+                        {/* OrderService::minimumAmount — khaali / 0 = ₹1 */}
+                        {form.pricing_type === 'customer_decides' && <p className="mt-1 text-[11px] text-[#8A8A96]">Buyers can pay this or more. Leave empty to accept anything from ₹1.</p>}
                     </Field>
                 )}
 

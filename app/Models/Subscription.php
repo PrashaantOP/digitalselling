@@ -2,15 +2,23 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Creator ka Pro auto-renew (Razorpay Subscription). Status Razorpay jaisa:
+ * created → authenticated → active → (pending → halted) / cancelled / completed; `abandoned` = checkout adhoora chhoda.
+ * Pro kab tak hai wo yahan nahi, `users.plan_expires_at` me — har charge use aage badhata hai (SubscriptionService).
+ */
 class Subscription extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuid;
 
     protected $table = 'subscriptions';
 
+    /** In statuses me subscription "chal rahi" hai — naya subscribe band, cancel ka button dikhe. */
+    public const LIVE = ['authenticated', 'active', 'pending', 'halted'];
 
     protected $fillable = [
         'user_id',
@@ -21,15 +29,24 @@ class Subscription extends Model
         'current_period_start',
         'current_period_end',
         'cancelled_at',
+        'cancel_at_period_end',
+        'last_charged_at',
+        'failure_reason',
     ];
-
 
     protected $casts = [
-        'current_period_start' => 'date',
-        'current_period_end' => 'date',
+        'current_period_start' => 'datetime',
+        'current_period_end' => 'datetime',
         'cancelled_at' => 'datetime',
+        'cancel_at_period_end' => 'boolean',
+        'last_charged_at' => 'datetime',
     ];
 
+    /** Agle mahine apne aap katega? (halted me Razorpay retry band kar deta hai) */
+    public function renews(): bool
+    {
+        return in_array($this->status, ['authenticated', 'active', 'pending'], true) && ! $this->cancel_at_period_end;
+    }
 
     public function user()
     {

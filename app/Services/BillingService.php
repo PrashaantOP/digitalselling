@@ -17,9 +17,9 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Creator ki Pro plan billing — PREPAID. Creator 1/3/6/12 mahine ek baar pay karta hai aur
- * `users.plan_expires_at` aage badh jaata hai (wahi mechanism jo trial aur referral credit use karte hain).
- * Auto-debit nahi hai; expiry se pehle `billing:remind` mail bhejta hai.
+ * Creator ki Pro plan billing. Naya checkout ab monthly auto-renew hai (SubscriptionService); ye class
+ * `users.plan_expires_at` wala mechanism, GST hisaab / invoice, aur referral credit → Pro mahine sambhalti hai.
+ * Purani prepaid kharid (1/3/6/12 mahine, PlanPurchase) history ke liye hai — beech me atki kharid webhook se ab bhi poori hoti hai.
  *
  * Price GST-inclusive hai: creator ₹499 deta hai, invoice me tax andar se nikalta hai.
  * Referral credit kharid me part-payment ki tarah lag sakta hai; poora credit se ho to gateway ki zaroorat hi nahi.
@@ -321,31 +321,43 @@ class BillingService
 
     private function createInvoice(PlanPurchase $purchase, User $user): BillingInvoice
     {
-        $profile = $this->billingProfile($user);
-        $tax = $this->taxSplit((float) $purchase->amount_payable, $profile['gstin'], $profile['state']);
-
-        return BillingInvoice::create([
-            'user_id' => $user->id,
+        return $this->issueInvoice($user, (float) $purchase->amount_payable, 'Pro plan — ' . $purchase->months . ' month' . ($purchase->months > 1 ? 's' : ''), $purchase->period_start, $purchase->period_end, $purchase->paid_at, [
             'plan_purchase_id' => $purchase->id,
+            'gateway_payment_id' => $purchase->gateway_payment_id,
+            'credit_applied' => $purchase->credit_applied,
+        ]);
+    }
+
+    /**
+     * Ek paid tax invoice — prepaid kharid aur auto-renew ke har charge dono yahi use karte hain.
+     * `$links`: plan_purchase_id / subscription_id / gateway_payment_id / credit_applied.
+     */
+    public function issueInvoice(User $user, float $amount, string $description, $periodStart, $periodEnd, $paidAt, array $links = []): BillingInvoice
+    {
+        $profile = $this->billingProfile($user);
+        $tax = $this->taxSplit($amount, $profile['gstin'], $profile['state']);
+
+        return BillingInvoice::create($links + [
+            'user_id' => $user->id,
             'invoice_number' => InvoiceNumber::next(),
-            'amount' => $purchase->amount_payable,
+            'amount' => $amount,
             'taxable_amount' => $tax['taxable'],
             'gst_rate' => $tax['gst_rate'],
             'cgst_amount' => $tax['cgst'],
             'sgst_amount' => $tax['sgst'],
             'igst_amount' => $tax['igst'],
-            'credit_applied' => $purchase->credit_applied,
+            'credit_applied' => 0,
             'sac_code' => config('billing.sac_code'),
-            'description' => 'Pro plan — ' . $purchase->months . ' month' . ($purchase->months > 1 ? 's' : ''),
+            'description' => $description,
             'billing_name' => $profile['name'],
             'billing_email' => $profile['email'],
             'billing_gstin' => $profile['gstin'],
             'billing_state' => $profile['state'],
             'seller' => config('billing.seller'),
-            'period_start' => $purchase->period_start,
-            'period_end' => $purchase->period_end,
+            'period_start' => $periodStart,
+            'period_end' => $periodEnd,
             'status' => 'paid',
-            'paid_at' => $purchase->paid_at,
+            'paid_at' => $paidAt ?? now(),
             'created_at' => now(),
         ]);
     }

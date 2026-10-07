@@ -21,9 +21,9 @@ Artisan::command('plans:expire', function () {
 Schedule::command('plans:expire')->daily();
 
 /*
- | Pro billing (prepaid) — auto-renew nahi hai, isliye expiry se pehle yaad dilana zaroori hai.
- | Roz ek baar chalta hai aur sirf un creators ko mail karta hai jinki expiry theek N din door hai
- | (config billing.reminder_days) — isliye ek hi din me do baar mail nahi jaati.
+ | Pro khatam hone se pehle yaad — sirf unhe jinka auto-renew band hai (trial, referral credit, cancel kiya hua,
+ | purani prepaid kharid). Roz ek baar chalta hai aur sirf un creators ko mail karta hai jinki expiry theek N din
+ | door hai (config billing.reminder_days) — isliye ek hi din me do baar mail nahi jaati.
  */
 Artisan::command('billing:remind', function () {
     $freeRate = (float) (\App\Models\SubscriptionPlan::where('slug', 'free')->value('commission_rate') ?? PlanPricing::FALLBACK_RATES['free']);
@@ -37,6 +37,11 @@ Artisan::command('billing:remind', function () {
         User::where('role', 'creator')->where('plan', 'pro')
             ->whereBetween('plan_expires_at', [$day->copy()->startOfDay()->setTimezone(config('app.timezone')), $day->copy()->endOfDay()->setTimezone(config('app.timezone'))])
             ->each(function (User $user) use ($days, $proRate, $freeRate, &$sent) {
+                // har mahine apne aap katega — "khatam ho raha hai" mail galat hoga
+                if (app(\App\Services\SubscriptionService::class)->renewing($user)) {
+                    return;
+                }
+
                 try {
                     \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\PlanExpiringMail(
                         $user->name, (int) $days, $user->plan_expires_at->copy()->setTimezone('Asia/Kolkata')->format('j F Y'), $proRate, $freeRate,
@@ -50,6 +55,48 @@ Artisan::command('billing:remind', function () {
 
     $this->info("{$sent} reminder(s) sent.");
 })->purpose('Email creators whose Pro plan is about to end');
+
+/*
+ | Pro auto-renew ka Razorpay plan — ek baar (aur price badle to dobara). subscription_plans (slug pro) ke
+ | monthly_price se monthly plan banata hai; jo id aaye wo .env me RAZORPAY_PRO_PLAN_ID me daalo.
+ | Razorpay plan ka amount baad me badalta nahi — naya price = naya plan; purane subscribers purane plan pe rehte hain.
+ */
+Artisan::command('billing:razorpay-plan', function (\App\Services\RazorpayService $razorpay) {
+    if (! $razorpay->configured()) {
+        $this->error('Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env first (then php artisan config:clear).');
+
+        return 1;
+    }
+
+    $plan = \App\Models\SubscriptionPlan::where('slug', 'pro')->firstOrFail();
+    $amount = (int) round((float) $plan->monthly_price * 100);
+
+    if ($amount < 100) {
+        $this->error('The Pro plan monthly_price must be at least ₹1.');
+
+        return 1;
+    }
+
+    if ($current = config('services.razorpay.pro_plan_id')) {
+        $this->warn("RAZORPAY_PRO_PLAN_ID is already set ({$current}).");
+
+        if (! $this->confirm('Create another Razorpay plan anyway?', false)) {
+            return 0;
+        }
+    }
+
+    try {
+        $created = $razorpay->createPlan($amount, "{$plan->name} — monthly", 'Pro plan, renews every month (GST included)');
+    } catch (\Illuminate\Http\Client\RequestException $e) {
+        $this->error('Razorpay said: ' . ($e->response->json('error.description') ?? $e->getMessage()));
+
+        return 1;
+    }
+
+    $this->info("Razorpay plan created: ₹{$plan->monthly_price}/month.");
+    $this->line('Add this to .env, then run php artisan config:clear:');
+    $this->line("RAZORPAY_PRO_PLAN_ID={$created['id']}");
+})->purpose('Create the monthly Razorpay plan used for Pro auto-renew');
 
 Artisan::command('billing:expire-pending', function (\App\Services\BillingService $billing) {
     $this->info($billing->expirePending() . ' abandoned checkout(s) closed.');

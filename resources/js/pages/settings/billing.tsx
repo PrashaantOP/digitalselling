@@ -1,27 +1,13 @@
-import { cookie } from '@/components/public/checkout-card';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { loadRazorpay } from '@/lib/razorpay';
+import { completePayment, firstError, postJson, type PaymentPayload } from '@/lib/razorpay';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { AlertTriangle, BadgeCheck, Check, Crown, FileText, Gift, Info, Loader2, ShieldCheck, TrendingUp, Zap } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, CalendarClock, Check, Crown, FileText, Gift, Info, Loader2, Repeat, ShieldCheck, TrendingUp, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Billing', href: '/dashboard/settings/billing' }];
-
-interface Quote {
-    months: number;
-    unit_price: number;
-    subtotal: number;
-    discount: number;
-    credit: number;
-    payable: number;
-    new_expiry: string;
-    taxable: number;
-    gst_rate: number;
-    gst: number;
-}
 
 interface InvoiceRow {
     uuid: string;
@@ -38,7 +24,14 @@ interface Props {
     plan: { effective: 'free' | 'pro'; expires_at: string | null; permanent: boolean; commission_rate: number };
     pro: { name: string; monthly_price: number; commission_rate: number; features: string[] };
     freeRate: number;
-    quotes: { months: number; plain: Quote; withCredit: Quote }[];
+    /** Monthly price (GST-inclusive) + pehla charge kab — trial / credit ka Pro chal raha ho to uske baad */
+    price: { amount: number; first_charge_at: string | null; taxable: number; gst_rate: number; gst: number };
+    subscription: {
+        status: 'authenticated' | 'active' | 'pending' | 'halted';
+        renews: boolean;
+        next_charge_at: string | null;
+        failure_reason: string | null;
+    } | null;
     creditBalance: number;
     billing: { name: string; email: string; gstin: string | null; state: string | null };
     states: string[];
@@ -53,19 +46,11 @@ const date = (v: string | null) => (v ? new Date(v).toLocaleDateString('en-IN', 
 const daysUntil = (v: string) => Math.max(0, Math.ceil((new Date(v).getTime() - Date.now()) / 86_400_000));
 const pct = (v: number) => `${Number(v.toFixed(2))}%`;
 
-const post = (url: string, body: unknown) =>
-    fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-XSRF-TOKEN': cookie('XSRF-TOKEN') },
-        body: JSON.stringify(body),
-    });
-
-export default function Billing({ plan, pro, freeRate, quotes, creditBalance, billing, states, paymentsReady, savings, invoices }: Props) {
+export default function Billing({ plan, pro, freeRate, price, subscription, creditBalance, billing, states, paymentsReady, savings, invoices }: Props) {
     const { auth } = usePage<SharedData>().props;
-    const [months, setMonths] = useState(quotes[0]?.months ?? 1);
-    const [useCredit, setUseCredit] = useState(creditBalance > 0);
     const [state, setState] = useState('');
     const [busy, setBusy] = useState(false);
+    const [confirmCancel, setConfirmCancel] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [notice, setNotice] = useState<string | null>(null);
 
@@ -75,74 +60,59 @@ export default function Billing({ plan, pro, freeRate, quotes, creditBalance, bi
         return () => window.clearTimeout(t);
     }, [notice]);
 
-    const row = quotes.find((q) => q.months === months) ?? quotes[0];
-    const quote = useCredit && creditBalance > 0 ? row.withCredit : row.plain;
     const onPro = plan.effective === 'pro';
+    const renewing = subscription?.renews ?? false;
     const daysLeft = plan.expires_at ? daysUntil(plan.expires_at) : null;
-    const endingSoon = onPro && daysLeft !== null && daysLeft <= 7;
+    const endingSoon = onPro && !renewing && daysLeft !== null && daysLeft <= 7;
     const needsState = !billing.state;
     const unverified = auth.user.email_verified_at === null;
-    const canPay = !plan.permanent && !unverified && (quote.payable === 0 || paymentsReady) && (!needsState || state !== '');
+    // halted = auto-debit ruk gaya; cancel ho chuka (mahina chal raha) — dono me naya subscribe ho sakta hai
+    const canSubscribe = !plan.permanent && !renewing && !unverified && paymentsReady && (!needsState || state !== '');
 
-    function done(message: string) {
-        setNotice(message);
-        router.reload();
-    }
-
-    async function pay() {
+    async function subscribe() {
         setBusy(true);
         setError(null);
 
         try {
-            const res = await post('/dashboard/settings/billing/checkout', { months, use_credit: useCredit && creditBalance > 0, ...(needsState ? { state } : {}) });
+            const res = await postJson('/dashboard/settings/billing/subscribe', needsState ? { state } : {});
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                const first = data?.errors ? (Object.values(data.errors)[0] as string[])[0] : null;
-                setError(first ?? data?.message ?? 'Could not start the payment. Please try again.');
+                setError(firstError(data, 'Could not start auto-renew. Please try again.'));
                 return;
             }
 
-            // poora amount referral credit se ho gaya — gateway ki zaroorat nahi
-            if (data.paid) {
-                done(data.message);
-                return;
+            const result = await completePayment(data as PaymentPayload, '/dashboard/settings/billing/verify');
+
+            if (result.ok) {
+                setNotice(result.message ?? 'Auto-renew is on.');
+                router.reload();
+            } else if (result.error) {
+                setError(result.error);
             }
-
-            if (!(await loadRazorpay()) || !window.Razorpay) {
-                setError('Could not load the payment window. Check your connection and try again.');
-                return;
-            }
-
-            const checkout = new window.Razorpay({
-                key: data.key,
-                order_id: data.order_id,
-                amount: data.amount,
-                currency: 'INR',
-                name: data.name,
-                description: data.description,
-                prefill: data.prefill,
-                theme: { color: '#4F46E5' },
-                handler: async (response: Record<string, string>) => {
-                    setBusy(true);
-                    const verify = await post('/dashboard/settings/billing/verify', response);
-                    const result = await verify.json().catch(() => null);
-                    setBusy(false);
-
-                    if (verify.ok) {
-                        done(result?.message ?? 'Payment received — Pro is active.');
-                    } else {
-                        setError(result?.errors?.payment?.[0] ?? 'We could not confirm the payment yet. If money was deducted, Pro will activate in a few minutes.');
-                    }
-                },
-            });
-            checkout.on('payment.failed', (r) => setError(r.error?.description ?? 'The payment did not go through. You were not charged.'));
-            checkout.open();
         } catch {
             setError('Could not reach the server. Please try again.');
         } finally {
             setBusy(false);
         }
+    }
+
+    function cancel() {
+        setBusy(true);
+        setError(null);
+        router.post(
+            '/dashboard/settings/billing/cancel',
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setConfirmCancel(false);
+                    setNotice('Auto-renew is off. Pro stays on until the end of the period you have paid for.');
+                },
+                onError: (errors) => setError(Object.values(errors)[0] ?? 'Could not turn off auto-renew. Please try again.'),
+                onFinish: () => setBusy(false),
+            },
+        );
     }
 
     return (
@@ -165,7 +135,7 @@ export default function Billing({ plan, pro, freeRate, quotes, creditBalance, bi
                         <div className="flex items-start gap-2.5 rounded-xl bg-[#FFF4DB] p-3.5 text-[13px] font-medium text-[#B46E00]">
                             <AlertTriangle className="mt-px size-4 shrink-0" />
                             <span>
-                                Pro ends {daysLeft === 0 ? 'today' : `in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`}. It does not renew on its own — after that
+                                Pro ends {daysLeft === 0 ? 'today' : `in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`}. Auto-renew is off — after that
                                 commission goes back to {pct(freeRate)}.
                             </span>
                         </div>
@@ -188,9 +158,11 @@ export default function Billing({ plan, pro, freeRate, quotes, creditBalance, bi
                                 <p className="mt-0.5 text-sm text-[#6B6B78]">
                                     {plan.permanent
                                         ? 'Pro with no end date.'
-                                        : onPro && plan.expires_at
-                                          ? `Valid till ${date(plan.expires_at)} · ${daysLeft} day${daysLeft === 1 ? '' : 's'} left`
-                                          : 'No expiry — upgrade any time.'}
+                                        : renewing && subscription?.next_charge_at
+                                          ? `Renews on ${date(subscription.next_charge_at)} · ${money(price.amount)}/month`
+                                          : onPro && plan.expires_at
+                                            ? `Valid till ${date(plan.expires_at)} · ${daysLeft} day${daysLeft === 1 ? '' : 's'} left`
+                                            : 'No expiry — upgrade any time.'}
                                 </p>
                             </div>
                         </div>
@@ -201,12 +173,12 @@ export default function Billing({ plan, pro, freeRate, quotes, creditBalance, bi
                     </section>
 
                     <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
-                        {/* Buy / extend */}
+                        {/* Subscribe / manage auto-renew */}
                         <section className="flex flex-col gap-5 rounded-xl bg-white p-5 shadow-sm">
                             <div>
-                                <h2 className="text-base font-bold text-[#14141B]">{onPro ? 'Extend Pro' : 'Upgrade to Pro'}</h2>
+                                <h2 className="text-base font-bold text-[#14141B]">{renewing ? 'Auto-renew' : onPro ? 'Keep Pro with auto-renew' : 'Upgrade to Pro'}</h2>
                                 <p className="mt-0.5 text-sm text-[#8A8A96]">
-                                    Pay once for the months you want. New months are added after your current end date.
+                                    {money(price.amount)} a month, charged automatically to your card or UPI. Turn it off any time.
                                 </p>
                             </div>
 
@@ -214,49 +186,95 @@ export default function Billing({ plan, pro, freeRate, quotes, creditBalance, bi
                                 <div className="flex items-start gap-2.5 rounded-lg bg-[#EEF0FF] p-3.5 text-[13px] font-medium text-[#4338CA]">
                                     <BadgeCheck className="mt-px size-4 shrink-0" /> Your account already has Pro with no end date — there is nothing to buy.
                                 </div>
-                            ) : (
+                            ) : renewing && subscription ? (
                                 <>
-                                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4" role="radiogroup" aria-label="Duration">
-                                        {quotes.map((q) => (
-                                            <button
-                                                key={q.months}
-                                                type="button"
-                                                role="radio"
-                                                aria-checked={months === q.months}
-                                                onClick={() => setMonths(q.months)}
-                                                className={cn(
-                                                    'rounded-xl border p-3 text-left transition',
-                                                    months === q.months
-                                                        ? 'border-[#4F46E5] bg-[#EEF0FF] ring-1 ring-[#4F46E5]'
-                                                        : 'border-[#E4E2DA] bg-white hover:border-[#C9C6BC]',
-                                                )}
-                                            >
-                                                <span className="block text-sm font-bold text-[#14141B]">
-                                                    {q.months} month{q.months > 1 ? 's' : ''}
-                                                </span>
-                                                <span className="mt-0.5 block text-xs text-[#6B6B78] tabular-nums">{money(q.plain.subtotal - q.plain.discount)}</span>
-                                            </button>
-                                        ))}
+                                    <div className="flex flex-col gap-3 rounded-xl bg-[#F6F5F2] p-4 text-sm">
+                                        <div className="flex items-center gap-2 font-semibold text-[#059669]">
+                                            <Repeat className="size-4" /> Auto-renew is on
+                                        </div>
+                                        <dl className="flex flex-col gap-1.5">
+                                            <div className="flex justify-between gap-4">
+                                                <dt className="text-[#6B6B78]">Plan</dt>
+                                                <dd className="font-medium text-[#14141B]">{pro.name} · monthly</dd>
+                                            </div>
+                                            <div className="flex justify-between gap-4">
+                                                <dt className="text-[#6B6B78]">Next charge</dt>
+                                                <dd className="font-medium text-[#14141B] tabular-nums">
+                                                    {money(price.amount)} on {date(subscription.next_charge_at)}
+                                                </dd>
+                                            </div>
+                                        </dl>
                                     </div>
 
-                                    {creditBalance > 0 && (
-                                        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#E4E2DA] p-3.5">
-                                            <input
-                                                type="checkbox"
-                                                checked={useCredit}
-                                                onChange={(e) => setUseCredit(e.target.checked)}
-                                                className="mt-0.5 size-4 accent-[#4F46E5]"
-                                            />
-                                            <span className="min-w-0">
-                                                <span className="flex items-center gap-1.5 text-sm font-semibold text-[#14141B]">
-                                                    <Gift className="size-4 text-[#7C3AED]" /> Use referral credit
-                                                </span>
-                                                <span className="mt-0.5 block text-xs text-[#8A8A96]">
-                                                    {money(creditBalance)} available. It is only deducted once the payment succeeds.
-                                                </span>
+                                    {subscription.status === 'pending' && (
+                                        <div className="flex items-start gap-2 rounded-lg bg-[#FFF4DB] p-3 text-[13px] font-medium text-[#B46E00]">
+                                            <AlertTriangle className="mt-px size-4 shrink-0" />
+                                            <span>
+                                                The last charge did not go through{subscription.failure_reason ? ` (${subscription.failure_reason})` : ''}. Razorpay will try again
+                                                over the next few days — keep enough balance on your card or UPI.
                                             </span>
-                                        </label>
+                                        </div>
                                     )}
+
+                                    {error && (
+                                        <div role="alert" className="flex items-start gap-2 rounded-lg bg-[#FDECEC] p-3 text-[13px] font-medium text-[#B42318]">
+                                            <AlertTriangle className="mt-px size-4 shrink-0" /> {error}
+                                        </div>
+                                    )}
+
+                                    {confirmCancel ? (
+                                        <div className="flex flex-col gap-3 rounded-xl border border-[#F3C7C3] p-4">
+                                            <p className="text-sm text-[#4B4B57]">
+                                                Turn off auto-renew? Pro stays on until {date(plan.expires_at ?? subscription.next_charge_at)}, then commission goes
+                                                back to {pct(freeRate)}. You can subscribe again later.
+                                            </p>
+                                            <div className="flex gap-2">
+                                                <Button onClick={cancel} disabled={busy} className="h-10 flex-1 bg-[#B42318] text-sm font-bold hover:bg-[#912018]">
+                                                    {busy ? <Loader2 className="size-4 animate-spin" /> : 'Turn off auto-renew'}
+                                                </Button>
+                                                <Button variant="outline" onClick={() => setConfirmCancel(false)} disabled={busy} className="h-10 flex-1 text-sm font-semibold">
+                                                    Keep it on
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setConfirmCancel(true)}
+                                            className="self-start text-sm font-semibold text-[#B42318] hover:underline"
+                                        >
+                                            Cancel auto-renew
+                                        </button>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    {subscription?.status === 'halted' && (
+                                        <div className="flex items-start gap-2 rounded-lg bg-[#FDECEC] p-3 text-[13px] font-medium text-[#B42318]">
+                                            <AlertTriangle className="mt-px size-4 shrink-0" />
+                                            <span>
+                                                Auto-renew stopped because the payments kept failing{subscription.failure_reason ? ` (${subscription.failure_reason})` : ''}.
+                                                Subscribe again with a working card or UPI to keep Pro.
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <ul className="flex flex-col gap-2 rounded-xl bg-[#F6F5F2] p-4 text-sm text-[#4B4B57]">
+                                        <li className="flex gap-2">
+                                            <CalendarClock className="mt-0.5 size-4 shrink-0 text-[#4F46E5]" />
+                                            {price.first_charge_at
+                                                ? `Your current Pro runs till ${date(price.first_charge_at)} — the first ${money(price.amount)} is charged then, not today.`
+                                                : `${money(price.amount)} today, then every month on the same date.`}
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <Repeat className="mt-0.5 size-4 shrink-0 text-[#4F46E5]" /> Renews on its own — no reminders to miss. Cancel any time; the month
+                                            you paid for still runs out.
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <FileText className="mt-0.5 size-4 shrink-0 text-[#4F46E5]" /> A GST invoice for every payment (includes {money(price.gst)} GST at{' '}
+                                            {pct(price.gst_rate)}).
+                                        </li>
+                                    </ul>
 
                                     {needsState && (
                                         <div>
@@ -280,35 +298,6 @@ export default function Billing({ plan, pro, freeRate, quotes, creditBalance, bi
                                         </div>
                                     )}
 
-                                    <dl className="flex flex-col gap-2 rounded-xl bg-[#F6F5F2] p-4 text-sm">
-                                        <div className="flex justify-between gap-4">
-                                            <dt className="text-[#6B6B78]">
-                                                {pro.name} × {quote.months} month{quote.months > 1 ? 's' : ''}
-                                            </dt>
-                                            <dd className="font-medium text-[#14141B] tabular-nums">{money(quote.subtotal)}</dd>
-                                        </div>
-                                        {quote.discount > 0 && (
-                                            <div className="flex justify-between gap-4">
-                                                <dt className="text-[#6B6B78]">Discount</dt>
-                                                <dd className="font-medium text-[#059669] tabular-nums">−{money(quote.discount)}</dd>
-                                            </div>
-                                        )}
-                                        {quote.credit > 0 && (
-                                            <div className="flex justify-between gap-4">
-                                                <dt className="text-[#6B6B78]">Referral credit</dt>
-                                                <dd className="font-medium text-[#059669] tabular-nums">−{money(quote.credit)}</dd>
-                                            </div>
-                                        )}
-                                        <div className="mt-1 flex items-baseline justify-between gap-4 border-t border-[#E4E2DA] pt-3">
-                                            <dt className="font-bold text-[#14141B]">You pay</dt>
-                                            <dd className="text-xl font-bold text-[#14141B] tabular-nums">{money(quote.payable)}</dd>
-                                        </div>
-                                        <p className="text-xs text-[#8A8A96]">
-                                            {quote.payable > 0 && `Includes ${money(quote.gst)} GST (${pct(quote.gst_rate)}). `}
-                                            Pro will be valid till {date(quote.new_expiry)}.
-                                        </p>
-                                    </dl>
-
                                     {error && (
                                         <div role="alert" className="flex items-start gap-2 rounded-lg bg-[#FDECEC] p-3 text-[13px] font-medium text-[#B42318]">
                                             <AlertTriangle className="mt-px size-4 shrink-0" /> {error}
@@ -320,27 +309,46 @@ export default function Billing({ plan, pro, freeRate, quotes, creditBalance, bi
                                             <Info className="mt-px size-4 shrink-0" /> Verify your email address before making a payment.
                                         </div>
                                     ) : (
-                                        !paymentsReady &&
-                                        quote.payable > 0 && (
+                                        !paymentsReady && (
                                             <div className="flex items-start gap-2 rounded-lg bg-[#FFF4DB] p-3 text-[13px] font-medium text-[#B46E00]">
                                                 <Info className="mt-px size-4 shrink-0" /> Online payments are not set up yet. Please check back soon.
                                             </div>
                                         )
                                     )}
 
-                                    <Button onClick={pay} disabled={busy || !canPay} className="h-11 w-full bg-[#4F46E5] text-sm font-bold hover:bg-[#4338CA]">
+                                    <Button onClick={subscribe} disabled={busy || !canSubscribe} className="h-11 w-full bg-[#4F46E5] text-sm font-bold hover:bg-[#4338CA]">
                                         {busy ? (
                                             <Loader2 className="size-4 animate-spin" />
-                                        ) : quote.payable > 0 ? (
-                                            `Pay ${money(quote.payable)}`
+                                        ) : price.first_charge_at ? (
+                                            'Turn on auto-renew'
                                         ) : (
-                                            'Activate with referral credit'
+                                            `Subscribe — ${money(price.amount)}/month`
                                         )}
                                     </Button>
                                     <p className="flex items-center justify-center gap-1.5 text-xs text-[#8A8A96]">
-                                        <ShieldCheck className="size-3.5" /> Secure payment by Razorpay · UPI, cards, netbanking · no auto-debit
+                                        <ShieldCheck className="size-3.5" /> Secure payment by Razorpay · cards and UPI AutoPay
                                     </p>
                                 </>
+                            )}
+
+                            {creditBalance > 0 && !plan.permanent && (
+                                <div className="flex items-start gap-2.5 rounded-lg border border-[#E4E2DA] p-3 text-[13px] text-[#4B4B57]">
+                                    <Gift className="mt-px size-4 shrink-0 text-[#7C3AED]" />
+                                    <span>
+                                        You have {money(creditBalance)} referral credit.{' '}
+                                        {renewing ? (
+                                            'It can be turned into Pro months only while auto-renew is off, so you are never charged twice.'
+                                        ) : (
+                                            <>
+                                                Turn it into Pro months on{' '}
+                                                <Link href="/dashboard/refer-earn" className="font-semibold text-[#4F46E5] hover:underline">
+                                                    Refer &amp; Earn
+                                                </Link>
+                                                .
+                                            </>
+                                        )}
+                                    </span>
+                                </div>
                             )}
                         </section>
 

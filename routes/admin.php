@@ -90,6 +90,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{adminOrder}', [OrderController::class, 'show'])->name('orders.show');
+        Route::post('orders/{adminOrder}/refund', [OrderController::class, 'refund'])->name('orders.refund');
 
         Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
         Route::get('billing/invoices/{adminInvoice}', [BillingController::class, 'invoice'])->name('billing.invoice');

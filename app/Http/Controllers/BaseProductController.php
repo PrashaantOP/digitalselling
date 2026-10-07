@@ -279,10 +279,23 @@ abstract class BaseProductController extends Controller
 
         $data = $request->validate($rules);
 
-        if (($data['pricing_type'] ?? $product->pricing_type) === 'free') {
+        $pricingType = $data['pricing_type'] ?? $product->pricing_type;
+
+        if ($pricingType === 'free') {
             $data['price'] = 0;
+        }
+
+        // discount sirf fixed price pe — "pay what you want" me purana discount pada reh jaata to minimum galat banta
+        if ($pricingType !== 'fixed') {
             $data['has_discount'] = false;
             $data['discounted_price'] = null;
+        }
+
+        // final daam aur discount (jo bheja wo, warna jo pehle se hai) — discount hamesha daam se kam
+        $finalPrice = (float) ($data['price'] ?? $product->price);
+        $finalDiscount = array_key_exists('discounted_price', $data) ? $data['discounted_price'] : $product->discounted_price;
+        if (($data['has_discount'] ?? $product->has_discount) && $finalDiscount !== null && (float) $finalDiscount >= $finalPrice) {
+            throw ValidationException::withMessages(['discounted_price' => 'The discounted price must be lower than the price.']);
         }
 
         DB::transaction(function () use ($product, $data, $request) {
@@ -355,7 +368,7 @@ abstract class BaseProductController extends Controller
             'pricing_type' => ['sometimes', Rule::in(['fixed', 'customer_decides', 'free'])],
             'price' => ['sometimes', 'numeric', 'min:0', 'max:10000000'],
             'has_discount' => ['sometimes', 'boolean'],
-            'discounted_price' => array_merge(['nullable', 'numeric', 'min:0'], request()->has('price') ? ['lt:price'] : []),
+            'discounted_price' => array_merge(['nullable', 'numeric', 'gt:0'], request()->has('price') ? ['lt:price'] : []),
             'button_text' => ['sometimes', 'required', 'string', 'max:30'],
             'theme' => ['nullable', 'string', 'max:30'],
             'accent_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
@@ -378,6 +391,10 @@ abstract class BaseProductController extends Controller
         }
         if ($product->pricing_type === 'fixed' && (float) $product->price <= 0) {
             $p['price'] = 'Set a price greater than 0 (or choose Free).';
+        }
+        if ($product->pricing_type === 'fixed' && $product->has_discount
+            && ((float) $product->discounted_price <= 0 || (float) $product->discounted_price >= (float) $product->price)) {
+            $p['discounted_price'] = 'The discounted price must be more than ₹0 and lower than the price.';
         }
 
         return $p;

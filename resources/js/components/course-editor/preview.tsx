@@ -265,9 +265,16 @@ export function CoursePreview({ form, detail, coverImages, checkoutQuestions, dr
                     </span>
                 )}
             </div>
+            {/* live page jaisa: minimum + buyer ka amount box */}
+            {form.pricing_type === 'customer_decides' && (
+                <p className="text-xs" style={{ color: t.muted }}>
+                    Minimum {money(Math.max(1, price))} — pay more if you’d like to support the creator.
+                </p>
+            )}
             <p className="text-xs" style={{ color: t.muted }}>
                 Access to this purchase will be sent to this email
             </p>
+            {form.pricing_type === 'customer_decides' && fakeInput(String(Math.max(1, price)), '₹')}
             {fakeInput('Full name')}
             {fakeInput('Email address')}
             {fakeInput('Phone number', '+91')}
@@ -279,7 +286,7 @@ export function CoursePreview({ form, detail, coverImages, checkoutQuestions, dr
                 ))}
             <button type="button" disabled className="flex h-12 w-full cursor-not-allowed items-center justify-between rounded-lg px-4 text-sm font-extrabold tracking-wide text-white uppercase opacity-90" style={{ background: accent }}>
                 <span className="truncate">{cta}</span>
-                <span className="shrink-0">{form.pricing_type === 'customer_decides' ? '' : `${shownPrice} →`}</span>
+                <span className="shrink-0">{form.pricing_type === 'customer_decides' ? `${money(Math.max(1, price))} →` : `${shownPrice} →`}</span>
             </button>
         </aside>
     );
