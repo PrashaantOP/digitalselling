@@ -34,7 +34,7 @@ export default function AdminCreators({ creators, filters }: { creators: Paginat
                 <select aria-label="Plan" value={filters.plan ?? ''} onChange={(e) => setFilter('plan', e.target.value)} className={SELECT}>
                     <option value="">All plans</option>
                     <option value="free">Free</option>
-                    <option value="pro">Pro</option>
+                    <option value="plus">Plus</option>
                 </select>
                 <select aria-label="Status" value={filters.status ?? ''} onChange={(e) => setFilter('status', e.target.value)} className={SELECT}>
                     <option value="">Any status</option>

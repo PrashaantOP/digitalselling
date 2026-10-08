@@ -34,14 +34,14 @@ class HomePageTest extends TestCase
             ->where('trialDays', 90));
     }
 
-    public function test_home_pricing_shows_free_and_pro_only()
+    public function test_home_pricing_shows_free_and_plus_only()
     {
         // band plan landing pe nahi aana chahiye
         SubscriptionPlan::create(['name' => 'Legacy', 'slug' => 'legacy', 'monthly_price' => 299, 'commission_rate' => 5, 'is_active' => false]);
 
         $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->where('plans', fn ($plans) => collect($plans)->map(fn ($p) => [$p['slug'], (float) $p['commission_rate'], (float) $p['monthly_price']])->all()
-                === [['free', 15.0, 0.0], ['pro', 10.0, 499.0]]));
+                === [['free', 15.0, 0.0], ['plus', 10.0, 499.0]]));
     }
 
     public function test_home_works_without_any_products()

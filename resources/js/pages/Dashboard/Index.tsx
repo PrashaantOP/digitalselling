@@ -421,7 +421,7 @@ export default function DashboardIndex({
                                 <section className="rounded-2xl border-2 border-orange-200 bg-gradient-to-b from-card to-orange-50 p-5 shadow-sm dark:border-orange-900 dark:to-orange-950/20">
                                     <span className="inline-flex items-center gap-1 rounded-full bg-orange-500 px-2 py-1 text-[10px] font-bold tracking-wide text-white uppercase">
                                         <Rocket className="size-3" />
-                                        Pro membership
+                                        Plus membership
                                     </span>
                                     <h2 className="mt-3 text-base font-bold">Level up your business</h2>
                                     <ul className="my-4 space-y-2 text-xs">
@@ -440,7 +440,7 @@ export default function DashboardIndex({
                                         href="/dashboard/settings/billing"
                                         className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-orange-500 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-600"
                                     >
-                                        Explore Pro <ArrowRight className="size-3.5" />
+                                        Explore Plus <ArrowRight className="size-3.5" />
                                     </Link>
                                 </section>
 

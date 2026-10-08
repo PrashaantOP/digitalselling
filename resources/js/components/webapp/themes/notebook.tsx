@@ -5,7 +5,7 @@ import { CoverArt, FEATURES, SensitiveNote, sessionLength, siteCopy, Socials, ST
 import { initials, type WebappData } from '../types';
 
 /*
- * Notebook (pro) — "classes" wala design: graph-paper background, tilted featured card,
+ * Notebook (plus) — "classes" wala design: graph-paper background, tilted featured card,
  * type filter tabs, bento features aur clickable steps. Brand colour accent hai, sun-yellow highlight.
  * CSS .wn me scoped, breakpoints container queries pe (dashboard ka phone preview bhi sahi dikhe).
  */

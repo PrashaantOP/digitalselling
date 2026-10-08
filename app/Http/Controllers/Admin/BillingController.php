@@ -12,7 +12,7 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 /**
- * Admin → Billing (read-only): Pro auto-renew subscriptions (har mahine ka charge + failures), purani prepaid
+ * Admin → Billing (read-only): Plus auto-renew subscriptions (har mahine ka charge + failures), purani prepaid
  * kharid (plan_purchases) aur sabke tax invoices.
  */
 class BillingController extends Controller
@@ -86,7 +86,7 @@ class BillingController extends Controller
                 'month_revenue' => (float) (clone $month)->sum('amount'),
                 'month_taxable' => (float) (clone $month)->sum('taxable_amount'),
                 'month_gst' => (float) (clone $month)->sum('cgst_amount') + (float) (clone $month)->sum('sgst_amount') + (float) (clone $month)->sum('igst_amount'),
-                'active_pro' => User::where('role', 'creator')->where('plan', 'pro')
+                'active_plus' => User::where('role', 'creator')->where('plan', 'plus')
                     ->where(fn ($q) => $q->whereNull('plan_expires_at')->orWhere('plan_expires_at', '>', now()))->count(),
                 'renewing' => Subscription::whereIn('status', ['authenticated', 'active', 'pending'])->where('cancel_at_period_end', false)->count(),
                 'failing' => Subscription::whereIn('status', ['pending', 'halted'])->count(),

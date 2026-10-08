@@ -7,12 +7,12 @@ export type FaqItem = { q: string; a: string };
 // Pricing wale sawaal trial days pe depend karte hain — isliye function
 const pricingFaqs = (trialDays: number): FaqItem[] => [
     {
-        q: 'How much does DigitalSelling cost?',
-        a: 'There is no setup fee. On Free you pay 15% commission per sale; on Pro (₹499/month) you pay only 10%. The commission already includes Razorpay payment gateway charges — nothing else is deducted.',
+        q: 'How much does CreatorPro cost?',
+        a: 'There is no setup fee. On Free you pay 15% commission per sale; on Plus (₹499/month) you pay only 10%. The commission already includes Razorpay payment gateway charges — nothing else is deducted.',
     },
     {
-        q: `What happens after my ${trialDays}-day Pro trial?`,
-        a: `Every new account gets Pro free for ${trialDays} days — no card needed. When the trial ends you move to Free (15%) automatically, or upgrade to Pro for ₹499/month. Your products, students and store are never affected.`,
+        q: `What happens after my ${trialDays}-day Plus trial?`,
+        a: `Every new account gets Plus free for ${trialDays} days — no card needed. When the trial ends you move to Free (15%) automatically, or upgrade to Plus for ₹499/month. Your products, students and store are never affected.`,
     },
 ];
 
@@ -23,7 +23,7 @@ const FAQS: FaqItem[] = [
     },
     {
         q: 'How do my students pay, and when do I receive the money?',
-        a: 'Buyers pay through Razorpay using UPI, cards, netbanking or wallets. Your earnings are credited to your DigitalSelling balance, and you can withdraw to your bank or UPI once your KYC is verified.',
+        a: 'Buyers pay through Razorpay using UPI, cards, netbanking or wallets. Your earnings are credited to your CreatorPro balance, and you can withdraw to your bank or UPI once your KYC is verified.',
     },
     {
         q: 'What kind of lessons can I add to a course?',

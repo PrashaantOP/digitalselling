@@ -88,7 +88,7 @@ Route::bind('settlement', fn ($v) => $byUuid(Settlement::where('creator_id', Ten
 Route::bind('order', fn ($v) => $byUuid(Order::where('creator_id', Tenant::id()), $v));
 Route::bind('role', fn ($v) => $byUuid(Role::where(config('permission.column_names.team_foreign_key', 'team_id'), Tenant::id()), $v));
 
-// ---- Billing: Pro plan ka invoice sirf usi creator ko ----
+// ---- Billing: Plus plan ka invoice sirf usi creator ko ----
 Route::bind('billingInvoice', fn ($v) => $byUuid(BillingInvoice::where('user_id', Tenant::id()), $v));
 
 // ---- Public checkout: sirf published product ----

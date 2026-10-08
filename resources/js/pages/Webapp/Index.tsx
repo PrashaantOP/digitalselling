@@ -1,3 +1,4 @@
+import { StoreTabsHeader } from '@/components/store-page/store-tabs';
 import { Button } from '@/components/ui/button';
 import { WebappView } from '@/components/webapp/webapp-view';
 import { WEBAPP_THEMES, type WebappData, type WebappThemeSlug } from '@/components/webapp/types';
@@ -8,25 +9,29 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Check, ExternalLink, EyeOff, Loader2, Lock, Monitor, Smartphone, Sparkles, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Web App', href: '/dashboard/web-app' }];
+// Store ka ek tab hai (pehle sidebar me alag link tha)
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Store', href: '/dashboard/store' },
+    { title: 'Web App', href: '/dashboard/store/web-app' },
+];
 
 interface ThemeRow {
     slug: WebappThemeSlug;
     name: string;
     tagline: string;
-    pro: boolean;
+    plus: boolean;
     locked: boolean;
 }
 
 interface Props {
     themes: ThemeRow[];
-    isPro: boolean;
+    isPlus: boolean;
     isLive: boolean;
     preview: WebappData;
 }
 
 // preview.theme hamesha "jo abhi live hai" hota hai (WebappThemes::resolve) — gallery bhi wahi highlight karti hai
-export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
+export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) {
     // preview turant badle (server round-trip ka intezaar nahi), save background me hota hai
     const [active, setActive] = useState<WebappThemeSlug>(preview.theme);
     const [saving, setSaving] = useState<WebappThemeSlug | null>(null);
@@ -46,7 +51,7 @@ export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
         setActive(theme.slug);
         setSaving(theme.slug);
         router.put(
-            '/dashboard/web-app',
+            '/dashboard/store/web-app',
             { theme: theme.slug },
             {
                 preserveScroll: true,
@@ -62,6 +67,7 @@ export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Web App" />
             <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+                <StoreTabsHeader active="webapp" />
                 <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     {/* Title */}
                     <div className="flex flex-col justify-between gap-3 pt-1 md:flex-row md:items-center">
@@ -145,7 +151,7 @@ export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
                                                 {theme.locked && (
                                                     <span className="absolute inset-0 flex items-center justify-center bg-white/65 backdrop-blur-[1px]">
                                                         <span className="flex items-center gap-1.5 rounded-full bg-[#14141B] px-3 py-1 text-[11px] font-bold text-white">
-                                                            <Lock className="size-3" /> PRO
+                                                            <Lock className="size-3" /> PLUS
                                                         </span>
                                                     </span>
                                                 )}
@@ -156,9 +162,9 @@ export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
                                                     <div className="min-w-0">
                                                         <p className="flex items-center gap-1.5 text-sm font-bold text-[#14141B]">
                                                             {theme.name}
-                                                            {theme.pro && (
+                                                            {theme.plus && (
                                                                 <span className="rounded bg-[#F1EAFE] px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-[#7C3AED] uppercase">
-                                                                    Pro
+                                                                    Plus
                                                                 </span>
                                                             )}
                                                         </p>
@@ -176,7 +182,7 @@ export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
                                                         href="/dashboard/settings/billing"
                                                         className="mt-auto inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#FF6B4A] px-3 text-xs font-bold text-white transition hover:bg-[#E85D3D]"
                                                     >
-                                                        <Zap className="size-3.5" /> Unlock with Pro
+                                                        <Zap className="size-3.5" /> Unlock with Plus
                                                     </Link>
                                                 ) : (
                                                     <Button
@@ -194,16 +200,16 @@ export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
                                 })}
                             </div>
 
-                            {!isPro && (
+                            {!isPlus && (
                                 <div className="flex flex-col justify-between gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">
                                     <div className="flex items-start gap-3.5">
                                         <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#F1EAFE] text-[#7C3AED]">
                                             <Sparkles className="size-5" />
                                         </span>
                                         <div>
-                                            <p className="text-sm font-semibold text-[#14141B]">{themes.filter((theme) => theme.locked).length} more designs with Pro</p>
+                                            <p className="text-sm font-semibold text-[#14141B]">{themes.filter((theme) => theme.locked).length} more designs with Plus</p>
                                             <p className="mt-0.5 text-xs text-[#8A8A96]">
-                                                Premium themes unlock the moment you upgrade — and if Pro ends, your web app falls back to the free
+                                                Premium themes unlock the moment you upgrade — and if Plus ends, your web app falls back to the free
                                                 theme on its own.
                                             </p>
                                         </div>
@@ -212,7 +218,7 @@ export default function WebappIndex({ themes, isPro, isLive, preview }: Props) {
                                         href="/dashboard/settings/billing"
                                         className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#FF6B4A] px-4 text-sm font-bold text-white transition hover:bg-[#E85D3D]"
                                     >
-                                        <Zap className="size-4" /> Upgrade to Pro
+                                        <Zap className="size-4" /> Upgrade to Plus
                                     </Link>
                                 </div>
                             )}

@@ -49,7 +49,7 @@ class CreatorSecurityTest extends TestCase
     {
         $user = $this->creator();
 
-        $user->fill(['role' => 'sub_admin', 'status' => 'suspended', 'plan' => 'pro', 'parent_creator_id' => 1, 'name' => 'New name'])->save();
+        $user->fill(['role' => 'sub_admin', 'status' => 'suspended', 'plan' => 'plus', 'parent_creator_id' => 1, 'name' => 'New name'])->save();
         $user->refresh();
 
         $this->assertSame('creator', $user->role);

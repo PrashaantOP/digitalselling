@@ -69,7 +69,7 @@ export function Hero({ stats, trialDays }: { stats: HomeStats; trialDays: number
                     </Reveal>
                     <Reveal delay={240} className="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
                         <Link href={auth.user ? route('dashboard') : route('register')} className={primaryBtn}>
-                            {auth.user ? 'Go to dashboard' : `Start free — ${trialDays} days of Pro`} <ArrowRight className="size-4" />
+                            {auth.user ? 'Go to dashboard' : `Start free — ${trialDays} days of Plus`} <ArrowRight className="size-4" />
                         </Link>
                         <a href="#course-workflow" className={secondaryBtn}>
                             <PlayCircle className="size-4 text-blue-600" /> See how a course works
@@ -77,7 +77,7 @@ export function Hero({ stats, trialDays }: { stats: HomeStats; trialDays: number
                     </Reveal>
                     <Reveal delay={320}>
                         <ul className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-600 lg:justify-start">
-                            {[`${trialDays}-day Pro trial`, 'No setup fee', 'Secure payments by Razorpay'].map((t) => (
+                            {[`${trialDays}-day Plus trial`, 'No setup fee', 'Secure payments by Razorpay'].map((t) => (
                                 <li key={t} className="flex items-center gap-1.5">
                                     <CheckCircle2 className="size-4 text-blue-600" /> {t}
                                 </li>

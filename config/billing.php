@@ -1,7 +1,7 @@
 <?php
 
 /*
-| Creator ki Pro plan billing (prepaid). Price `subscription_plans.monthly_price` se aata hai aur
+| Creator ki Plus plan billing (prepaid). Price `subscription_plans.monthly_price` se aata hai aur
 | GST-INCLUSIVE hai — creator ₹499 hi deta hai, invoice me tax andar se nikalta hai.
 */
 return [
@@ -25,7 +25,7 @@ return [
 
     // invoice pe platform (seller) ki details
     'seller' => [
-        'name' => env('BILLING_SELLER_NAME', env('APP_NAME', 'DigitalSelling')),
+        'name' => env('BILLING_SELLER_NAME', env('APP_NAME', 'CreatorPro')),
         'legal_name' => env('BILLING_SELLER_LEGAL_NAME'),
         'gstin' => env('BILLING_SELLER_GSTIN'),
         'address' => env('BILLING_SELLER_ADDRESS'),

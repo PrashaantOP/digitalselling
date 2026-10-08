@@ -98,7 +98,7 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
         return () => window.clearTimeout(t);
     }, [notice]);
 
-    const shareText = `I'm selling my courses and sessions on Kiln — join with my link and get 90 days of Pro free: ${link}`;
+    const shareText = `I'm selling my courses and sessions on CreatorPro — join with my link and get 90 days of Plus free: ${link}`;
     const canRedeem = balance.months_available >= 1 && !blockedReason;
     const cost = months * balance.monthly_price;
 
@@ -116,7 +116,7 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
             { months },
             {
                 preserveScroll: true,
-                onSuccess: () => setNotice(`${months} month${months > 1 ? 's' : ''} of Pro added to your account.`),
+                onSuccess: () => setNotice(`${months} month${months > 1 ? 's' : ''} of Plus added to your account.`),
                 onFinish: () => setRedeeming(false),
             },
         );
@@ -158,7 +158,7 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                                     {money(reward)} for every successful referral
                                 </p>
                                 <p className="mt-1.5 max-w-lg text-sm text-white/75">
-                                    Credit goes straight into your Pro subscription — {money(balance.monthly_price)} = 1 month of Pro.
+                                    Credit goes straight into your Plus subscription — {money(balance.monthly_price)} = 1 month of Plus.
                                 </p>
                             </div>
 
@@ -193,7 +193,7 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                                         <Share2 className="size-3.5" /> Post
                                     </a>
                                     <a
-                                        href={`mailto:?subject=${encodeURIComponent('Join me on Kiln')}&body=${encodeURIComponent(shareText)}`}
+                                        href={`mailto:?subject=${encodeURIComponent('Join me on CreatorPro')}&body=${encodeURIComponent(shareText)}`}
                                         className="flex h-8 items-center gap-1.5 rounded-lg bg-white/15 px-3 text-xs font-semibold transition hover:bg-white/25"
                                     >
                                         <Mail className="size-3.5" /> Email
@@ -220,7 +220,7 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                             tone="bg-[#FFF4DB] text-[#B46E00]"
                         />
                         <StatTile
-                            label="Used for Pro"
+                            label="Used for Plus"
                             value={money(balance.redeemed)}
                             sub="Applied to your subscription"
                             icon={<Crown className="size-3.5" />}
@@ -229,7 +229,7 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                         <StatTile
                             label="Available"
                             value={money(balance.balance)}
-                            sub={balance.months_available > 0 ? `Enough for ${balance.months_available} month${balance.months_available > 1 ? 's' : ''} of Pro` : 'Not enough to redeem yet'}
+                            sub={balance.months_available > 0 ? `Enough for ${balance.months_available} month${balance.months_available > 1 ? 's' : ''} of Plus` : 'Not enough to redeem yet'}
                             icon={<Wallet className="size-3.5" />}
                             tone="bg-[#E6F6EC] text-[#059669]"
                         />
@@ -295,22 +295,22 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                                     <span className="flex size-8 items-center justify-center rounded-lg bg-[#F1EAFE] text-[#7C3AED]">
                                         <Crown className="size-4" />
                                     </span>
-                                    <h3 className="text-sm font-semibold text-[#14141B]">Redeem for Pro</h3>
+                                    <h3 className="text-sm font-semibold text-[#14141B]">Redeem for Plus</h3>
                                 </div>
                                 <p className="mt-2 text-xs text-[#8A8A96]">
-                                    {money(balance.monthly_price)} = 1 month of Pro (10% commission). Anything left over stays in your balance.
+                                    {money(balance.monthly_price)} = 1 month of Plus (10% commission). Anything left over stays in your balance.
                                 </p>
 
                                 {blockedReason === 'paid_subscription' ? (
                                     <div className="mt-4 flex items-start gap-2 rounded-lg bg-[#FFF4DB] p-3 text-[12px] font-medium text-[#B46E00]">
                                         <Info className="mt-px size-4 shrink-0" />
-                                        Your account already has Pro with no end date, so there is nothing to add this credit to.
+                                        Your account already has Plus with no end date, so there is nothing to add this credit to.
                                     </div>
                                 ) : blockedReason === 'auto_renew' ? (
                                     <div className="mt-4 flex items-start gap-2 rounded-lg bg-[#FFF4DB] p-3 text-[12px] font-medium text-[#B46E00]">
                                         <Info className="mt-px size-4 shrink-0" />
                                         <span>
-                                            Pro auto-renew is on, so credit can't be added right now (you would pay twice).{' '}
+                                            Plus auto-renew is on, so credit can't be added right now (you would pay twice).{' '}
                                             <Link href="/dashboard/settings/billing" className="font-semibold underline">
                                                 Turn off auto-renew
                                             </Link>{' '}
@@ -357,14 +357,14 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                                             </p>
                                         )}
                                         {planExpiresAt && (
-                                            <p className="mt-2 text-center text-[11px] text-[#8A8A96]">Your Pro runs until {shortDate(planExpiresAt)}.</p>
+                                            <p className="mt-2 text-center text-[11px] text-[#8A8A96]">Your Plus runs until {shortDate(planExpiresAt)}.</p>
                                         )}
                                     </>
                                 )}
 
                                 <p className="mt-3 flex items-start gap-1.5 border-t border-[#E4E2DA]/70 pt-3 text-[11px] text-[#8A8A96]">
                                     <Info className="mt-px size-3.5 shrink-0" />
-                                    Referral credit can only be used for Pro — it cannot be withdrawn to a bank account.
+                                    Referral credit can only be used for Plus — it cannot be withdrawn to a bank account.
                                 </p>
                             </div>
 
@@ -373,9 +373,9 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                                 <ol className="mt-4 flex flex-col gap-3.5">
                                     {[
                                         { icon: <Share2 className="size-4" />, tone: 'bg-[#EEF2FF] text-[#4F46E5]', text: 'Send your link to a creator.' },
-                                        { icon: <UserPlus className="size-4" />, tone: 'bg-[#E6F2FF] text-[#0284C7]', text: 'They join and set up their store (90 days of Pro free).' },
+                                        { icon: <UserPlus className="size-4" />, tone: 'bg-[#E6F2FF] text-[#0284C7]', text: 'They join and set up their store (90 days of Plus free).' },
                                         { icon: <ShoppingBag className="size-4" />, tone: 'bg-[#FFF4DB] text-[#B46E00]', text: 'They make their first successful sale.' },
-                                        { icon: <IndianRupee className="size-4" />, tone: 'bg-[#E6F6EC] text-[#059669]', text: `${money(reward)} lands in your credit — ready for Pro.` },
+                                        { icon: <IndianRupee className="size-4" />, tone: 'bg-[#E6F6EC] text-[#059669]', text: `${money(reward)} lands in your credit — ready for Plus.` },
                                     ].map((step, index) => (
                                         <li key={step.text} className="flex items-start gap-3">
                                             <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-md', step.tone)}>{step.icon}</span>

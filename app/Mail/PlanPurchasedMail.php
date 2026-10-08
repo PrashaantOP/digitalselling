@@ -9,7 +9,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-/** Creator ko — "Pro ka payment mil gaya", invoice ke link ke saath. */
+/** Creator ko — "Plus ka payment mil gaya", invoice ke link ke saath. */
 class PlanPurchasedMail extends Mailable
 {
     use Queueable, SerializesModels;
@@ -18,7 +18,7 @@ class PlanPurchasedMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Payment received — your Pro plan is active');
+        return new Envelope(subject: 'Payment received — your Plus plan is active');
     }
 
     public function content(): Content

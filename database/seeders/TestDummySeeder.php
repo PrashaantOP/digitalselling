@@ -33,7 +33,7 @@ class TestDummySeeder extends Seeder
                 'country_code' => '+91',
                 'username' => 'testcreator',
                 'role' => 'creator',
-                'plan' => 'pro',
+                'plan' => 'plus',
                 'status' => 'active',
                 'email_verified_at' => $now,
                 'phone_verified_at' => $now,
@@ -104,9 +104,9 @@ class TestDummySeeder extends Seeder
             ]);
 
             // ---------- 3. PLAN / SUBSCRIPTION / BILLING / NOTIFICATIONS ----------
-            // Wahi Pro plan jo migration seed karta hai (₹499/month, 10%) — alag dummy plan landing pricing pe dikh jaata
-            $planId = $this->upsert('subscription_plans', ['slug' => 'pro'], [
-                'name' => 'Pro',
+            // Wahi Plus plan jo migration seed karta hai (₹499/month, 10%) — alag dummy plan landing pricing pe dikh jaata
+            $planId = $this->upsert('subscription_plans', ['slug' => 'plus'], [
+                'name' => 'Plus',
                 'monthly_price' => 499,
                 'commission_rate' => 10.00,
                 'is_active' => true,

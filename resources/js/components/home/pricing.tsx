@@ -22,7 +22,7 @@ export function Pricing({ plans, trialDays }: { plans: HomePlan[]; trialDays: nu
                     eyebrow="Pricing"
                     title={
                         <>
-                            Start with <span className="text-blue-600">{trialDays} days of Pro</span>, free
+                            Start with <span className="text-blue-600">{trialDays} days of Plus</span>, free
                         </>
                     }
                     description="No setup fee, no card needed to sign up. You only pay a small commission when you make a sale — and it already includes Razorpay payment gateway charges."
@@ -31,7 +31,7 @@ export function Pricing({ plans, trialDays }: { plans: HomePlan[]; trialDays: nu
                 <Reveal className="mx-auto mt-10 flex max-w-2xl items-center gap-3 rounded-2xl bg-blue-600 px-5 py-4 text-sm text-white shadow-lg shadow-blue-600/25">
                     <Gift className="size-5 shrink-0" />
                     <p>
-                        <span className="font-semibold">Every new account starts on Pro.</span> After {trialDays} days, continue on Pro or move to
+                        <span className="font-semibold">Every new account starts on Plus.</span> After {trialDays} days, continue on Plus or move to
                         Free — your products, students and store stay exactly as they are.
                     </p>
                 </Reveal>
@@ -40,7 +40,7 @@ export function Pricing({ plans, trialDays }: { plans: HomePlan[]; trialDays: nu
                     {plans.map((plan, i) => {
                         const isFree = Number(plan.monthly_price) === 0;
                         const featured = !isFree;
-                        // Pro ko Free se kitna % kam lagta hai
+                        // Plus ko Free se kitna % kam lagta hai
                         const saves = free && featured ? Number(free.commission_rate) - Number(plan.commission_rate) : 0;
 
                         return (
@@ -97,7 +97,7 @@ export function Pricing({ plans, trialDays }: { plans: HomePlan[]; trialDays: nu
                                             featured ? 'bg-white text-blue-700 hover:bg-blue-50' : 'bg-blue-600 text-white hover:bg-blue-700',
                                         )}
                                     >
-                                        {isFree ? 'Start selling' : `Start ${trialDays}-day Pro free`}
+                                        {isFree ? 'Start selling' : `Start ${trialDays}-day Plus free`}
                                     </Link>
                                 </div>
                             </Reveal>

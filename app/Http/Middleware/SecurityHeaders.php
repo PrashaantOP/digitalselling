@@ -59,7 +59,7 @@ class SecurityHeaders
             'font-src' => ["'self'", 'data:', 'https://fonts.bunny.net', ...($admin ? [] : ['https://fonts.gstatic.com'])],
             'img-src' => ["'self'", 'data:', 'blob:', ...($admin ? [] : ['https:'])],
             'media-src' => ["'self'", 'blob:', ...($admin ? [] : ['https:'])],
-            // Razorpay Checkout.js apne API + analytics ko call karta hai (Pro plan billing)
+            // Razorpay Checkout.js apne API + analytics ko call karta hai (Plus plan billing)
             'connect-src' => ["'self'", $dev, $devWs, ...($admin ? [] : ['https://api.razorpay.com', 'https://lumberjack.razorpay.com'])],
             // 'self': certificate design ka live preview (same-origin iframe)
             'frame-src' => $admin ? ["'none'"] : ["'self'", 'https://www.youtube.com', 'https://www.youtube-nocookie.com', 'https://player.vimeo.com', 'https://api.razorpay.com', 'https://checkout.razorpay.com'],

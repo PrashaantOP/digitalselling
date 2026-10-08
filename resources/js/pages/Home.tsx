@@ -16,7 +16,7 @@ export default function Home({ stats, plans, trialDays }: Props) {
     return (
         <HomeShell
             title="Create and sell online courses"
-            description={`DigitalSelling is the course platform for Indian creators — video lessons, live classes, quizzes, assignments and certificates in one place. Start with ${trialDays} days of Pro free — secure payments by Razorpay.`}
+            description={`CreatorPro is the course platform for Indian creators — video lessons, live classes, quizzes, assignments and certificates in one place. Start with ${trialDays} days of Plus free — secure payments by Razorpay.`}
         >
             <Hero stats={stats} trialDays={trialDays} />
             <CourseFeatures />

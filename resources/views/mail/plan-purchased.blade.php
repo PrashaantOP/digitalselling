@@ -1,22 +1,24 @@
-<x-mail::message>
-# Payment received
+<x-mail::message :preheader="'₹' . $amount . ' paid · Plus' . ($validTill ? ' till ' . $validTill : '')">
+<x-mail::badge tone="plus">Plus plan</x-mail::badge>
 
-Hi {{ $name }}, thanks — your Pro plan is active.
+# Payment received — Plus is active
 
-<x-mail::panel>
-**Plan:** Pro — {{ $months }} month{{ $months > 1 ? 's' : '' }}<br>
-**Amount paid:** ₹{{ $amount }} (incl. GST)<br>
+Hi {{ $name }}, thanks! Your Plus plan is active.
+
+<x-mail::summary>
+<x-mail::row label="Plan">Plus — {{ $months }} month{{ $months > 1 ? 's' : '' }}</x-mail::row>
 @if ($validTill)
-**Pro valid till:** {{ $validTill }}<br>
+<x-mail::row label="Valid till">{{ $validTill }}</x-mail::row>
 @endif
 @if ($invoiceNumber)
-**Invoice:** {{ $invoiceNumber }}
+<x-mail::row label="Invoice">{{ $invoiceNumber }}</x-mail::row>
 @endif
-</x-mail::panel>
+<x-mail::row label="Amount paid" :total="true">₹{{ $amount }}</x-mail::row>
+</x-mail::summary>
 
-This purchase does not renew on its own. We will remind you before it ends — or turn on auto-renew from Billing.
+<small>Includes GST. This purchase does not renew on its own — we will remind you before it ends, or you can turn on auto-renew from Billing.</small>
 
-<x-mail::button :url="$invoiceUrl">
+<x-mail::button :url="$invoiceUrl" color="accent">
 View invoice
 </x-mail::button>
 </x-mail::message>

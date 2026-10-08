@@ -92,7 +92,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         >
                             <Gift className="size-5 shrink-0 text-blue-600" />
                             <span className="text-slate-700">
-                                New here? <span className="font-semibold text-blue-700">Create a store & get 90 days of Pro free →</span>
+                                New here? <span className="font-semibold text-blue-700">Create a store & get 90 days of Plus free →</span>
                             </span>
                         </Link>
                     </>

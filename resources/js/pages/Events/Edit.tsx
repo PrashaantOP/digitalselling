@@ -284,7 +284,7 @@ function PreviewPane({ item, publicUrl, device }: { item: EventItem; publicUrl: 
 
                         <p className="mt-8 text-center text-[11px] text-[#8A8A96]">
                             Built with{' '}
-                            <span className="font-semibold text-[#4F46E5]">SuperCreators</span>
+                            <span className="font-semibold text-[#4F46E5]">CreatorPro</span>
                         </p>
                     </div>
                 </div>

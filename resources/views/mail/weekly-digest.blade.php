@@ -1,22 +1,25 @@
-<x-mail::message>
+<x-mail::message audience="creator" :preheader="$stats['sales'] . ' sale' . ($stats['sales'] === 1 ? '' : 's') . ' · ₹' . number_format($stats['earned'], 2) . ' earned this week'" note="You get this email because “Weekly digest” is on in your notification settings.">
+<x-mail::badge tone="primary">Your week</x-mail::badge>
+
 # Your week at a glance
 
 Hi {{ $name }}, here's what happened from {{ $stats['from'] }} to {{ $stats['to'] }}.
 
-<x-mail::panel>
-**Sales:** {{ $stats['sales'] }}<br>
-**Paid by buyers:** ₹{{ number_format($stats['revenue'], 2) }}<br>
-**You earned:** ₹{{ number_format($stats['earned'], 2) }}<br>
-**New course students:** {{ $stats['enrollments'] }}<br>
-**Courses completed:** {{ $stats['completions'] }}
+<x-mail::stats :items="[
+    ['label' => 'Sales', 'value' => $stats['sales']],
+    ['label' => 'You earned', 'value' => '₹' . number_format($stats['earned'], 2)],
+    ['label' => 'New students', 'value' => $stats['enrollments']],
+    ['label' => 'Courses completed', 'value' => $stats['completions']],
+]" />
+
+<x-mail::summary>
+<x-mail::row label="Paid by buyers">₹{{ number_format($stats['revenue'], 2) }}</x-mail::row>
 @if ($stats['top'])
-<br>**Best seller:** {{ $stats['top'] }}
+<x-mail::row label="Best seller">{{ $stats['top'] }}</x-mail::row>
 @endif
-</x-mail::panel>
+</x-mail::summary>
 
 <x-mail::button :url="$url">
 Open your dashboard
 </x-mail::button>
-
-<small>You get this email because “Weekly digest” is on in your notification settings.</small>
 </x-mail::message>

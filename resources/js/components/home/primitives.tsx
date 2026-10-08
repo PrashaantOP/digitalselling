@@ -112,7 +112,7 @@ export function Logo({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
                 </svg>
             </span>
             <span className={cn('text-lg font-semibold tracking-tight', tone === 'dark' ? 'text-slate-900' : 'text-white')}>
-                Digital<span className={tone === 'dark' ? 'text-blue-600' : 'text-blue-300'}>Selling</span>
+                Creator<span className={tone === 'dark' ? 'text-blue-600' : 'text-blue-300'}>Pro</span>
             </span>
         </span>
     );

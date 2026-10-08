@@ -17,7 +17,7 @@ use Illuminate\Validation\ValidationException;
  *
  * Niyam: 1 referral = ₹100, par credit tabhi milta hai jab referred creator apni
  * PEHLI successful sale kare (sirf signup pe nahi — warna fake emails se paisa ban jaata).
- * Ye credit bank me withdraw nahi hota — sirf Pro subscription me redeem hota hai
+ * Ye credit bank me withdraw nahi hota — sirf Plus subscription me redeem hota hai
  * (₹499 = 1 mahina), aur wo bhi maujooda `plan_expires_at` mechanism se, Razorpay ko chhue bina.
  */
 class ReferralService
@@ -27,10 +27,10 @@ class ReferralService
 
     private const FALLBACK_MONTHLY_PRICE = 499.0;
 
-    /** Ek mahine Pro ki keemat — plans table se, hardcode nahi. */
+    /** Ek mahine Plus ki keemat — plans table se, hardcode nahi. */
     public function monthlyPrice(): float
     {
-        $price = (float) SubscriptionPlan::where('slug', 'pro')->value('monthly_price');
+        $price = (float) SubscriptionPlan::where('slug', 'plus')->value('monthly_price');
 
         return $price > 0 ? $price : self::FALLBACK_MONTHLY_PRICE;
     }
@@ -148,12 +148,12 @@ class ReferralService
     }
 
     /**
-     * Pro bina expiry ke (permanent — admin ne diya, ya purani paid subscription) ho to
+     * Plus bina expiry ke (permanent — admin ne diya, ya purani paid subscription) ho to
      * usme mahine jodne ka koi matlab nahi; credit kat jaata aur milta kuch nahi. Isliye redemption block.
      */
     public function blockedReason(User $user): ?string
     {
-        if ($user->plan === 'pro' && $user->plan_expires_at === null) {
+        if ($user->plan === 'plus' && $user->plan_expires_at === null) {
             return 'paid_subscription';
         }
 
@@ -161,7 +161,7 @@ class ReferralService
         return app(SubscriptionService::class)->renewing($user) ? 'auto_renew' : null;
     }
 
-    /** Credit → Pro. Poore mahine hi (₹499 = 1 mahina); bacha hua balance wallet me rehta hai. */
+    /** Credit → Plus. Poore mahine hi (₹499 = 1 mahina); bacha hua balance wallet me rehta hai. */
     public function redeem(User $user, int $months): ReferralCredit
     {
         if ($months < 1) {
@@ -172,17 +172,17 @@ class ReferralService
 
         if ($blocked === 'paid_subscription') {
             throw ValidationException::withMessages([
-                'months' => 'Your account already has Pro with no end date, so there is nothing to add this credit to.',
+                'months' => 'Your account already has Plus with no end date, so there is nothing to add this credit to.',
             ]);
         }
 
         if ($blocked === 'auto_renew') {
             throw ValidationException::withMessages([
-                'months' => 'Pro auto-renew is on. Turn it off in Billing first, then use your credit for Pro months.',
+                'months' => 'Plus auto-renew is on. Turn it off in Billing first, then use your credit for Plus months.',
             ]);
         }
 
-        // Pro dene ka ek hi raasta — BillingService (kharid ki row, expiry, ledger sab wahin). Lazy resolve,
+        // Plus dene ka ek hi raasta — BillingService (kharid ki row, expiry, ledger sab wahin). Lazy resolve,
         // kyunki BillingService khud is service pe depend karta hai.
         return app(BillingService::class)->redeemWithCredit($user, $months);
     }

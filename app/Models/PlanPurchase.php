@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Pro plan ki ek prepaid kharid (ya uski koshish). Paid hote hi BillingService::fulfil()
+ * Plus plan ki ek prepaid kharid (ya uski koshish). Paid hote hi BillingService::fulfil()
  * users.plan_expires_at aage badhata hai aur tax invoice banata hai.
  */
 class PlanPurchase extends Model

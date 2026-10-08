@@ -10,7 +10,7 @@ use Inertia\Inertia;
 
 /**
  * Dashboard → Refer & Earn.
- * Credit sirf Pro subscription me lagta hai — withdraw ka yahan koi raasta hai hi nahi.
+ * Credit sirf Plus subscription me lagta hai — withdraw ka yahan koi raasta hai hi nahi.
  */
 class ReferralController extends Controller
 {
@@ -54,7 +54,7 @@ class ReferralController extends Controller
         ]);
     }
 
-    /** Credit → Pro mahine. Balance kam ho ya paid subscription chal rahi ho to service hi rok deti hai. */
+    /** Credit → Plus mahine. Balance kam ho ya paid subscription chal rahi ho to service hi rok deti hai. */
     public function redeem(Request $request)
     {
         $data = $request->validate(['months' => ['required', 'integer', 'min:1', 'max:24']]);

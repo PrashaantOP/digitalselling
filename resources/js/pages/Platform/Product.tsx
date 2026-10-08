@@ -62,7 +62,7 @@ export default function ProductPage({ type, trialDays }: Props) {
                     </Reveal>
                     <Reveal delay={240} className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
                         <Link href={auth.user ? route('dashboard') : route('register')} className={primaryBtn}>
-                            {auth.user ? 'Go to dashboard' : `Start free — ${trialDays} days of Pro`} <ArrowRight className="size-4" />
+                            {auth.user ? 'Go to dashboard' : `Start free — ${trialDays} days of Plus`} <ArrowRight className="size-4" />
                         </Link>
                         <a href="#how-it-works" className={secondaryBtn}>
                             See how it works

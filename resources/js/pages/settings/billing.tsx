@@ -21,10 +21,10 @@ interface InvoiceRow {
 }
 
 interface Props {
-    plan: { effective: 'free' | 'pro'; expires_at: string | null; permanent: boolean; commission_rate: number };
-    pro: { name: string; monthly_price: number; commission_rate: number; features: string[] };
+    plan: { effective: 'free' | 'plus'; expires_at: string | null; permanent: boolean; commission_rate: number };
+    plus: { name: string; monthly_price: number; commission_rate: number; features: string[] };
     freeRate: number;
-    /** Monthly price (GST-inclusive) + pehla charge kab — trial / credit ka Pro chal raha ho to uske baad */
+    /** Monthly price (GST-inclusive) + pehla charge kab — trial / credit ka Plus chal raha ho to uske baad */
     price: { amount: number; first_charge_at: string | null; taxable: number; gst_rate: number; gst: number };
     subscription: {
         status: 'authenticated' | 'active' | 'pending' | 'halted';
@@ -46,7 +46,7 @@ const date = (v: string | null) => (v ? new Date(v).toLocaleDateString('en-IN', 
 const daysUntil = (v: string) => Math.max(0, Math.ceil((new Date(v).getTime() - Date.now()) / 86_400_000));
 const pct = (v: number) => `${Number(v.toFixed(2))}%`;
 
-export default function Billing({ plan, pro, freeRate, price, subscription, creditBalance, billing, states, paymentsReady, savings, invoices }: Props) {
+export default function Billing({ plan, plus, freeRate, price, subscription, creditBalance, billing, states, paymentsReady, savings, invoices }: Props) {
     const { auth } = usePage<SharedData>().props;
     const [state, setState] = useState('');
     const [busy, setBusy] = useState(false);
@@ -60,10 +60,10 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
         return () => window.clearTimeout(t);
     }, [notice]);
 
-    const onPro = plan.effective === 'pro';
+    const onPlus = plan.effective === 'plus';
     const renewing = subscription?.renews ?? false;
     const daysLeft = plan.expires_at ? daysUntil(plan.expires_at) : null;
-    const endingSoon = onPro && !renewing && daysLeft !== null && daysLeft <= 7;
+    const endingSoon = onPlus && !renewing && daysLeft !== null && daysLeft <= 7;
     const needsState = !billing.state;
     const unverified = auth.user.email_verified_at === null;
     // halted = auto-debit ruk gaya; cancel ho chuka (mahina chal raha) — dono me naya subscribe ho sakta hai
@@ -107,7 +107,7 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                 preserveScroll: true,
                 onSuccess: () => {
                     setConfirmCancel(false);
-                    setNotice('Auto-renew is off. Pro stays on until the end of the period you have paid for.');
+                    setNotice('Auto-renew is off. Plus stays on until the end of the period you have paid for.');
                 },
                 onError: (errors) => setError(Object.values(errors)[0] ?? 'Could not turn off auto-renew. Please try again.'),
                 onFinish: () => setBusy(false),
@@ -122,7 +122,7 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                 <div className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     <div className="flex flex-col gap-1 pt-1">
                         <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Billing</h1>
-                        <p className="text-sm text-[#8A8A96]">Your plan, Pro payments and tax invoices.</p>
+                        <p className="text-sm text-[#8A8A96]">Your plan, Plus payments and tax invoices.</p>
                     </div>
 
                     {notice && (
@@ -135,7 +135,7 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                         <div className="flex items-start gap-2.5 rounded-xl bg-[#FFF4DB] p-3.5 text-[13px] font-medium text-[#B46E00]">
                             <AlertTriangle className="mt-px size-4 shrink-0" />
                             <span>
-                                Pro ends {daysLeft === 0 ? 'today' : `in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`}. Auto-renew is off — after that
+                                Plus ends {daysLeft === 0 ? 'today' : `in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`}. Auto-renew is off — after that
                                 commission goes back to {pct(freeRate)}.
                             </span>
                         </div>
@@ -147,20 +147,20 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                             <span
                                 className={cn(
                                     'flex size-11 shrink-0 items-center justify-center rounded-xl',
-                                    onPro ? 'bg-[#F1EAFE] text-[#7C3AED]' : 'bg-[#F0EFEA] text-[#6B6B78]',
+                                    onPlus ? 'bg-[#F1EAFE] text-[#7C3AED]' : 'bg-[#F0EFEA] text-[#6B6B78]',
                                 )}
                             >
-                                {onPro ? <Crown className="size-5" /> : <Zap className="size-5" />}
+                                {onPlus ? <Crown className="size-5" /> : <Zap className="size-5" />}
                             </span>
                             <div>
                                 <p className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">Current plan</p>
-                                <p className="mt-0.5 text-lg font-bold text-[#14141B]">{onPro ? pro.name : 'Free'}</p>
+                                <p className="mt-0.5 text-lg font-bold text-[#14141B]">{onPlus ? plus.name : 'Free'}</p>
                                 <p className="mt-0.5 text-sm text-[#6B6B78]">
                                     {plan.permanent
-                                        ? 'Pro with no end date.'
+                                        ? 'Plus with no end date.'
                                         : renewing && subscription?.next_charge_at
                                           ? `Renews on ${date(subscription.next_charge_at)} · ${money(price.amount)}/month`
-                                          : onPro && plan.expires_at
+                                          : onPlus && plan.expires_at
                                             ? `Valid till ${date(plan.expires_at)} · ${daysLeft} day${daysLeft === 1 ? '' : 's'} left`
                                             : 'No expiry — upgrade any time.'}
                                 </p>
@@ -176,7 +176,7 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                         {/* Subscribe / manage auto-renew */}
                         <section className="flex flex-col gap-5 rounded-xl bg-white p-5 shadow-sm">
                             <div>
-                                <h2 className="text-base font-bold text-[#14141B]">{renewing ? 'Auto-renew' : onPro ? 'Keep Pro with auto-renew' : 'Upgrade to Pro'}</h2>
+                                <h2 className="text-base font-bold text-[#14141B]">{renewing ? 'Auto-renew' : onPlus ? 'Keep Plus with auto-renew' : 'Upgrade to Plus'}</h2>
                                 <p className="mt-0.5 text-sm text-[#8A8A96]">
                                     {money(price.amount)} a month, charged automatically to your card or UPI. Turn it off any time.
                                 </p>
@@ -184,7 +184,7 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
 
                             {plan.permanent ? (
                                 <div className="flex items-start gap-2.5 rounded-lg bg-[#EEF0FF] p-3.5 text-[13px] font-medium text-[#4338CA]">
-                                    <BadgeCheck className="mt-px size-4 shrink-0" /> Your account already has Pro with no end date — there is nothing to buy.
+                                    <BadgeCheck className="mt-px size-4 shrink-0" /> Your account already has Plus with no end date — there is nothing to buy.
                                 </div>
                             ) : renewing && subscription ? (
                                 <>
@@ -195,7 +195,7 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                                         <dl className="flex flex-col gap-1.5">
                                             <div className="flex justify-between gap-4">
                                                 <dt className="text-[#6B6B78]">Plan</dt>
-                                                <dd className="font-medium text-[#14141B]">{pro.name} · monthly</dd>
+                                                <dd className="font-medium text-[#14141B]">{plus.name} · monthly</dd>
                                             </div>
                                             <div className="flex justify-between gap-4">
                                                 <dt className="text-[#6B6B78]">Next charge</dt>
@@ -225,7 +225,7 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                                     {confirmCancel ? (
                                         <div className="flex flex-col gap-3 rounded-xl border border-[#F3C7C3] p-4">
                                             <p className="text-sm text-[#4B4B57]">
-                                                Turn off auto-renew? Pro stays on until {date(plan.expires_at ?? subscription.next_charge_at)}, then commission goes
+                                                Turn off auto-renew? Plus stays on until {date(plan.expires_at ?? subscription.next_charge_at)}, then commission goes
                                                 back to {pct(freeRate)}. You can subscribe again later.
                                             </p>
                                             <div className="flex gap-2">
@@ -254,7 +254,7 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                                             <AlertTriangle className="mt-px size-4 shrink-0" />
                                             <span>
                                                 Auto-renew stopped because the payments kept failing{subscription.failure_reason ? ` (${subscription.failure_reason})` : ''}.
-                                                Subscribe again with a working card or UPI to keep Pro.
+                                                Subscribe again with a working card or UPI to keep Plus.
                                             </span>
                                         </div>
                                     )}
@@ -263,7 +263,7 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                                         <li className="flex gap-2">
                                             <CalendarClock className="mt-0.5 size-4 shrink-0 text-[#4F46E5]" />
                                             {price.first_charge_at
-                                                ? `Your current Pro runs till ${date(price.first_charge_at)} — the first ${money(price.amount)} is charged then, not today.`
+                                                ? `Your current Plus runs till ${date(price.first_charge_at)} — the first ${money(price.amount)} is charged then, not today.`
                                                 : `${money(price.amount)} today, then every month on the same date.`}
                                         </li>
                                         <li className="flex gap-2">
@@ -337,10 +337,10 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                                     <span>
                                         You have {money(creditBalance)} referral credit.{' '}
                                         {renewing ? (
-                                            'It can be turned into Pro months only while auto-renew is off, so you are never charged twice.'
+                                            'It can be turned into Plus months only while auto-renew is off, so you are never charged twice.'
                                         ) : (
                                             <>
-                                                Turn it into Pro months on{' '}
+                                                Turn it into Plus months on{' '}
                                                 <Link href="/dashboard/refer-earn" className="font-semibold text-[#4F46E5] hover:underline">
                                                     Refer &amp; Earn
                                                 </Link>
@@ -352,22 +352,22 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                             )}
                         </section>
 
-                        {/* Why Pro */}
+                        {/* Why Plus */}
                         <aside className="flex flex-col gap-5">
                             <section className="rounded-xl bg-white p-5 shadow-sm">
-                                <h2 className="text-base font-bold text-[#14141B]">What Pro changes</h2>
+                                <h2 className="text-base font-bold text-[#14141B]">What Plus changes</h2>
                                 <div className="mt-3 grid grid-cols-2 gap-2.5">
                                     <div className="rounded-lg bg-[#F6F5F2] p-3">
                                         <p className="text-xs text-[#8A8A96]">Free</p>
                                         <p className="text-lg font-bold text-[#14141B] tabular-nums">{pct(freeRate)}</p>
                                     </div>
                                     <div className="rounded-lg bg-[#F1EAFE] p-3">
-                                        <p className="text-xs text-[#7C3AED]">Pro</p>
-                                        <p className="text-lg font-bold text-[#14141B] tabular-nums">{pct(pro.commission_rate)}</p>
+                                        <p className="text-xs text-[#7C3AED]">Plus</p>
+                                        <p className="text-lg font-bold text-[#14141B] tabular-nums">{pct(plus.commission_rate)}</p>
                                     </div>
                                 </div>
                                 <ul className="mt-4 flex flex-col gap-2 text-sm text-[#4B4B57]">
-                                    {pro.features.map((feature) => (
+                                    {plus.features.map((feature) => (
                                         <li key={feature} className="flex gap-2">
                                             <Check className="mt-0.5 size-4 shrink-0 text-[#059669]" /> {feature}
                                         </li>
@@ -383,9 +383,9 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                                     <div className="text-sm text-[#4B4B57]">
                                         <p className="font-semibold text-[#14141B]">Your last 30 days</p>
                                         <p className="mt-0.5">
-                                            You sold {money(savings.sales_30d)}. The gap between Free and Pro commission on that is{' '}
+                                            You sold {money(savings.sales_30d)}. The gap between Free and Plus commission on that is{' '}
                                             <span className="font-semibold text-[#14141B]">{money(savings.extra_commission)}</span>, against{' '}
-                                            {money(pro.monthly_price)} for a month of Pro.
+                                            {money(plus.monthly_price)} for a month of Plus.
                                         </p>
                                     </div>
                                 </section>
@@ -424,7 +424,7 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                             <h2 className="text-base font-bold text-[#14141B]">Invoices</h2>
                         </div>
                         {invoices.length === 0 ? (
-                            <p className="px-5 pb-6 text-sm text-[#8A8A96]">No invoices yet. A GST invoice appears here after each Pro payment.</p>
+                            <p className="px-5 pb-6 text-sm text-[#8A8A96]">No invoices yet. A GST invoice appears here after each Plus payment.</p>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full min-w-[560px] text-sm">
@@ -442,7 +442,7 @@ export default function Billing({ plan, pro, freeRate, price, subscription, cred
                                             <tr key={invoice.uuid} className="border-b border-[#F0EFEA] last:border-0">
                                                 <td className="px-5 py-3">
                                                     <p className="font-semibold text-[#14141B]">{invoice.number}</p>
-                                                    <p className="text-xs text-[#8A8A96]">{invoice.description ?? 'Pro plan'}</p>
+                                                    <p className="text-xs text-[#8A8A96]">{invoice.description ?? 'Plus plan'}</p>
                                                 </td>
                                                 <td className="px-3 py-3 whitespace-nowrap text-[#4B4B57]">{date(invoice.paid_at)}</td>
                                                 <td className="px-3 py-3 whitespace-nowrap text-[#4B4B57]">

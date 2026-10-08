@@ -1,0 +1,2 @@
+@props(['tone' => 'info'])
+{{ $slot }}

@@ -35,7 +35,7 @@ interface Props {
     items: Paginated<PurchaseRow>;
     subscriptions: Paginated<SubscriptionRow>;
     filters: { status: string; q: string | null };
-    totals: { month_revenue: number; month_taxable: number; month_gst: number; active_pro: number; renewing: number; failing: number };
+    totals: { month_revenue: number; month_taxable: number; month_gst: number; active_plus: number; renewing: number; failing: number };
 }
 
 const TABS = [
@@ -47,16 +47,16 @@ const TABS = [
 
 export default function AdminBilling({ items, subscriptions, filters, totals }: Props) {
     const tiles = [
-        { label: 'Pro revenue this month', value: money(totals.month_revenue), sub: 'GST-inclusive' },
+        { label: 'Plus revenue this month', value: money(totals.month_revenue), sub: 'GST-inclusive' },
         { label: 'Taxable value', value: money(totals.month_taxable), sub: 'This month' },
         { label: 'GST collected', value: money(totals.month_gst), sub: 'This month' },
-        { label: 'Creators on Pro', value: String(totals.active_pro), sub: 'Trial, paid and granted' },
+        { label: 'Creators on Plus', value: String(totals.active_plus), sub: 'Trial, paid and granted' },
         { label: 'Auto-renew on', value: String(totals.renewing), sub: totals.failing > 0 ? `${totals.failing} with failed charges` : 'No failed charges' },
     ];
 
     return (
         <AdminLayout title="Billing">
-            <PageHeader title="Billing" description="Pro auto-renew subscriptions, older prepaid purchases, and the tax invoice for each payment." />
+            <PageHeader title="Billing" description="Plus auto-renew subscriptions, older prepaid purchases, and the tax invoice for each payment." />
 
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
                 {tiles.map((tile) => (
@@ -151,7 +151,7 @@ export default function AdminBilling({ items, subscriptions, filters, totals }: 
                                     </td>
                                     <td className={TD}>
                                         <p className="font-medium text-slate-900">
-                                            Pro · {p.months} month{p.months > 1 ? 's' : ''}
+                                            Plus · {p.months} month{p.months > 1 ? 's' : ''}
                                         </p>
                                         <p className="text-xs text-slate-500">{p.period_end ? `Valid till ${dateOnly(p.period_end)}` : dateTime(p.created_at)}</p>
                                     </td>

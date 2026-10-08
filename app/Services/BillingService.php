@@ -17,8 +17,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Creator ki Pro plan billing. Naya checkout ab monthly auto-renew hai (SubscriptionService); ye class
- * `users.plan_expires_at` wala mechanism, GST hisaab / invoice, aur referral credit → Pro mahine sambhalti hai.
+ * Creator ki Plus plan billing. Naya checkout ab monthly auto-renew hai (SubscriptionService); ye class
+ * `users.plan_expires_at` wala mechanism, GST hisaab / invoice, aur referral credit → Plus mahine sambhalti hai.
  * Purani prepaid kharid (1/3/6/12 mahine, PlanPurchase) history ke liye hai — beech me atki kharid webhook se ab bhi poori hoti hai.
  *
  * Price GST-inclusive hai: creator ₹499 deta hai, invoice me tax andar se nikalta hai.
@@ -30,7 +30,7 @@ class BillingService
 
     public function plan(): SubscriptionPlan
     {
-        return SubscriptionPlan::where('slug', 'pro')->where('is_active', true)->firstOrFail();
+        return SubscriptionPlan::where('slug', 'plus')->where('is_active', true)->firstOrFail();
     }
 
     /** @return int[] */
@@ -40,12 +40,12 @@ class BillingService
     }
 
     /**
-     * `plan = pro` aur expiry null = permanent Pro (admin ne diya). Usme mahine jodne ka koi matlab nahi,
+     * `plan = plus` aur expiry null = permanent Plus (admin ne diya). Usme mahine jodne ka koi matlab nahi,
      * isliye kharid band — warna creator paisa de kar bhi kuch nahi paata.
      */
     public function blockedReason(User $user): ?string
     {
-        return $user->plan === 'pro' && $user->plan_expires_at === null ? 'permanent_pro' : null;
+        return $user->plan === 'plus' && $user->plan_expires_at === null ? 'permanent_plus' : null;
     }
 
     /**
@@ -137,7 +137,7 @@ class BillingService
         }
 
         if ($this->blockedReason($user) !== null) {
-            throw ValidationException::withMessages(['months' => 'Your account already has Pro with no end date.']);
+            throw ValidationException::withMessages(['months' => 'Your account already has Plus with no end date.']);
         }
 
         $quote = $this->quote($user, $months, $useCredit);
@@ -163,8 +163,8 @@ class BillingService
     }
 
     /**
-     * Refer & Earn page ka "credit → Pro mahine". Poore mahine credit se hi — balance kam ho to mana.
-     * (ReferralService::redeem() isi ko call karta hai, taaki Pro milne ka ek hi raasta rahe.)
+     * Refer & Earn page ka "credit → Plus mahine". Poore mahine credit se hi — balance kam ho to mana.
+     * (ReferralService::redeem() isi ko call karta hai, taaki Plus milne ka ek hi raasta rahe.)
      */
     public function redeemWithCredit(User $user, int $months): ReferralCredit
     {
@@ -186,7 +186,7 @@ class BillingService
     }
 
     /**
-     * Payment aa gayi — Pro do. IDEMPOTENT: checkout ka verify call aur webhook dono aayein to bhi
+     * Payment aa gayi — Plus do. IDEMPOTENT: checkout ka verify call aur webhook dono aayein to bhi
      * mahine ek hi baar judte hain aur invoice ek hi banta hai.
      *
      * Caller ki zimmedari: payment sach me hui hai ye pehle verify karna (signature / webhook).
@@ -218,14 +218,14 @@ class BillingService
                         throw ValidationException::withMessages(['months' => 'You do not have enough referral credit for that.']);
                     }
 
-                    // paisa aa chuka hai — Pro to dena hi hai; jitna credit bacha utna hi kaato aur kami report karo
+                    // paisa aa chuka hai — Plus to dena hi hai; jitna credit bacha utna hi kaato aur kami report karo
                     report(new \RuntimeException("Plan purchase {$purchase->uuid}: referral credit short by " . ($credit - $balance)));
                     $credit = max(0.0, $balance);
                 }
             }
 
-            // permanent Pro ko expiry mat do (kharid waise blocked hai; ye sirf race ke liye)
-            $user->forceFill(['plan' => 'pro', 'plan_expires_at' => $permanent ? null : $end])->save();
+            // permanent Plus ko expiry mat do (kharid waise blocked hai; ye sirf race ke liye)
+            $user->forceFill(['plan' => 'plus', 'plan_expires_at' => $permanent ? null : $end])->save();
 
             $purchase->forceFill([
                 'status' => 'paid',
@@ -242,7 +242,7 @@ class BillingService
             ])->save();
 
             if ($credit > 0) {
-                $label = $purchase->months . ' month' . ($purchase->months > 1 ? 's' : '') . ' of Pro';
+                $label = $purchase->months . ' month' . ($purchase->months > 1 ? 's' : '') . ' of Plus';
 
                 ReferralCredit::create([
                     'user_id' => $user->id,
@@ -291,7 +291,7 @@ class BillingService
     }
 
     /**
-     * Naye mahine kab se kab tak: Pro (trial / credit / pichhli kharid) chal rahi ho to uske khatam hone ke BAAD se,
+     * Naye mahine kab se kab tak: Plus (trial / credit / pichhli kharid) chal rahi ho to uske khatam hone ke BAAD se,
      * warna abhi se. Trial ke beech kharidne pe trial ke din zaya nahi hote.
      *
      * @return array{0: Carbon, 1: Carbon}
@@ -299,7 +299,7 @@ class BillingService
     private function periodFor(User $user, int $months): array
     {
         $current = $user->plan_expires_at;
-        $start = PlanPricing::effectivePlan($user) === 'pro' && $current?->isFuture() ? $current->copy() : now();
+        $start = PlanPricing::effectivePlan($user) === 'plus' && $current?->isFuture() ? $current->copy() : now();
 
         return [$start, $start->copy()->addMonthsNoOverflow($months)];
     }
@@ -321,7 +321,7 @@ class BillingService
 
     private function createInvoice(PlanPurchase $purchase, User $user): BillingInvoice
     {
-        return $this->issueInvoice($user, (float) $purchase->amount_payable, 'Pro plan — ' . $purchase->months . ' month' . ($purchase->months > 1 ? 's' : ''), $purchase->period_start, $purchase->period_end, $purchase->paid_at, [
+        return $this->issueInvoice($user, (float) $purchase->amount_payable, 'Plus plan — ' . $purchase->months . ' month' . ($purchase->months > 1 ? 's' : ''), $purchase->period_start, $purchase->period_end, $purchase->paid_at, [
             'plan_purchase_id' => $purchase->id,
             'gateway_payment_id' => $purchase->gateway_payment_id,
             'credit_applied' => $purchase->credit_applied,

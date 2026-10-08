@@ -1,15 +1,17 @@
-<x-mail::message>
-# Course completed 🎉
+<x-mail::message audience="creator" :preheader="$student . ' finished ' . $title" note="You get this email because “Course completion” is on in your notification settings.">
+<x-mail::badge tone="success">Course completed 🎉</x-mail::badge>
 
-Hi {{ $name }}, **{{ $student }}** just finished **{{ $title }}**.
+# {{ $student }} finished your course
 
-@if ($certificate)
-Their certificate was issued automatically with your design.
+Hi {{ $name }}, **{{ $student }}** just completed **{{ $title }}**.
 
-@endif
+<x-mail::summary>
+<x-mail::row label="Student">{{ $student }}</x-mail::row>
+<x-mail::row label="Course">{{ $title }}</x-mail::row>
+<x-mail::row label="Certificate">{{ $certificate ? 'Issued automatically with your design' : 'Off for this course' }}</x-mail::row>
+</x-mail::summary>
+
 <x-mail::button :url="$url">
 View their progress
 </x-mail::button>
-
-<small>You get this email because “Course completion” is on in your notification settings.</small>
 </x-mail::message>

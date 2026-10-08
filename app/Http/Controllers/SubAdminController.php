@@ -23,7 +23,7 @@ use Inertia\Inertia;
 
 /**
  * Team (sub-admins) — sirf owner creator (routes pe `owner` middleware).
- * Seats: Free 1, Pro 5 (TeamSeats). Har access-badalne wala kaam password dobara maangta hai
+ * Seats: Free 1, Plus 5 (TeamSeats). Har access-badalne wala kaam password dobara maangta hai
  * aur TeamActivity me log hota hai.
  */
 class SubAdminController extends Controller
@@ -107,7 +107,7 @@ class SubAdminController extends Controller
 
         if (TeamSeats::used($creator) >= ($limit = TeamSeats::limit($creator))) {
             throw ValidationException::withMessages(['email' => $limit === 1
-                ? 'Your plan includes 1 team member. Upgrade to Pro to add up to 5.'
+                ? 'Your plan includes 1 team member. Upgrade to Plus to add up to 5.'
                 : "You've used all {$limit} team seats. Remove someone to invite another person."]);
         }
 

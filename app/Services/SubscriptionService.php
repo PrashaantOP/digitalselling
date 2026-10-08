@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Mail\ProPaymentFailedMail;
-use App\Mail\ProRenewedMail;
+use App\Mail\PlusPaymentFailedMail;
+use App\Mail\PlusRenewedMail;
 use App\Models\BillingInvoice;
 use App\Models\Subscription;
 use App\Models\User;
@@ -16,27 +16,27 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Pro plan — monthly ₹499, AUTO-RENEW (Razorpay Subscriptions: card / UPI AutoPay).
+ * Plus plan — monthly ₹499, AUTO-RENEW (Razorpay Subscriptions: card / UPI AutoPay).
  *
- *  start()   — Razorpay subscription banao, checkout usi id se khulta hai. Trial / credit ka Pro chal raha ho
+ *  start()   — Razorpay subscription banao, checkout usi id se khulta hai. Trial / credit ka Plus chal raha ho
  *              to pehla charge uske khatam hone pe (start_at) — creator ke din zaya nahi hote.
  *  verify()  — checkout ka success handler (signature + Razorpay se status).
  *  charged() — har mahine ka paisa aaya (verify ya webhook `subscription.charged`): plan_expires_at aage, GST invoice, mail.
  *              IDEMPOTENT — ek payment ka ek hi invoice (billing_invoices.gateway_payment_id unique).
  *  cancel()  — auto-renew band; chalu mahina poora chalta hai, phir plans:expire Free kar deta hai.
  *
- * Pro kab tak hai ye hamesha `users.plan_expires_at` batata hai — trial, referral credit, purani kharid sab wahi use karte hain.
+ * Plus kab tak hai ye hamesha `users.plan_expires_at` batata hai — trial, referral credit, purani kharid sab wahi use karte hain.
  */
 class SubscriptionService
 {
-    /** Agla charge thoda der se aaye (Razorpay retry) to beech me Pro na toote */
+    /** Agla charge thoda der se aaye (Razorpay retry) to beech me Plus na toote */
     private const GRACE_DAYS = 1;
 
     public function __construct(private RazorpayService $razorpay, private BillingService $billing) {}
 
     public function planId(): ?string
     {
-        return config('services.razorpay.pro_plan_id') ?: null;
+        return config('services.razorpay.plus_plan_id') ?: null;
     }
 
     public function ready(): bool
@@ -59,7 +59,7 @@ class SubscriptionService
     public function start(User $user): Subscription
     {
         if ($this->billing->blockedReason($user) !== null) {
-            throw ValidationException::withMessages(['plan' => 'Your account already has Pro with no end date.']);
+            throw ValidationException::withMessages(['plan' => 'Your account already has Plus with no end date.']);
         }
 
         if (! $this->ready()) {
@@ -82,8 +82,8 @@ class SubscriptionService
         // pichhle adhoore checkout (window khol ke band kar di) — ab kaam ke nahi
         Subscription::where('user_id', $user->id)->where('status', 'created')->update(['status' => 'abandoned']);
 
-        // trial / credit / purani kharid ka Pro chal raha hai — pehla charge uske khatam hone pe
-        $startAt = PlanPricing::effectivePlan($user) === 'pro' && $user->plan_expires_at?->gt(now()->addHour())
+        // trial / credit / purani kharid ka Plus chal raha hai — pehla charge uske khatam hone pe
+        $startAt = PlanPricing::effectivePlan($user) === 'plus' && $user->plan_expires_at?->gt(now()->addHour())
             ? $user->plan_expires_at->getTimestamp()
             : null;
 
@@ -96,7 +96,7 @@ class SubscriptionService
 
         try {
             $gateway = $this->razorpay->createSubscription($this->planId(), [
-                'kind' => 'pro_subscription',
+                'kind' => 'plus_subscription',
                 'user' => $user->uuid,
                 'subscription' => $subscription->uuid,
             ], $startAt);
@@ -114,7 +114,7 @@ class SubscriptionService
 
     /**
      * Checkout.js ka success handler. Signature sahi = mandate ban gaya. Pehla charge abhi hua ho (trial nahi tha)
-     * to Pro yahin chalu — browser band ho jaye to webhook wahi kaam karta hai.
+     * to Plus yahin chalu — browser band ho jaye to webhook wahi kaam karta hai.
      */
     public function verify(User $user, string $paymentId, string $subscriptionId, string $signature): Subscription
     {
@@ -184,15 +184,15 @@ class SubscriptionService
                 'failure_reason' => null,
             ])->save();
 
-            // permanent Pro (admin ka diya) ko expiry mat do; credit / purani kharid aage tak ho to use chhota mat karo
+            // permanent Plus (admin ka diya) ko expiry mat do; credit / purani kharid aage tak ho to use chhota mat karo
             if ($this->billing->blockedReason($user) === null) {
                 $until = $end->copy()->addDays(self::GRACE_DAYS);
-                $keep = PlanPricing::effectivePlan($user) === 'pro' && $user->plan_expires_at?->gt($until);
+                $keep = PlanPricing::effectivePlan($user) === 'plus' && $user->plan_expires_at?->gt($until);
 
-                $user->forceFill(['plan' => 'pro', 'plan_expires_at' => $keep ? $user->plan_expires_at : $until])->save();
+                $user->forceFill(['plan' => 'plus', 'plan_expires_at' => $keep ? $user->plan_expires_at : $until])->save();
             }
 
-            return $this->billing->issueInvoice($user, $amount, 'Pro plan — monthly (auto-renew)', $start, $end, $this->time($payment['created_at'] ?? null), [
+            return $this->billing->issueInvoice($user, $amount, 'Plus plan — monthly (auto-renew)', $start, $end, $this->time($payment['created_at'] ?? null), [
                 'subscription_id' => $subscription->id,
                 'gateway_payment_id' => $paymentId,
             ]);
@@ -200,7 +200,7 @@ class SubscriptionService
 
         if ($invoice) {
             try {
-                Mail::to($invoice->user->email)->send(new ProRenewedMail($invoice, $first));
+                Mail::to($invoice->user->email)->send(new PlusRenewedMail($invoice, $first));
             } catch (\Throwable $e) {
                 report($e);
             }
@@ -209,7 +209,7 @@ class SubscriptionService
         return $invoice;
     }
 
-    /** Auto-debit fail — `pending` (Razorpay retry karega) ya `halted` (retry khatam). Pro abhi ki expiry tak chalta hai. */
+    /** Auto-debit fail — `pending` (Razorpay retry karega) ya `halted` (retry khatam). Plus abhi ki expiry tak chalta hai. */
     public function paymentFailed(Subscription $subscription, array $entity, ?string $reason = null): void
     {
         $before = $subscription->status;
@@ -222,7 +222,7 @@ class SubscriptionService
         }
 
         try {
-            Mail::to($subscription->user->email)->send(new ProPaymentFailedMail($subscription->user, $subscription->status === 'halted'));
+            Mail::to($subscription->user->email)->send(new PlusPaymentFailedMail($subscription->user, $subscription->status === 'halted'));
         } catch (\Throwable $e) {
             report($e);
         }

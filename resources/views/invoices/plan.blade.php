@@ -113,7 +113,7 @@
             <tbody>
                 <tr>
                     <td>
-                        <div class="strong">{{ $invoice->description ?: 'Pro plan' }}</div>
+                        <div class="strong">{{ $invoice->description ?: 'Plus plan' }}</div>
                         @if ($invoice->period_start && $invoice->period_end)
                             <div class="small muted">{{ $period($invoice->period_start) }} – {{ $period($invoice->period_end) }}</div>
                         @endif
@@ -142,7 +142,7 @@
 
         <div class="foot small muted">
             <div>This is a computer-generated invoice and does not require a signature.</div>
-            <div class="right">Thank you for being on Pro.</div>
+            <div class="right">Thank you for being on Plus.</div>
         </div>
     </div>
 

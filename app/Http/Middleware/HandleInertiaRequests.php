@@ -106,7 +106,7 @@ class HandleInertiaRequests extends Middleware
         return [
             'effective' => $effective,
             'commission_rate' => PlanPricing::commissionRate($creator),
-            'expires_at' => $effective === 'pro' ? $creator->plan_expires_at?->toIso8601String() : null,
+            'expires_at' => $effective === 'plus' ? $creator->plan_expires_at?->toIso8601String() : null,
         ];
     }
 }

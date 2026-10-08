@@ -65,6 +65,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Saare emails ka preview (phone + desktop) — SIRF local; production me route bante hi nahi
+if (app()->isLocal()) {
+    Route::get('/dev/mails', [\App\Http\Controllers\Dev\MailPreviewController::class, 'index'])->name('dev.mails');
+    Route::get('/dev/mails/{mail}', [\App\Http\Controllers\Dev\MailPreviewController::class, 'show'])->where('mail', '[a-z0-9-]+')->name('dev.mails.show');
+}
+
 // Footer ke product + legal/company pages — public.php ke catch-all /{username} se pehle hone chahiye
 Route::get('/products/{type}', [HomeController::class, 'product'])
     ->whereIn('type', array_keys(HomeController::PRODUCT_PAGES))
@@ -116,9 +122,8 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
     // ---- 2b. Unified Products catalog (cross-type browse/filter view) ----
     Route::get('dashboard/products', [ProductsOverviewController::class, 'index'])->name('products.index');
 
-    // ---- 3. Web App (theme picker — branding store se aati hai) ----
-    Route::get('dashboard/web-app', [WebappController::class, 'edit'])->name('webapp.edit')->middleware('perm:store.view');
-    Route::put('dashboard/web-app', [WebappController::class, 'update'])->name('webapp.update')->middleware('perm:store.edit');
+    // ---- 3. Web App — ab Store ka ek tab (dashboard/store/web-app, neeche group me). Purane link na tootein. ----
+    Route::redirect('dashboard/web-app', '/dashboard/store/web-app', 301);
 
     // ---- 3b. Store ----
     Route::prefix('dashboard/store')->group(function () {
@@ -132,6 +137,10 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
         Route::put('settings', [StoreSettingsController::class, 'update'])->name('store.settings.update')->middleware('perm:store.edit');
 
         Route::get('analytics', [StoreAnalyticsController::class, 'index'])->name('store.analytics')->middleware('perm:store.view');
+
+        // Web App (theme picker — branding store se aati hai)
+        Route::get('web-app', [WebappController::class, 'edit'])->name('webapp.edit')->middleware('perm:store.view');
+        Route::put('web-app', [WebappController::class, 'update'])->name('webapp.update')->middleware('perm:store.edit');
 
         Route::post('header-buttons', [StoreHeaderButtonController::class, 'store'])->name('store.header-buttons.store')->middleware('perm:store.edit');
         Route::delete('header-buttons/{headerButton}', [StoreHeaderButtonController::class, 'destroy'])->name('store.header-buttons.destroy')->middleware('perm:store.edit');
@@ -164,7 +173,7 @@ Route::middleware(['auth', 'set.team.context'])->group(function () use ($product
     Route::get('/dashboard/audience/visitors', [AudienceController::class, 'visitors'])->name('audience.visitors')->middleware('perm:audience.view');
     Route::get('/dashboard/audience/export', [AudienceController::class, 'export'])->name('audience.export')->middleware('perm:audience.view');
     Route::get('/dashboard/refer-earn', [ReferralController::class, 'index'])->name('referral.index')->middleware('owner');
-    // credit sirf Pro me redeem hota hai — withdraw ka koi route jaan-bujh ke nahi hai
+    // credit sirf Plus me redeem hota hai — withdraw ka koi route jaan-bujh ke nahi hai
     Route::post('/dashboard/refer-earn/redeem', [ReferralController::class, 'redeem'])->name('referral.redeem')->middleware(['owner', 'throttle:10,1']);
 
     // ---- 8. Sub-admins & roles (sirf owner creator) ----

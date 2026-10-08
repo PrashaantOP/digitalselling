@@ -37,6 +37,19 @@ class AppServiceProvider extends ServiceProvider
             ->numbers()
             ->when($this->app->isProduction(), fn (Password $rule) => $rule->uncompromised()));
 
+        // Laravel ke apne auth mails bhi baaki emails jaise (brand theme, mail/*.blade.php) — link ka logic Laravel ka hi
+        \Illuminate\Auth\Notifications\VerifyEmail::toMailUsing(fn ($user, string $url) => (new \Illuminate\Notifications\Messages\MailMessage)
+            ->subject('Verify your email address')
+            ->markdown('mail.verify-email', ['url' => $url, 'name' => $user->name ?? null]));
+
+        \Illuminate\Auth\Notifications\ResetPassword::toMailUsing(fn ($user, string $token) => (new \Illuminate\Notifications\Messages\MailMessage)
+            ->subject('Reset your password')
+            ->markdown('mail.reset-password', [
+                'url' => url(route('password.reset', ['token' => $token, 'email' => $user->getEmailForPasswordReset()], false)),
+                'name' => $user->name ?? null,
+                'minutes' => (int) config('auth.passwords.' . config('auth.defaults.passwords') . '.expire', 60),
+            ]));
+
         // Email+IP wala 5-try lock LoginRequest me hai; ye ek IP se alag-alag emails try karne ko rokta hai.
         RateLimiter::for('login-ip', fn (Request $request) => Limit::perMinute(20)->by($request->ip()));
         // ek IP se ghante me 5 naye accounts — bulk fake signups / verification-email spam rokne ke liye

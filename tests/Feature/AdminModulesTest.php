@@ -163,9 +163,9 @@ class AdminModulesTest extends TestCase
     {
         $creator = $this->creator();
 
-        $this->asAdmin()->put("/admin/creators/{$creator->uuid}/plan", ['plan' => 'pro', 'plan_expires_at' => now()->addMonth()->toDateString()])->assertSessionHasNoErrors();
+        $this->asAdmin()->put("/admin/creators/{$creator->uuid}/plan", ['plan' => 'plus', 'plan_expires_at' => now()->addMonth()->toDateString()])->assertSessionHasNoErrors();
 
-        $this->assertSame('pro', $creator->fresh()->plan);
+        $this->assertSame('plus', $creator->fresh()->plan);
         $this->assertTrue($this->audited('creator.plan_changed'));
     }
 
@@ -256,10 +256,10 @@ class AdminModulesTest extends TestCase
         $this->asAdmin()->get("/admin/creators/{$creator->uuid}")->assertInertia(fn (AssertableInertia $page) => $page->has('pendingAdjustments', 1)->has('planPurchases', 0));
     }
 
-    public function test_billing_page_lists_pro_payments_with_month_totals(): void
+    public function test_billing_page_lists_plus_payments_with_month_totals(): void
     {
         $creator = $this->creator();
-        $plan = \App\Models\SubscriptionPlan::where('slug', 'pro')->firstOrFail();
+        $plan = \App\Models\SubscriptionPlan::where('slug', 'plus')->firstOrFail();
         $purchase = \App\Models\PlanPurchase::create(['user_id' => $creator->id, 'plan_id' => $plan->id, 'months' => 1, 'unit_price' => 499, 'subtotal' => 499, 'amount_payable' => 499, 'gateway' => 'razorpay']);
         $purchase->forceFill(['status' => 'paid', 'paid_at' => now(), 'gateway_payment_id' => 'pay_admin1'])->save();
         $invoice = \App\Models\BillingInvoice::create([

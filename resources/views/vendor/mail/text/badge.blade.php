@@ -1,0 +1,2 @@
+@props(['tone' => 'primary'])
+[{{ $slot }}]

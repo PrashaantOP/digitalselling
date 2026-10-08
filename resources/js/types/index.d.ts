@@ -4,7 +4,7 @@ import type { Config } from 'ziggy-js';
 export interface Auth {
     user: User;
     isOwner?: boolean;
-    plan?: { effective: 'free' | 'pro'; commission_rate: number; expires_at: string | null } | null;
+    plan?: { effective: 'free' | 'plus'; commission_rate: number; expires_at: string | null } | null;
 }
 
 export interface BreadcrumbItem {

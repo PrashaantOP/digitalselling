@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Http;
 
 /**
  * Razorpay ka patla wrapper — SDK ke bina, Laravel ke Http client se (tests me Http::fake() chal jaata hai).
- * Abhi Pro plan billing isko use karti hai; buyer checkout pipeline bhi yahi use karegi.
+ * Abhi Plus plan billing isko use karti hai; buyer checkout pipeline bhi yahi use karegi.
  * Saare amounts PAISE me (₹499 => 49900).
  */
 class RazorpayService
@@ -74,7 +74,7 @@ class RazorpayService
         return $status === 'captured' ? 'captured' : 'not_paid';
     }
 
-    // ---------------------------------------------------------------- subscriptions (Pro plan auto-renew)
+    // ---------------------------------------------------------------- subscriptions (Plus plan auto-renew)
 
     /** Monthly plan — ek hi baar banta hai (`php artisan billing:razorpay-plan`). */
     public function createPlan(int $amountPaise, string $name, string $description): array

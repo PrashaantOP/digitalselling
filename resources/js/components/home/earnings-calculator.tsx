@@ -6,14 +6,14 @@ import { Container, Reveal, SectionHeading } from './primitives';
 import { type HomePlan } from './types';
 
 // DB me plan na ho tab bhi calculator kaam kare (PlanPricing::FALLBACK_RATES jaisa)
-const FALLBACK = { free: { rate: 15, price: 0 }, pro: { rate: 10, price: 499 } };
+const FALLBACK = { free: { rate: 15, price: 0 }, plus: { rate: 10, price: 499 } };
 
 function rates(plans: HomePlan[]) {
     const free = plans.find((p) => p.slug === 'free');
-    const pro = plans.find((p) => p.slug === 'pro');
+    const plus = plans.find((p) => p.slug === 'plus');
     return {
         free: free ? { rate: Number(free.commission_rate), price: Number(free.monthly_price) } : FALLBACK.free,
-        pro: pro ? { rate: Number(pro.commission_rate), price: Number(pro.monthly_price) } : FALLBACK.pro,
+        plus: plus ? { rate: Number(plus.commission_rate), price: Number(plus.monthly_price) } : FALLBACK.plus,
     };
 }
 
@@ -62,16 +62,16 @@ function Slider({
 export function EarningsCalculator({ plans, trialDays }: { plans: HomePlan[]; trialDays: number }) {
     const [price, setPrice] = useState(999);
     const [sales, setSales] = useState(50);
-    const [plan, setPlan] = useState<'free' | 'pro'>('pro');
+    const [plan, setPlan] = useState<'free' | 'plus'>('plus');
     const r = rates(plans);
 
     const gross = price * sales;
     const fee = (gross * r[plan].rate) / 100;
     const earn = gross - fee;
 
-    // Pro vs Free: commission ka farak − Pro subscription. Trial me subscription ₹0.
-    const commissionSaved = (gross * (r.free.rate - r.pro.rate)) / 100;
-    const proGainAfterTrial = commissionSaved - r.pro.price;
+    // Plus vs Free: commission ka farak − Plus subscription. Trial me subscription ₹0.
+    const commissionSaved = (gross * (r.free.rate - r.plus.rate)) / 100;
+    const plusGainAfterTrial = commissionSaved - r.plus.price;
 
     return (
         <section id="calculator" className="scroll-mt-20 bg-white py-20 sm:py-28">
@@ -111,7 +111,7 @@ export function EarningsCalculator({ plans, trialDays }: { plans: HomePlan[]; tr
                             <div>
                                 <span className="text-sm font-medium text-slate-700">Plan</span>
                                 <div role="radiogroup" className="mt-3 grid grid-cols-2 gap-2 rounded-2xl bg-slate-50 p-1.5 ring-1 ring-slate-200">
-                                    {(['free', 'pro'] as const).map((p) => (
+                                    {(['free', 'plus'] as const).map((p) => (
                                         <button
                                             key={p}
                                             role="radio"
@@ -124,7 +124,7 @@ export function EarningsCalculator({ plans, trialDays }: { plans: HomePlan[]; tr
                                                     : 'text-slate-600 hover:text-blue-700',
                                             )}
                                         >
-                                            {p === 'free' ? 'Free' : 'Pro'} · {r[p].rate}%
+                                            {p === 'free' ? 'Free' : 'Plus'} · {r[p].rate}%
                                         </button>
                                     ))}
                                 </div>
@@ -157,16 +157,16 @@ export function EarningsCalculator({ plans, trialDays }: { plans: HomePlan[]; tr
 
                             <div className="relative rounded-2xl bg-white/10 p-4 text-sm ring-1 ring-white/20">
                                 <p className="flex items-center gap-2 font-semibold">
-                                    <TrendingUp className="size-4 text-sky-300" /> Pro vs Free
+                                    <TrendingUp className="size-4 text-sky-300" /> Plus vs Free
                                 </p>
                                 <p className="mt-1.5 text-blue-100">
-                                    For your first {trialDays} days, Pro saves you{' '}
+                                    For your first {trialDays} days, Plus saves you{' '}
                                     <span className="font-semibold text-white">₹{inr(commissionSaved)}/month</span> at no cost.{' '}
-                                    {proGainAfterTrial > 0 ? (
+                                    {plusGainAfterTrial > 0 ? (
                                         <>
-                                            After that, Pro still leaves you{' '}
-                                            <span className="font-semibold text-white">₹{inr(proGainAfterTrial)} more</span> each month after the ₹
-                                            {inr(r.pro.price)} subscription.
+                                            After that, Plus still leaves you{' '}
+                                            <span className="font-semibold text-white">₹{inr(plusGainAfterTrial)} more</span> each month after the ₹
+                                            {inr(r.plus.price)} subscription.
                                         </>
                                     ) : (
                                         <>After the trial, Free works out cheaper at this volume — switch anytime.</>
@@ -177,7 +177,7 @@ export function EarningsCalculator({ plans, trialDays }: { plans: HomePlan[]; tr
                     </div>
                 </Reveal>
                 <p className="mt-4 text-center text-xs text-slate-500">
-                    Estimate only. Excludes GST on the Pro subscription and any refunds or chargebacks.
+                    Estimate only. Excludes GST on the Plus subscription and any refunds or chargebacks.
                 </p>
             </Container>
         </section>

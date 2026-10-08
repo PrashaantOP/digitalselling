@@ -20,7 +20,7 @@ export interface PaymentPayload {
     message?: string;
     key?: string;
     order_id?: string;
-    /** Pro auto-renew — order ki jagah Razorpay subscription (mandate + har mahine charge) */
+    /** Plus auto-renew — order ki jagah Razorpay subscription (mandate + har mahine charge) */
     subscription_id?: string;
     amount?: number;
     name?: string;

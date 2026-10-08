@@ -20,7 +20,7 @@ interface Member {
 interface Props {
     members: Member[];
     roles: { uuid: string; name: string; is_template: boolean }[];
-    seats: { used: number; limit: number; plan: 'free' | 'pro' };
+    seats: { used: number; limit: number; plan: 'free' | 'plus' };
 }
 
 type Action = { kind: 'invite' } | { kind: 'role'; member: Member } | { kind: 'remove'; member: Member } | null;
@@ -67,14 +67,14 @@ export default function TeamMembers({ members, roles, seats }: Props) {
                         <p className="text-sm font-semibold text-[#14141B]">
                             {seats.used} of {seats.limit} seat{seats.limit === 1 ? '' : 's'} used
                         </p>
-                        <p className="text-xs text-[#8A8A96]">Pending invites count as a seat. {seats.plan === 'pro' ? 'Pro includes 5 seats.' : 'Free includes 1 seat.'}</p>
+                        <p className="text-xs text-[#8A8A96]">Pending invites count as a seat. {seats.plan === 'plus' ? 'Plus includes 5 seats.' : 'Free includes 1 seat.'}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="h-2 w-40 overflow-hidden rounded-full bg-[#ECEBE6]">
                         <div className={cn('h-full rounded-full', full ? 'bg-[#B46E00]' : 'bg-[#4F46E5]')} style={{ width: `${Math.min(100, (seats.used / seats.limit) * 100)}%` }} />
                     </div>
-                    {full && seats.plan !== 'pro' && (
+                    {full && seats.plan !== 'plus' && (
                         <Link href="/dashboard/settings/billing" className="text-xs font-semibold text-[#4F46E5] hover:underline">
                             Upgrade for 5 seats
                         </Link>

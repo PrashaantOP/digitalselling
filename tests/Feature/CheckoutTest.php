@@ -51,9 +51,9 @@ class CheckoutTest extends TestCase
         $this->assertSame(0, Enrollment::count()); // pay se pehle koi access nahi
     }
 
-    public function test_pro_creator_orders_carry_the_pro_commission(): void
+    public function test_plus_creator_orders_carry_the_plus_commission(): void
     {
-        $product = $this->product($this->seller('pro', ['plan' => 'pro', 'plan_expires_at' => now()->addMonth()]));
+        $product = $this->product($this->seller('plus', ['plan' => 'plus', 'plan_expires_at' => now()->addMonth()]));
 
         $this->checkout($product)->assertCreated();
 

@@ -11,7 +11,7 @@ interface Props {
         email: string;
         phone: string | null;
         username: string | null;
-        plan: 'free' | 'pro';
+        plan: 'free' | 'plus';
         effective_plan: string;
         plan_expires_at: string | null;
         commission_rate: number;
@@ -62,7 +62,7 @@ export default function AdminCreatorShow({ creator, kyc, payoutMethods, totals, 
         e.preventDefault();
         setSavingPlan(true);
         setPlanError(null);
-        router.put(`/admin/creators/${creator.uuid}/plan`, { plan: plan.plan, plan_expires_at: plan.plan === 'pro' ? plan.plan_expires_at || null : null }, {
+        router.put(`/admin/creators/${creator.uuid}/plan`, { plan: plan.plan, plan_expires_at: plan.plan === 'plus' ? plan.plan_expires_at || null : null }, {
             preserveScroll: true,
             onError: (errs) => setPlanError(Object.values(errs)[0] as string),
             onFinish: () => setSavingPlan(false),
@@ -151,14 +151,14 @@ export default function AdminCreatorShow({ creator, kyc, payoutMethods, totals, 
                         <div className="grid grid-cols-2 gap-3">
                             <label className="flex flex-col gap-1.5">
                                 <span className="text-xs font-semibold text-slate-700">Plan</span>
-                                <select value={plan.plan} onChange={(e) => setPlan({ ...plan, plan: e.target.value as 'free' | 'pro' })} className="h-9 rounded-lg border border-slate-200 px-2 text-sm">
+                                <select value={plan.plan} onChange={(e) => setPlan({ ...plan, plan: e.target.value as 'free' | 'plus' })} className="h-9 rounded-lg border border-slate-200 px-2 text-sm">
                                     <option value="free">Free</option>
-                                    <option value="pro">Pro</option>
+                                    <option value="plus">Plus</option>
                                 </select>
                             </label>
                             <label className="flex flex-col gap-1.5">
-                                <span className="text-xs font-semibold text-slate-700">Pro until (empty = no expiry)</span>
-                                <input type="date" disabled={plan.plan !== 'pro'} value={plan.plan_expires_at} onChange={(e) => setPlan({ ...plan, plan_expires_at: e.target.value })} className="h-9 rounded-lg border border-slate-200 px-2 text-sm disabled:bg-slate-50" />
+                                <span className="text-xs font-semibold text-slate-700">Plus until (empty = no expiry)</span>
+                                <input type="date" disabled={plan.plan !== 'plus'} value={plan.plan_expires_at} onChange={(e) => setPlan({ ...plan, plan_expires_at: e.target.value })} className="h-9 rounded-lg border border-slate-200 px-2 text-sm disabled:bg-slate-50" />
                             </label>
                         </div>
                         {planError && <p className="text-xs text-rose-600">{planError}</p>}
@@ -249,7 +249,7 @@ export default function AdminCreatorShow({ creator, kyc, payoutMethods, totals, 
                     )}
                 </Card>
 
-                <Card title="Pro payments" action={<Link href={`/admin/billing?status=all&q=${encodeURIComponent(creator.email)}`} className="text-xs font-semibold text-indigo-600 hover:underline">All</Link>}>
+                <Card title="Plus payments" action={<Link href={`/admin/billing?status=all&q=${encodeURIComponent(creator.email)}`} className="text-xs font-semibold text-indigo-600 hover:underline">All</Link>}>
                     <ul className="divide-y divide-slate-100">
                         {planPurchases.map((p) => (
                             <li key={p.uuid} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
@@ -266,7 +266,7 @@ export default function AdminCreatorShow({ creator, kyc, payoutMethods, totals, 
                                 )}
                             </li>
                         ))}
-                        {planPurchases.length === 0 && <li className="px-5 py-6 text-center text-sm text-slate-500">No Pro payments yet.</li>}
+                        {planPurchases.length === 0 && <li className="px-5 py-6 text-center text-sm text-slate-500">No Plus payments yet.</li>}
                     </ul>
                 </Card>
             </div>

@@ -21,7 +21,7 @@ export default function Register({ referralCode }: { referralCode?: string | nul
             <div className="mb-6 flex items-start gap-3 rounded-2xl bg-linear-to-r from-blue-600 to-blue-700 px-4 py-3.5 text-sm text-white shadow-lg shadow-blue-600/20">
                 <Gift className="mt-0.5 size-5 shrink-0" />
                 <p>
-                    <span className="font-semibold">Your account starts with 90 days of Pro.</span>{' '}
+                    <span className="font-semibold">Your account starts with 90 days of Plus.</span>{' '}
                     <span className="text-blue-100">Only 10% commission on sales — gateway charges included.</span>
                 </p>
             </div>

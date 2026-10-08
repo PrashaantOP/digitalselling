@@ -29,7 +29,7 @@ class WebappController extends Controller
 
         return Inertia::render('Webapp/Index', [
             'themes' => WebappThemes::forCreator($creator),
-            'isPro' => PlanPricing::effectivePlan($creator) === 'pro',
+            'isPlus' => PlanPricing::effectivePlan($creator) === 'plus',
             'isLive' => (bool) $store->is_live,
             'preview' => WebappPayload::for($creator, $store),
         ]);
@@ -45,7 +45,7 @@ class WebappController extends Controller
 
         // Rule::in sirf slug valid hai ye dekhta hai — plan ka gate yahan lagta hai
         if (! in_array($data['theme'], WebappThemes::allowedFor($creator), true)) {
-            throw ValidationException::withMessages(['theme' => 'This design is available on the Pro plan.']);
+            throw ValidationException::withMessages(['theme' => 'This design is available on the Plus plan.']);
         }
 
         $store = StoreController::storeFor($this->tid());

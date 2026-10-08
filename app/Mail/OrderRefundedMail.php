@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Order;
+use App\Support\MailBrand;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -29,6 +30,8 @@ class OrderRefundedMail extends Mailable
 
         return new Content(markdown: 'mail.order-refunded', with: [
             'forCreator' => $this->forCreator,
+            // buyer ko creator ka store, creator ko platform
+            'brand' => $this->forCreator ? MailBrand::platform() : MailBrand::forCreator($order->creator),
             'name' => $this->forCreator ? ($order->product?->creator?->name ?: 'there') : ($order->buyer_name ?: 'there'),
             'title' => $order->product?->title ?? 'your purchase',
             'amount' => '₹' . number_format((float) $order->total_amount, 2),

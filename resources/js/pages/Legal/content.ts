@@ -3,7 +3,7 @@
  * TODO: neeche ke placeholders (email, address, jurisdiction) apni asli details se replace karo.
  */
 export const COMPANY = {
-    name: 'DigitalSelling',
+    name: 'CreatorPro',
     email: 'support@example.com', // TODO: asli support email
     address: 'Your registered business address, City, State, India', // TODO
     jurisdiction: 'your city', // TODO: courts ka shehar (Terms → governing law)
@@ -135,9 +135,9 @@ export const PAGES: Record<PageKey, PolicyPage> = {
                 heading: '5. Fees and payouts',
                 bullets: [
                     'Free plan: 15% platform commission on each successful sale, no monthly fee.',
-                    'Pro plan: 10% platform commission on each successful sale, ₹499 per month (plus applicable GST).',
+                    'Plus plan: 10% platform commission on each successful sale, ₹499 per month (plus applicable GST).',
                     'The commission includes payment gateway (Razorpay) charges — no separate gateway fee is deducted from your earnings.',
-                    `Every new creator account starts on Pro free for ${TRIAL_DAYS} days. When the trial ends, the account moves to the Free plan automatically unless you choose to subscribe to Pro. No card is required to start the trial.`,
+                    `Every new creator account starts on Plus free for ${TRIAL_DAYS} days. When the trial ends, the account moves to the Free plan automatically unless you choose to subscribe to Plus. No card is required to start the trial.`,
                     'Plan changes apply to sales made after the change; past orders keep the commission rate recorded at the time of sale.',
                 ],
                 paragraphs: [
@@ -217,7 +217,7 @@ export const PAGES: Record<PageKey, PolicyPage> = {
             {
                 heading: '6. Creator subscriptions',
                 paragraphs: [
-                    `The first ${TRIAL_DAYS} days of Pro are free and nothing is charged during the trial. After that, the Pro plan (₹499/month) is billed in advance and is non-refundable for the current billing period. You can cancel anytime to stop future renewals and continue on the Free plan.`,
+                    `The first ${TRIAL_DAYS} days of Plus are free and nothing is charged during the trial. After that, the Plus plan (₹499/month) is billed in advance and is non-refundable for the current billing period. You can cancel anytime to stop future renewals and continue on the Free plan.`,
                 ],
             },
         ],

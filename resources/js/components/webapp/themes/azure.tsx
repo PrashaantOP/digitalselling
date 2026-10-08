@@ -5,7 +5,7 @@ import { FEATURES, SensitiveNote, sessionLength, siteCopy, Socials, STEPS, typeL
 import { initials, type WebappData } from '../types';
 
 /*
- * Azure (pro) — saaf corporate full website: diagonal brand panel wala hero, numbered product list,
+ * Azure (plus) — saaf corporate full website: diagonal brand panel wala hero, numbered product list,
  * connected steps. Brand colour hi poora accent hai. CSS .wz me scoped, breakpoints container queries pe.
  */
 

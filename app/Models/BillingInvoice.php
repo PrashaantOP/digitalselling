@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Creator ko platform ka tax invoice (Pro plan). `amount` GST-inclusive total hai;
+ * Creator ko platform ka tax invoice (Plus plan). `amount` GST-inclusive total hai;
  * taxable + CGST/SGST/IGST uska breakup. Buyer/seller details snapshot hain.
  */
 class BillingInvoice extends Model

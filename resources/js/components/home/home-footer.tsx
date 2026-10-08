@@ -86,7 +86,7 @@ export function HomeFooter() {
                 </div>
 
                 <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-blue-100/60 sm:flex-row">
-                    <p>© {new Date().getFullYear()} DigitalSelling. All rights reserved.</p>
+                    <p>© {new Date().getFullYear()} CreatorPro. All rights reserved.</p>
                     <p className="flex flex-wrap justify-center gap-x-4 gap-y-1">
                         <Link href="/privacy-policy" className="hover:text-white">
                             Privacy

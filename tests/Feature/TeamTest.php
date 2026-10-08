@@ -59,14 +59,14 @@ class TeamTest extends TestCase
         $owner = $this->creator('free');
 
         $this->invite($owner, 'one@test.com')->assertSessionHasNoErrors();
-        $this->invite($owner, 'two@test.com')->assertSessionHasErrors(['email' => 'Your plan includes 1 team member. Upgrade to Pro to add up to 5.']);
+        $this->invite($owner, 'two@test.com')->assertSessionHasErrors(['email' => 'Your plan includes 1 team member. Upgrade to Plus to add up to 5.']);
         Mail::assertSent(SubAdminInviteMail::class, 1);
     }
 
-    public function test_pro_plan_gets_five_seats(): void
+    public function test_plus_plan_gets_five_seats(): void
     {
         Mail::fake();
-        $owner = $this->creator('pro');
+        $owner = $this->creator('plus');
 
         foreach (range(1, 5) as $i) {
             $this->invite($owner, "m{$i}@test.com")->assertSessionHasNoErrors();
@@ -77,7 +77,7 @@ class TeamTest extends TestCase
     public function test_downgrade_keeps_existing_members_but_blocks_new_invites(): void
     {
         Mail::fake();
-        $owner = $this->creator('pro');
+        $owner = $this->creator('plus');
         $this->invite($owner, 'a@test.com')->assertSessionHasNoErrors();
         $this->invite($owner, 'b@test.com')->assertSessionHasNoErrors();
 

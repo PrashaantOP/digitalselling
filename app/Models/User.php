@@ -22,7 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * role / status / plan / parent_creator_id jaan-bujh ke yahan NAHI hain — koi bhi request
-     * `update($request->all())` se khud ko admin/pro/active na bana sake. Inhe sirf server
+     * `update($request->all())` se khud ko admin/plus/active na bana sake. Inhe sirf server
      * `forceFill()` se set karta hai.
      */
     protected $fillable = [
@@ -64,10 +64,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === 'customer';
     }
 
-    /** Trial expiry ko dhyan me rakh ke — seedha `plan === 'pro'` mat check karo. */
-    public function onPro(): bool
+    /** Trial expiry ko dhyan me rakh ke — seedha `plan === 'plus'` mat check karo. */
+    public function onPlus(): bool
     {
-        return PlanPricing::effectivePlan($this) === 'pro';
+        return PlanPricing::effectivePlan($this) === 'plus';
     }
 
     public static function uniqueUsername(string $name, ?int $ignoreId = null): string

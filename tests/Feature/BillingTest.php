@@ -22,8 +22,8 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Pro billing ka hisaab: GST, invoices, referral credit, reminders, aur purani PREPAID kharid (PlanPurchase) —
- * naya checkout auto-renew hai (ProSubscriptionTest), par beech me atki prepaid kharid webhook se ab bhi poori hoti hai.
+ * Plus billing ka hisaab: GST, invoices, referral credit, reminders, aur purani PREPAID kharid (PlanPurchase) —
+ * naya checkout auto-renew hai (PlusSubscriptionTest), par beech me atki prepaid kharid webhook se ab bhi poori hoti hai.
  * Razorpay hamesha Http::fake() se, asli API ko koi call nahi jaati.
  */
 class BillingTest extends TestCase
@@ -48,7 +48,7 @@ class BillingTest extends TestCase
             'services.razorpay.key_id' => 'rzp_test_key',
             'services.razorpay.key_secret' => self::SECRET,
             'services.razorpay.webhook_secret' => self::WEBHOOK_SECRET,
-            'services.razorpay.pro_plan_id' => 'plan_T1',
+            'services.razorpay.plus_plan_id' => 'plan_T1',
             'billing.seller.gstin' => '10ABCDE1234F1Z5', // 10 = Bihar
             'billing.seller.state' => 'Bihar',
         ]);
@@ -128,14 +128,14 @@ class BillingTest extends TestCase
         $this->assertSame('free', $this->creator->fresh()->plan);
     }
 
-    public function test_webhook_activates_pro_and_issues_a_tax_invoice(): void
+    public function test_webhook_activates_plus_and_issues_a_tax_invoice(): void
     {
         $this->purchase(1);
 
         $this->webhook('payment.captured', 'order_T1', 49900)->assertOk()->assertJson(['status' => 'ok']);
 
         $user = $this->creator->fresh();
-        $this->assertSame('pro', $user->plan);
+        $this->assertSame('plus', $user->plan);
         $this->assertEqualsWithDelta(30, (int) now()->diffInDays($user->plan_expires_at), 2);
         $this->assertSame('pay_1', PlanPurchase::first()->gateway_payment_id);
 
@@ -187,7 +187,7 @@ class BillingTest extends TestCase
 
     public function test_buying_during_the_trial_adds_months_after_the_trial_ends(): void
     {
-        $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => now()->addDays(40)])->save();
+        $this->creator->forceFill(['plan' => 'plus', 'plan_expires_at' => now()->addDays(40)])->save();
 
         $this->purchase(1);
         $this->webhook('payment.captured', 'order_T1', 49900)->assertOk();
@@ -198,7 +198,7 @@ class BillingTest extends TestCase
 
     public function test_an_expired_plan_restarts_from_today(): void
     {
-        $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => now()->subDays(20)])->save();
+        $this->creator->forceFill(['plan' => 'plus', 'plan_expires_at' => now()->subDays(20)])->save();
 
         $this->purchase(1);
         $this->webhook('payment.captured', 'order_T1', 49900)->assertOk();
@@ -206,9 +206,9 @@ class BillingTest extends TestCase
         $this->assertEqualsWithDelta(30, (int) now()->diffInDays($this->creator->fresh()->plan_expires_at), 2);
     }
 
-    public function test_permanent_pro_cannot_buy_more_months(): void
+    public function test_permanent_plus_cannot_buy_more_months(): void
     {
-        $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => null])->save();
+        $this->creator->forceFill(['plan' => 'plus', 'plan_expires_at' => null])->save();
 
         $this->expectException(ValidationException::class);
 
@@ -239,14 +239,14 @@ class BillingTest extends TestCase
         $this->assertSame('200.00', $invoice->credit_applied);
     }
 
-    public function test_full_credit_activates_pro_without_touching_the_gateway(): void
+    public function test_full_credit_activates_plus_without_touching_the_gateway(): void
     {
         $this->fund(600);
 
         $this->assertSame('paid', $this->purchase(1, true)->status);
 
         Http::assertNothingSent();
-        $this->assertSame('pro', $this->creator->fresh()->plan);
+        $this->assertSame('plus', $this->creator->fresh()->plan);
         $this->assertSame('credit', PlanPurchase::first()->gateway);
         $this->assertSame(0, BillingInvoice::count()); // paisa nahi aaya — tax invoice nahi
         $this->assertEqualsWithDelta(101, 600 - (float) ReferralCredit::where('type', 'redeemed')->sum('amount'), 0.01);
@@ -273,7 +273,7 @@ class BillingTest extends TestCase
         $this->actingAs($this->creator)->get('/dashboard/settings/billing')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('settings/billing')
             ->where('plan.effective', 'free')
-            ->where('pro.monthly_price', 499)
+            ->where('plus.monthly_price', 499)
             ->where('price.amount', 499)
             ->where('price.gst', 76.12)
             ->where('price.first_charge_at', null)
@@ -286,7 +286,7 @@ class BillingTest extends TestCase
 
     public function test_payments_are_not_ready_without_the_razorpay_plan_id(): void
     {
-        config(['services.razorpay.pro_plan_id' => null]);
+        config(['services.razorpay.plus_plan_id' => null]);
 
         $this->actingAs($this->creator)->get('/dashboard/settings/billing')->assertInertia(fn (Assert $page) => $page->where('paymentsReady', false));
     }
@@ -341,10 +341,10 @@ class BillingTest extends TestCase
 
     public function test_reminder_goes_only_to_creators_expiring_on_a_reminder_day_without_auto_renew(): void
     {
-        $soon = User::factory()->createOne(['role' => 'creator', 'username' => 'soon', 'plan' => 'pro', 'plan_expires_at' => now('Asia/Kolkata')->addDays(3)->setTime(12, 0)]);
-        $later = User::factory()->createOne(['role' => 'creator', 'username' => 'later', 'plan' => 'pro', 'plan_expires_at' => now('Asia/Kolkata')->addDays(5)->setTime(12, 0)]);
+        $soon = User::factory()->createOne(['role' => 'creator', 'username' => 'soon', 'plan' => 'plus', 'plan_expires_at' => now('Asia/Kolkata')->addDays(3)->setTime(12, 0)]);
+        $later = User::factory()->createOne(['role' => 'creator', 'username' => 'later', 'plan' => 'plus', 'plan_expires_at' => now('Asia/Kolkata')->addDays(5)->setTime(12, 0)]);
         // usi din khatam, par auto-renew chalu — "ends soon" mail galat hoga
-        $renewing = User::factory()->createOne(['role' => 'creator', 'username' => 'renews', 'plan' => 'pro', 'plan_expires_at' => now('Asia/Kolkata')->addDays(3)->setTime(12, 0)]);
+        $renewing = User::factory()->createOne(['role' => 'creator', 'username' => 'renews', 'plan' => 'plus', 'plan_expires_at' => now('Asia/Kolkata')->addDays(3)->setTime(12, 0)]);
         Subscription::create(['user_id' => $renewing->id, 'plan_id' => $this->billing->plan()->id, 'status' => 'active', 'gateway' => 'razorpay', 'gateway_subscription_id' => 'sub_R']);
 
         $this->artisan('billing:remind')->assertSuccessful();

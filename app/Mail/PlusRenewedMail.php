@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /** Creator ko — auto-renew ka charge mila (pehla ho ya har mahine ka), invoice ke link ke saath. */
-class ProRenewedMail extends Mailable
+class PlusRenewedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -18,14 +18,14 @@ class ProRenewedMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: $this->first ? 'Payment received — Pro is active with auto-renew' : 'Pro renewed — payment received');
+        return new Envelope(subject: $this->first ? 'Payment received — Plus is active with auto-renew' : 'Plus renewed — payment received');
     }
 
     public function content(): Content
     {
         $user = $this->invoice->user;
 
-        return new Content(markdown: 'mail.pro-renewed', with: [
+        return new Content(markdown: 'mail.plus-renewed', with: [
             'first' => $this->first,
             'name' => $user?->name ?: 'there',
             'amount' => number_format((float) $this->invoice->amount, 2),

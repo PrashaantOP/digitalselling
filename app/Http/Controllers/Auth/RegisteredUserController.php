@@ -51,7 +51,7 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        // Har naya creator 90 din Pro (10% commission) pe shuru hota hai
+        // Har naya creator 90 din Plus (10% commission) pe shuru hota hai
         $user = (new User)->forceFill([
             'name' => $request->name,
             'email' => $request->email,

@@ -19,7 +19,7 @@ class CreatorController extends Controller
     {
         $filters = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
-            'plan' => ['nullable', Rule::in(['free', 'pro'])],
+            'plan' => ['nullable', Rule::in(['free', 'plus'])],
             // 'deleted' = account khud delete kiya (soft) — sirf yahi filter unhe dikhata hai
             'status' => ['nullable', Rule::in(['active', 'suspended', 'deleted'])],
             'kyc' => ['nullable', Rule::in(['not_started', 'pending', 'verified', 'rejected'])],
@@ -195,14 +195,14 @@ class CreatorController extends Controller
     public function updatePlan(Request $request, User $creator): RedirectResponse
     {
         $data = $request->validate([
-            'plan' => ['required', Rule::in(['free', 'pro'])],
+            'plan' => ['required', Rule::in(['free', 'plus'])],
             'plan_expires_at' => ['nullable', 'date', 'after:today'],
         ]);
 
         $before = $creator->only(['plan', 'plan_expires_at']);
         $creator->forceFill([
             'plan' => $data['plan'],
-            'plan_expires_at' => $data['plan'] === 'pro' ? ($data['plan_expires_at'] ?? null) : null,
+            'plan_expires_at' => $data['plan'] === 'plus' ? ($data['plan_expires_at'] ?? null) : null,
         ])->save();
 
         AdminAudit::log('creator.plan_changed', $creator, [

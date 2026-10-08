@@ -26,14 +26,14 @@ export default function AuthBrandLayout({ children, title, description }: PropsW
                 <div aria-hidden className="home-grid-light pointer-events-none absolute inset-0 opacity-25" />
                 <div aria-hidden className="pointer-events-none absolute -right-32 -bottom-32 h-96 w-96 rounded-full bg-sky-400/30 blur-3xl" />
 
-                <Link href={route('home')} className="relative w-fit" aria-label="DigitalSelling home">
+                <Link href={route('home')} className="relative w-fit" aria-label="CreatorPro home">
                     <Logo tone="light" />
                 </Link>
 
                 <div className="relative my-auto max-w-md py-12">
                     <span className="inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold ring-1 ring-white/25">New creators</span>
                     <h2 className="mt-5 text-4xl leading-tight font-semibold tracking-tight">
-                        {TRIAL_DAYS} days of Pro,
+                        {TRIAL_DAYS} days of Plus,
                         <br />
                         completely free.
                     </h2>
@@ -50,7 +50,7 @@ export default function AuthBrandLayout({ children, title, description }: PropsW
                     <div className="mt-8 grid grid-cols-2 gap-3">
                         <div className="rounded-2xl bg-white/10 p-4 ring-1 ring-white/20">
                             <p className="text-3xl font-semibold">10%</p>
-                            <p className="mt-1 text-xs text-blue-100">Pro commission</p>
+                            <p className="mt-1 text-xs text-blue-100">Plus commission</p>
                         </div>
                         <div className="rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
                             <p className="text-3xl font-semibold text-blue-100">15%</p>
@@ -70,7 +70,7 @@ export default function AuthBrandLayout({ children, title, description }: PropsW
                     aria-hidden
                     className="home-grid pointer-events-none absolute inset-0 mask-[radial-gradient(ellipse_at_top,black_20%,transparent_70%)] lg:hidden"
                 />
-                <Link href={route('home')} className="relative w-fit lg:hidden" aria-label="DigitalSelling home">
+                <Link href={route('home')} className="relative w-fit lg:hidden" aria-label="CreatorPro home">
                     <Logo />
                 </Link>
 

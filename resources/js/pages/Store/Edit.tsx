@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { StorePageView } from '@/components/store-page/store-page-view';
+import { StoreTabsHeader } from '@/components/store-page/store-tabs';
 import { THEMES, type StoreProduct } from '@/components/store-page/types';
 import AppLayout from '@/layouts/app-layout';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -105,13 +106,6 @@ interface StoreEditProps {
     analytics?: AnalyticsData;
 }
 
-const TABS: { key: StoreTab; label: string; href: string }[] = [
-    { key: 'profile', label: 'Store', href: '/dashboard/store' },
-    { key: 'analytics', label: 'Analytics', href: '/dashboard/store/analytics' },
-    { key: 'appearance', label: 'Appearance', href: '/dashboard/store/appearance' },
-    { key: 'settings', label: 'Settings', href: '/dashboard/store/settings' },
-];
-
 const SOCIAL_PLATFORMS: { value: SocialPlatform; label: string; placeholder: string }[] = [
     { value: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/yourhandle' },
     { value: 'youtube', label: 'YouTube Channel', placeholder: 'https://youtube.com/@yourchannel' },
@@ -191,29 +185,6 @@ function useAutoSave(action: string) {
 /* ------------------------------------------------------------------ */
 /*  SHARED UI                                                          */
 /* ------------------------------------------------------------------ */
-
-function TabNav({ active }: { active: StoreTab }) {
-    return (
-        <nav className="flex items-center gap-6 border-b border-[#E4E2DA]">
-            {TABS.map((tab) => {
-                const isActive = active === tab.key;
-                return (
-                    <button
-                        key={tab.key}
-                        type="button"
-                        onClick={() => router.get(tab.href, {}, { preserveScroll: true })}
-                        className={cn(
-                            '-mb-px flex items-center gap-2 border-b-2 py-3 text-sm font-medium transition-colors',
-                            isActive ? 'border-[#4F46E5] text-[#4F46E5]' : 'border-transparent text-[#8A8A96] hover:border-[#E4E2DA] hover:text-[#14141B]',
-                        )}
-                    >
-                        {tab.label}
-                    </button>
-                );
-            })}
-        </nav>
-    );
-}
 
 function SectionCard({
     icon,
@@ -455,7 +426,7 @@ function StoreTab({ store }: { store: Store }) {
                         <p className="truncate text-sm text-[#14141B]">
                             <span className="font-medium text-[#1B4D3E]">{form.is_live ? 'Your store is live:' : 'Your store is offline:'}</span>
                             <a className="ml-1 font-semibold text-[#4F46E5] hover:underline" href={`/${form.username}`} target="_blank" rel="noreferrer">
-                                creatorapp.in/{form.username}
+                                creatorpro.in/{form.username}
                             </a>
                         </p>
                     </div>
@@ -482,7 +453,7 @@ function StoreTab({ store }: { store: Store }) {
                                 </span>
                             </div>
                             <div className="flex items-stretch overflow-hidden rounded-lg border border-[#E4E2DA] bg-white transition focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/15">
-                                <span className="flex items-center border-r border-[#E4E2DA] bg-[#F0EFEA] px-3.5 py-2.5 font-mono text-sm text-[#4B4B57] select-none">creatorapp.in/</span>
+                                <span className="flex items-center border-r border-[#E4E2DA] bg-[#F0EFEA] px-3.5 py-2.5 font-mono text-sm text-[#4B4B57] select-none">creatorpro.in/</span>
                                 <input
                                     id="username"
                                     value={form.username}
@@ -500,7 +471,7 @@ function StoreTab({ store }: { store: Store }) {
                                 </p>
                             )}
                             <p className="text-xs text-[#8A8A96]">
-                                Your store is at <code className="font-mono text-[11px] text-[#4B4B57]">creatorapp.in/{form.username}</code>, your website at <code className="font-mono text-[11px] text-[#4B4B57]">/w/{form.username}</code> and bookings at <code className="font-mono text-[11px] text-[#4B4B57]">/book/{form.username}</code>
+                                Your store is at <code className="font-mono text-[11px] text-[#4B4B57]">creatorpro.in/{form.username}</code>, your website at <code className="font-mono text-[11px] text-[#4B4B57]">/w/{form.username}</code> and bookings at <code className="font-mono text-[11px] text-[#4B4B57]">/book/{form.username}</code>
                             </p>
                         </div>
 
@@ -920,10 +891,10 @@ function SettingsTab({ store }: { store: Store }) {
                             Your store's official link <Info className="size-3.5 text-[#8A8A96]" />
                         </Label>
                         <div className="flex items-center rounded-lg bg-[#F6F5F2] transition focus-within:ring-2 focus-within:ring-[#4F46E5]/20">
-                            <span className="rounded-l-lg border-r border-[#E4E2DA]/40 bg-[#ECEBE6] px-3.5 py-2.5 font-mono text-sm text-[#4B4B57] select-none">creatorapp.in/</span>
+                            <span className="rounded-l-lg border-r border-[#E4E2DA]/40 bg-[#ECEBE6] px-3.5 py-2.5 font-mono text-sm text-[#4B4B57] select-none">creatorpro.in/</span>
                             <input id="settings-username" value={form.username} onChange={(e) => update('username', slugify(e.target.value))} className="flex-1 bg-transparent px-3 py-2.5 text-sm font-medium text-[#14141B] outline-none" />
                             <CheckCircle2 className="mr-2 size-4 text-[#0D9488]" />
-                            <button type="button" onClick={() => navigator.clipboard?.writeText(`creatorapp.in/${form.username}`)} className="mr-1.5 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-[#14141B] shadow-sm transition hover:bg-[#F0EFEA]">
+                            <button type="button" onClick={() => navigator.clipboard?.writeText(`creatorpro.in/${form.username}`)} className="mr-1.5 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-[#14141B] shadow-sm transition hover:bg-[#F0EFEA]">
                                 <Copy className="size-3.5" /> Copy link
                             </button>
                         </div>
@@ -954,7 +925,7 @@ function SettingsTab({ store }: { store: Store }) {
                             <div className="flex flex-col gap-1.5 rounded-xl bg-[#F6F5F2] p-4">
                                 <div className="flex items-center gap-1.5 text-xs text-[#202124]">
                                     <span className="flex size-4 items-center justify-center rounded-full bg-[#EEF2FF] text-[10px] font-bold text-[#4F46E5]">K</span>
-                                    <span className="truncate font-medium">https://creatorapp.in › {form.username}</span>
+                                    <span className="truncate font-medium">https://creatorpro.in › {form.username}</span>
                                 </div>
                                 <span className="cursor-pointer text-lg leading-snug text-[#1a0dab] hover:underline">{form.meta_title || `${store.display_name} — Creator Store`}</span>
                                 <p className="text-xs leading-relaxed text-[#4d5156]">{form.meta_description || 'Welcome to my store! Explore courses, e-books and 1:1 mentorship sessions.'}</p>
@@ -1208,12 +1179,8 @@ export default function StoreEdit({ store, tab = 'profile', analytics }: StoreEd
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Store" />
             <div className="flex flex-1 flex-col bg-[#F6F5F2]">
-                {/* Sticky top header (tab navigation) */}
-                <div className="sticky top-0 z-30 border-b border-[#E4E2DA] bg-[#F6F5F2]/95 backdrop-blur-md">
-                    <div className="mx-auto w-full max-w-[1600px] px-4 md:px-6">
-                        <TabNav active={tab} />
-                    </div>
-                </div>
+                {/* Sticky top header (tab navigation) — Web App page bhi yahi dikhata hai */}
+                <StoreTabsHeader active={tab} />
 
                 <div className="mx-auto w-full max-w-[1600px] flex-1 px-4 pt-6 md:px-6">
                     <div>

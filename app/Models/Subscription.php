@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Creator ka Pro auto-renew (Razorpay Subscription). Status Razorpay jaisa:
+ * Creator ka Plus auto-renew (Razorpay Subscription). Status Razorpay jaisa:
  * created → authenticated → active → (pending → halted) / cancelled / completed; `abandoned` = checkout adhoora chhoda.
- * Pro kab tak hai wo yahan nahi, `users.plan_expires_at` me — har charge use aage badhata hai (SubscriptionService).
+ * Plus kab tak hai wo yahan nahi, `users.plan_expires_at` me — har charge use aage badhata hai (SubscriptionService).
  */
 class Subscription extends Model
 {

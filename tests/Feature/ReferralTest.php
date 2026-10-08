@@ -145,7 +145,7 @@ class ReferralTest extends TestCase
         }
     }
 
-    public function test_credit_converts_into_pro_months_and_keeps_the_remainder(): void
+    public function test_credit_converts_into_plus_months_and_keeps_the_remainder(): void
     {
         $this->fund(6); // 6 × ₹100 = ₹600
 
@@ -154,7 +154,7 @@ class ReferralTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $user = $this->referrer->fresh();
-        $this->assertSame('pro', $user->plan);
+        $this->assertSame('plus', $user->plan);
         $this->assertTrue($user->plan_expires_at->isFuture());
         $this->assertEqualsWithDelta(28, (int) now()->diffInDays($user->plan_expires_at), 4);
 
@@ -162,10 +162,10 @@ class ReferralTest extends TestCase
         $this->assertEqualsWithDelta(101, $this->referrals->balanceFor($user)['balance'], 0.01);
     }
 
-    public function test_redeeming_while_already_on_pro_extends_the_existing_expiry(): void
+    public function test_redeeming_while_already_on_plus_extends_the_existing_expiry(): void
     {
         $this->fund(6);
-        $this->referrer->forceFill(['plan' => 'pro', 'plan_expires_at' => now()->addDays(60)])->save();
+        $this->referrer->forceFill(['plan' => 'plus', 'plan_expires_at' => now()->addDays(60)])->save();
 
         $this->referrals->redeem($this->referrer->fresh(), 1);
 
@@ -188,9 +188,9 @@ class ReferralTest extends TestCase
     {
         $this->fund(6);
 
-        $plan = SubscriptionPlan::where('slug', 'pro')->first();
+        $plan = SubscriptionPlan::where('slug', 'plus')->first();
         Subscription::create(['user_id' => $this->referrer->id, 'plan_id' => $plan->id, 'status' => 'active', 'gateway' => 'razorpay']);
-        $this->referrer->forceFill(['plan' => 'pro', 'plan_expires_at' => null])->save();
+        $this->referrer->forceFill(['plan' => 'plus', 'plan_expires_at' => null])->save();
 
         $this->actingAs($this->referrer)
             ->post('/dashboard/refer-earn/redeem', ['months' => 1])

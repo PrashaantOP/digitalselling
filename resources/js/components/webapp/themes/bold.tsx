@@ -5,7 +5,7 @@ import { CoverArt, FEATURES, SensitiveNote, sessionLength, siteCopy, Socials, ST
 import { initials, type WebappData } from '../types';
 
 /*
- * Bold (pro) — neo-brutalist full website: mote borders, hard shadows, bento features.
+ * Bold (plus) — neo-brutalist full website: mote borders, hard shadows, bento features.
  * CSS .wb ke andar scoped hai aur breakpoints container queries se chalte hain,
  * isliye dashboard ke phone-frame preview me bhi wahi layout aata hai jo asli phone pe.
  */

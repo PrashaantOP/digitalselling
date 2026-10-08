@@ -113,4 +113,15 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    | Markdown mails ka look — dashboard ke rang (resources/views/vendor/mail/html/themes/brand.css).
+    | Components (badge, summary, row, code, notice, files, stats) bhi wahin vendor/mail/{html,text} me hain.
+    */
+    'markdown' => [
+        'theme' => 'brand',
+        'paths' => [
+            resource_path('views/vendor/mail'),
+        ],
+    ],
+
 ];

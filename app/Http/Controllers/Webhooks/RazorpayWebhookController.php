@@ -19,8 +19,8 @@ use Illuminate\Support\Facades\DB;
  *
  * Ek hi webhook sab laata hai:
  *  - buyer ka order (orders, gateway order id se)       → capture pakka karke ProcessSuccessfulOrder (fulfil)
- *  - purani prepaid Pro kharid (plan_purchases)         → BillingService::fulfil()
- *  - Pro auto-renew (`subscription.*`)                  → SubscriptionService
+ *  - purani prepaid Plus kharid (plan_purchases)         → BillingService::fulfil()
+ *  - Plus auto-renew (`subscription.*`)                  → SubscriptionService
  *  - Razorpay dashboard se kiya refund (`refund.*`)     → RefundService::applyRefund()
  *
  * Har event ka id (X-Razorpay-Event-Id) `razorpay_events` me — Razorpay retry kare to dobara kaam nahi.
@@ -138,7 +138,7 @@ class RazorpayWebhookController extends Controller
         return 'ok';
     }
 
-    /** Purani prepaid Pro kharid — browser band ho gaya ho tab bhi plan yahin se activate hota hai. */
+    /** Purani prepaid Plus kharid — browser band ho gaya ho tab bhi plan yahin se activate hota hai. */
     private function planPurchase(PlanPurchase $purchase, string $event, array $payment): string
     {
         $expected = (int) round((float) $purchase->amount_payable * 100);

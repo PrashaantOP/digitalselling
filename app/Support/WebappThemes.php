@@ -5,11 +5,11 @@ namespace App\Support;
 use App\Models\User;
 
 /**
- * Creator ke webapp (/w/{username}) ke designs. Ek free, baaki Pro ke saath unlock.
+ * Creator ke webapp (/w/{username}) ke designs. Ek free, baaki Plus ke saath unlock.
  *
  * Server hi source of truth hai — frontend ka registry sirf cards ki copy ke liye hai.
- * Sabse zaroori hissa resolve(): Pro khatam ho jaye to webapp apne aap free theme pe
- * gir jaata hai, par DB me chuna hua theme bacha rehta hai — Pro lautte hi wapas mil jaata hai.
+ * Sabse zaroori hissa resolve(): Plus khatam ho jaye to webapp apne aap free theme pe
+ * gir jaata hai, par DB me chuna hua theme bacha rehta hai — Plus lautte hi wapas mil jaata hai.
  */
 class WebappThemes
 {
@@ -17,10 +17,10 @@ class WebappThemes
     public const FREE = 'studio';
 
     public const ALL = [
-        'studio' => ['name' => 'Studio', 'tagline' => 'Full website — hero, sections aur footer', 'pro' => false],
-        'bold' => ['name' => 'Bold', 'tagline' => 'Neo-brutalist website — thick borders, hard shadows', 'pro' => true],
-        'azure' => ['name' => 'Azure', 'tagline' => 'Clean corporate website with a diagonal hero', 'pro' => true],
-        'notebook' => ['name' => 'Notebook', 'tagline' => 'Classroom feel — graph paper, filters, clickable steps', 'pro' => true],
+        'studio' => ['name' => 'Studio', 'tagline' => 'Full website — hero, sections aur footer', 'plus' => false],
+        'bold' => ['name' => 'Bold', 'tagline' => 'Neo-brutalist website — thick borders, hard shadows', 'plus' => true],
+        'azure' => ['name' => 'Azure', 'tagline' => 'Clean corporate website with a diagonal hero', 'plus' => true],
+        'notebook' => ['name' => 'Notebook', 'tagline' => 'Classroom feel — graph paper, filters, clickable steps', 'plus' => true],
     ];
 
     /** @return string[] */
@@ -29,15 +29,15 @@ class WebappThemes
         return array_keys(self::ALL);
     }
 
-    public static function isPro(string $slug): bool
+    public static function isPlus(string $slug): bool
     {
-        return (bool) (self::ALL[$slug]['pro'] ?? false);
+        return (bool) (self::ALL[$slug]['plus'] ?? false);
     }
 
     /** @return string[] jo theme ye creator abhi laga sakta hai */
     public static function allowedFor(User $creator): array
     {
-        return PlanPricing::effectivePlan($creator) === 'pro' ? self::slugs() : [self::FREE];
+        return PlanPricing::effectivePlan($creator) === 'plus' ? self::slugs() : [self::FREE];
     }
 
     /** Render ke waqt ka asli theme — unknown ya locked ho to free. */
@@ -49,7 +49,7 @@ class WebappThemes
     /**
      * Gallery ke liye list — kaunsa locked hai ye bhi saath me.
      *
-     * @return array<int, array{slug: string, name: string, tagline: string, pro: bool, locked: bool}>
+     * @return array<int, array{slug: string, name: string, tagline: string, plus: bool, locked: bool}>
      */
     public static function forCreator(User $creator): array
     {
@@ -60,7 +60,7 @@ class WebappThemes
                 'slug' => $slug,
                 'name' => $meta['name'],
                 'tagline' => $meta['tagline'],
-                'pro' => $meta['pro'],
+                'plus' => $meta['plus'],
                 'locked' => ! in_array($slug, $allowed, true),
             ])
             ->values()

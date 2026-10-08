@@ -30,7 +30,7 @@ class RegistrationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
-    public function test_new_creator_starts_with_a_90_day_pro_trial()
+    public function test_new_creator_starts_with_a_90_day_plus_trial()
     {
         $this->post('/register', [
             'name' => 'Trial User',
@@ -41,8 +41,8 @@ class RegistrationTest extends TestCase
 
         $user = User::where('email', 'trial@example.com')->firstOrFail();
 
-        $this->assertSame('pro', $user->plan);
+        $this->assertSame('plus', $user->plan);
         $this->assertTrue($user->plan_expires_at->between(now()->addDays(89), now()->addDays(90)->addMinute()));
-        $this->assertTrue($user->onPro());
+        $this->assertTrue($user->onPlus());
     }
 }

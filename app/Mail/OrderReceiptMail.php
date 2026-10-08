@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Order;
+use App\Support\MailBrand;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -26,6 +27,8 @@ class OrderReceiptMail extends Mailable
         $order = $this->order;
 
         return new Content(markdown: 'mail.order-receipt', with: [
+            // buyer creator se khareedta hai — header me uska store
+            'brand' => MailBrand::forCreator($order->creator),
             'name' => $order->buyer_name ?: 'there',
             'title' => $order->product?->title ?? 'Your purchase',
             'creatorName' => $order->product?->creator?->name,

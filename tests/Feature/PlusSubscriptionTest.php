@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Mail\ProPaymentFailedMail;
-use App\Mail\ProRenewedMail;
+use App\Mail\PlusPaymentFailedMail;
+use App\Mail\PlusRenewedMail;
 use App\Models\BillingInvoice;
 use App\Models\PayoutProfile;
 use App\Models\Subscription;
@@ -17,10 +17,10 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Pro plan — monthly ₹499, auto-renew (Razorpay Subscriptions). Razorpay hamesha nakli (Http::fake),
+ * Plus plan — monthly ₹499, auto-renew (Razorpay Subscriptions). Razorpay hamesha nakli (Http::fake),
  * asli API ko koi call nahi jaati.
  */
-class ProSubscriptionTest extends TestCase
+class PlusSubscriptionTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -48,7 +48,7 @@ class ProSubscriptionTest extends TestCase
             'services.razorpay.key_id' => 'rzp_test_key',
             'services.razorpay.key_secret' => self::SECRET,
             'services.razorpay.webhook_secret' => self::WEBHOOK_SECRET,
-            'services.razorpay.pro_plan_id' => 'plan_T1',
+            'services.razorpay.plus_plan_id' => 'plan_T1',
             'billing.seller.gstin' => '10ABCDE1234F1Z5', // 10 = Bihar
             'billing.seller.state' => 'Bihar',
             'inertia.ssr.enabled' => false,
@@ -110,7 +110,7 @@ class ProSubscriptionTest extends TestCase
     {
         return Subscription::create($attrs + [
             'user_id' => $this->creator->id,
-            'plan_id' => SubscriptionPlan::where('slug', 'pro')->value('id'),
+            'plan_id' => SubscriptionPlan::where('slug', 'plus')->value('id'),
             'status' => $status,
             'gateway' => 'razorpay',
             'gateway_subscription_id' => 'sub_LIVE',
@@ -151,7 +151,7 @@ class ProSubscriptionTest extends TestCase
     public function test_during_the_trial_the_first_charge_waits_for_the_trial_to_end(): void
     {
         $trialEnd = now()->addDays(40)->startOfSecond();
-        $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => $trialEnd])->save();
+        $this->creator->forceFill(['plan' => 'plus', 'plan_expires_at' => $trialEnd])->save();
 
         $this->actingAs($this->creator)->get('/dashboard/settings/billing')->assertInertia(fn (Assert $page) => $page->whereNot('price.first_charge_at', null));
         $this->subscribe()->assertCreated();
@@ -170,9 +170,9 @@ class ProSubscriptionTest extends TestCase
         $this->assertDatabaseHas('payout_profiles', ['user_id' => $this->creator->id, 'state' => 'Kerala']);
     }
 
-    public function test_permanent_pro_cannot_subscribe(): void
+    public function test_permanent_plus_cannot_subscribe(): void
     {
-        $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => null])->save();
+        $this->creator->forceFill(['plan' => 'plus', 'plan_expires_at' => null])->save();
 
         $this->subscribe()->assertUnprocessable()->assertJsonValidationErrors('plan');
         Http::assertNothingSent();
@@ -180,7 +180,7 @@ class ProSubscriptionTest extends TestCase
 
     public function test_it_explains_itself_when_the_razorpay_plan_is_not_set_up(): void
     {
-        config(['services.razorpay.pro_plan_id' => null]);
+        config(['services.razorpay.plus_plan_id' => null]);
 
         $this->subscribe()->assertUnprocessable()->assertJsonValidationErrors('plan');
         $this->assertSame(0, Subscription::count());
@@ -206,16 +206,16 @@ class ProSubscriptionTest extends TestCase
 
     // ---------------------------------------------------------------- verify
 
-    public function test_verify_with_the_first_charge_activates_pro_and_issues_a_gst_invoice(): void
+    public function test_verify_with_the_first_charge_activates_plus_and_issues_a_gst_invoice(): void
     {
         $this->subscribe();
         $this->remoteSubscription = $this->cycle(0, 30);
         $this->remotePayments['pay_1'] = ['id' => 'pay_1', 'amount' => 49900, 'status' => 'captured', 'created_at' => now()->getTimestamp()];
 
-        $this->verify()->assertOk()->assertJson(['paid' => true, 'message' => 'Payment received — Pro is active and renews every month.']);
+        $this->verify()->assertOk()->assertJson(['paid' => true, 'message' => 'Payment received — Plus is active and renews every month.']);
 
         $user = $this->creator->fresh();
-        $this->assertSame('pro', $user->plan);
+        $this->assertSame('plus', $user->plan);
         $this->assertEqualsWithDelta(31, (int) round(now()->diffInDays($user->plan_expires_at)), 1); // 30 din + 1 din grace
 
         $invoice = BillingInvoice::sole();
@@ -224,24 +224,24 @@ class ProSubscriptionTest extends TestCase
         $this->assertSame('38.06', $invoice->cgst_amount);
         $this->assertSame('pay_1', $invoice->gateway_payment_id);
         $this->assertSame(Subscription::first()->id, $invoice->subscription_id);
-        $this->assertSame('Pro plan — monthly (auto-renew)', $invoice->description);
+        $this->assertSame('Plus plan — monthly (auto-renew)', $invoice->description);
         $this->assertSame('active', Subscription::first()->status);
-        Mail::assertSent(ProRenewedMail::class, fn ($m) => $m->hasTo($this->creator->email) && $m->first);
+        Mail::assertSent(PlusRenewedMail::class, fn ($m) => $m->hasTo($this->creator->email) && $m->first);
 
         // wahi charge webhook se bhi aaye — dobara kuch nahi
         $this->webhook('subscription.charged', ['id' => 'sub_T1'] + $this->cycle(0, 30), ['id' => 'pay_1', 'amount' => 49900])->assertOk();
         $this->assertSame(1, BillingInvoice::count());
-        Mail::assertSent(ProRenewedMail::class, 1);
+        Mail::assertSent(PlusRenewedMail::class, 1);
     }
 
     public function test_verify_during_the_trial_only_turns_on_auto_renew(): void
     {
         $trialEnd = now()->addDays(40)->startOfSecond();
-        $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => $trialEnd])->save();
+        $this->creator->forceFill(['plan' => 'plus', 'plan_expires_at' => $trialEnd])->save();
         $this->subscribe();
         $this->remoteSubscription = ['status' => 'authenticated', 'paid_count' => 0];
 
-        $this->verify()->assertOk()->assertJson(['message' => 'Auto-renew is on. Your first payment is taken when your current Pro period ends.']);
+        $this->verify()->assertOk()->assertJson(['message' => 'Auto-renew is on. Your first payment is taken when your current Plus period ends.']);
 
         $this->assertSame('authenticated', Subscription::first()->status);
         $this->assertTrue($trialEnd->equalTo($this->creator->fresh()->plan_expires_at));
@@ -291,13 +291,13 @@ class ProSubscriptionTest extends TestCase
         $this->assertSame(2, BillingInvoice::where('subscription_id', $sub->id)->count());
         $this->assertEqualsWithDelta(31, (int) round($first->diffInDays($this->creator->fresh()->plan_expires_at)), 1);
         $this->assertNotNull($sub->fresh()->last_charged_at);
-        Mail::assertSent(ProRenewedMail::class, fn ($m) => ! $m->first);
+        Mail::assertSent(PlusRenewedMail::class, fn ($m) => ! $m->first);
     }
 
-    public function test_a_charge_never_shortens_pro_that_already_runs_longer(): void
+    public function test_a_charge_never_shortens_plus_that_already_runs_longer(): void
     {
         $credit = now()->addDays(100)->startOfSecond();
-        $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => $credit])->save();
+        $this->creator->forceFill(['plan' => 'plus', 'plan_expires_at' => $credit])->save();
         $this->live();
 
         $this->webhook('subscription.charged', $this->cycle(0, 30), ['id' => 'pay_m1', 'amount' => 49900])->assertOk();
@@ -309,7 +309,7 @@ class ProSubscriptionTest extends TestCase
     public function test_failed_auto_debits_mail_the_creator_once_per_step(): void
     {
         $expiry = now()->addDays(2)->startOfSecond();
-        $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => $expiry])->save();
+        $this->creator->forceFill(['plan' => 'plus', 'plan_expires_at' => $expiry])->save();
         $sub = $this->live();
 
         $this->webhook('subscription.pending', ['status' => 'pending'], ['id' => 'pay_f1', 'error_description' => 'Insufficient balance'])->assertOk();
@@ -317,14 +317,14 @@ class ProSubscriptionTest extends TestCase
 
         $this->assertSame('pending', $sub->fresh()->status);
         $this->assertSame('Insufficient balance', $sub->fresh()->failure_reason);
-        Mail::assertSent(ProPaymentFailedMail::class, 1);
-        Mail::assertSent(ProPaymentFailedMail::class, fn ($m) => ! $m->halted);
+        Mail::assertSent(PlusPaymentFailedMail::class, 1);
+        Mail::assertSent(PlusPaymentFailedMail::class, fn ($m) => ! $m->halted);
 
         $this->webhook('subscription.halted', ['status' => 'halted'])->assertOk();
 
         $this->assertSame('halted', $sub->fresh()->status);
-        Mail::assertSent(ProPaymentFailedMail::class, fn ($m) => $m->halted);
-        // Pro jitna paid tha utna hi chalta hai — beech me nahi kat-ta
+        Mail::assertSent(PlusPaymentFailedMail::class, fn ($m) => $m->halted);
+        // Plus jitna paid tha utna hi chalta hai — beech me nahi kat-ta
         $this->assertTrue($expiry->equalTo($this->creator->fresh()->plan_expires_at));
         $this->actingAs($this->creator)->get('/dashboard/settings/billing')->assertInertia(fn (Assert $page) => $page
             ->where('subscription.status', 'halted')->where('subscription.renews', false));
@@ -353,10 +353,10 @@ class ProSubscriptionTest extends TestCase
 
     // ---------------------------------------------------------------- cancel
 
-    public function test_cancelling_keeps_pro_until_the_paid_month_ends(): void
+    public function test_cancelling_keeps_plus_until_the_paid_month_ends(): void
     {
         $expiry = now()->addDays(20)->startOfSecond();
-        $this->creator->forceFill(['plan' => 'pro', 'plan_expires_at' => $expiry])->save();
+        $this->creator->forceFill(['plan' => 'plus', 'plan_expires_at' => $expiry])->save();
         $sub = $this->live('active', ['current_period_end' => now()->addDays(19)]);
 
         $this->actingAs($this->creator)->post('/dashboard/settings/billing/cancel')->assertRedirect()->assertSessionHasNoErrors();
@@ -423,9 +423,9 @@ class ProSubscriptionTest extends TestCase
 
     public function test_the_plan_command_creates_the_monthly_razorpay_plan(): void
     {
-        config(['services.razorpay.pro_plan_id' => null]);
+        config(['services.razorpay.plus_plan_id' => null]);
 
-        $this->artisan('billing:razorpay-plan')->expectsOutputToContain('RAZORPAY_PRO_PLAN_ID=plan_new')->assertSuccessful();
+        $this->artisan('billing:razorpay-plan')->expectsOutputToContain('RAZORPAY_PLUS_PLAN_ID=plan_new')->assertSuccessful();
 
         Http::assertSent(fn ($r) => str_ends_with($r->url(), '/v1/plans') && $r['period'] === 'monthly' && $r['interval'] === 1 && $r['item']['amount'] === 49900);
     }

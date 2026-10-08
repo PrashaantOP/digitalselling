@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Booking;
+use App\Support\MailBrand;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -32,6 +33,7 @@ class BookingConfirmedMail extends Mailable
         $start = $this->booking->scheduled_at->copy()->setTimezone($this->timezone);
 
         return new Content(markdown: 'mail.booking-confirmed', with: [
+            'brand' => MailBrand::forCreator($this->booking->relationLoaded('creator') ? $this->booking->creator : $this->booking->creator()->withTrashed()->first()),
             'name' => $this->booking->customer?->name ?: 'there',
             'when' => $start->format('l, j F Y') . ' · ' . $start->format('g:i a') . ' – ' . $start->copy()->addMinutes($this->booking->duration_minutes)->format('g:i a'),
             'duration' => $this->booking->duration_minutes,

@@ -183,7 +183,7 @@ export function CourseWorkflow() {
                             From idea to certificate — <span className="text-blue-600">every step, covered</span>
                         </>
                     }
-                    description="Here’s exactly how a course moves through DigitalSelling. Switch views to see what you do as a creator and what your student experiences."
+                    description="Here’s exactly how a course moves through CreatorPro. Switch views to see what you do as a creator and what your student experiences."
                 />
 
                 <Reveal className="mt-10 flex justify-center">

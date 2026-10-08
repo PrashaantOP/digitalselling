@@ -292,7 +292,7 @@ export function StorePageView({ data, mode }: Props) {
                         Visit website <ArrowUpRight className="size-3" />
                     </a>
                     <span className={tone.faint}>
-                        Powered by <span className="font-bold">Kiln Studio</span>
+                        Powered by <span className="font-bold">CreatorPro</span>
                     </span>
                 </footer>
             </div>

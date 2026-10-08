@@ -30,7 +30,7 @@ const BADGE_TONES: Record<string, string> = {
     verified: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
     paid: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
     success: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-    pro: 'bg-indigo-50 text-indigo-700 ring-indigo-200',
+    plus: 'bg-indigo-50 text-indigo-700 ring-indigo-200',
     pending: 'bg-amber-50 text-amber-700 ring-amber-200',
     processing: 'bg-sky-50 text-sky-700 ring-sky-200',
     unverified: 'bg-amber-50 text-amber-700 ring-amber-200',

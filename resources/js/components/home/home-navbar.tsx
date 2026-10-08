@@ -37,7 +37,7 @@ export function HomeNavbar() {
             )}
         >
             <Container className="flex h-16 items-center justify-between gap-4 lg:h-[72px]">
-                <Link href="/" aria-label="DigitalSelling home">
+                <Link href="/" aria-label="CreatorPro home">
                     <Logo />
                 </Link>
 

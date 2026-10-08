@@ -6,7 +6,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Pro plan ke tax invoice ka number: INV-2627-000001 (financial year April–March ke andar sequential).
+ * Plus plan ke tax invoice ka number: INV-2627-000001 (financial year April–March ke andar sequential).
  * Counter row lock ho ke badhta hai — do payments ek saath aayein tab bhi number na dohraye, na chhoote.
  * Hamesha DB transaction ke andar call karo (invoice na bane to number bhi wapas ho jaye).
  */

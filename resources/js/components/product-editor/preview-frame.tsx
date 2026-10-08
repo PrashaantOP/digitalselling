@@ -160,7 +160,7 @@ export function PreviewFrame({ device, url, accent, main, side }: { device: Devi
                         </>
                     )}
                     <p className={cn('text-center text-[11px] text-[#8A8A96]', !mobile && 'col-span-2')}>
-                        Built with <span className="font-semibold text-[#4F46E5]">SuperCreators</span>
+                        Built with <span className="font-semibold text-[#4F46E5]">CreatorPro</span>
                     </p>
                 </div>
             </div>
