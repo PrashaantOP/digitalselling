@@ -156,6 +156,7 @@ class TeamTest extends TestCase
             ->where('stats.revenue.value', 0)
             ->where('recentOrders', [])
             ->where('balance', null)
+            ->where('plusOffer', null)
             ->where('auth.permissions', fn ($perms) => collect($perms)->contains('courses.view') && ! collect($perms)->contains('payments.view')));
 
         // products overview: bookings type nahi (permission nahi), revenue hidden

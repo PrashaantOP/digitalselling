@@ -96,6 +96,47 @@ class DashboardTest extends TestCase
         );
     }
 
+    public function test_recent_sales_show_creator_earnings_and_uuid_only()
+    {
+        $creator = $this->creator();
+        $order = $this->sale($creator, $this->product($creator, 'course', 'Masterclass'), 849, now());
+        $order->forceFill(['total_amount' => 999, 'base_amount' => 999, 'platform_fee' => 150, 'buyer_name' => 'Rohan'])->save();
+
+        $this->actingAs($creator)->get('/dashboard')->assertInertia(fn (Assert $page) => $page
+            ->has('recentOrders', 1)
+            ->where('recentOrders.0.amount', 849)           // buyer ka 999 nahi — creator ki kamai, KPI jaisa
+            ->where('recentOrders.0.uuid', $order->uuid)
+            ->where('recentOrders.0.product', 'Masterclass')
+            ->where('recentOrders.0.buyer_name', 'Rohan')
+            ->missing('recentOrders.0.id')
+            ->missing('recentOrders.0.order_number')
+        );
+    }
+
+    public function test_plus_offer_shows_real_numbers_for_free_creators_only()
+    {
+        $free = $this->creator();
+        $free->forceFill(['plan' => 'free', 'plan_expires_at' => null])->save();
+        $this->sale($free, $this->product($free), 1000, now()->subDays(3));
+        $this->sale($free, $this->product($free), 5000, now()->subDays(40)); // 30 din se purana — ginna nahi
+
+        $this->actingAs($free)->get('/dashboard')->assertInertia(fn (Assert $page) => $page
+            ->where('plusOffer.current_rate', 15)
+            ->where('plusOffer.plus_rate', 10)
+            ->where('plusOffer.monthly_price', 499)
+            ->where('plusOffer.saved_last_30', 50)           // 1000 × (15 − 10)%
+            ->where('plusOffer.team_seats', 5)
+        );
+
+        $plus = $this->creator();
+        $plus->forceFill(['plan' => 'plus', 'plan_expires_at' => now()->addMonth()])->save();
+        $this->actingAs($plus)->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('plusOffer', null));
+
+        // Plus khatam ho gaya → phir se Free → card wapas
+        $plus->forceFill(['plan_expires_at' => now()->subDay()])->save();
+        $this->actingAs($plus)->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('plusOffer.plus_rate', 10));
+    }
+
     public function test_other_creators_data_does_not_leak()
     {
         $other = $this->creator();

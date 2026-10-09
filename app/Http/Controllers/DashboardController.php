@@ -8,8 +8,12 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Store;
 use App\Models\StorePageView;
+use App\Models\SubscriptionPlan;
+use App\Models\User;
 use App\Services\SettlementService;
+use App\Support\PlanPricing;
 use App\Support\TeamAccess;
+use App\Support\TeamSeats;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -89,11 +93,49 @@ class DashboardController extends Controller
                 'percent' => (int) round(count(array_filter($checklist)) / count($checklist) * 100),
                 'items' => $checklist,
             ],
-            'recentOrders' => ! $canSeeSales ? [] : Order::with('product:id,title,type')
+            // amount = creator ki kamai (net), baaki KPI jaisa. Browser ko uuid hi — numeric id nahi
+            'recentOrders' => ! $canSeeSales ? [] : Order::with('product:id,title')
                 ->where('creator_id', $tid)->where('status', 'success')
-                ->latest('paid_at')->limit(8)
-                ->get(['id', 'order_number', 'product_id', 'buyer_name', 'total_amount', 'paid_at']),
+                ->latest('paid_at')->limit(5)
+                ->get(['uuid', 'product_id', 'buyer_name', 'net_payout_amount', 'paid_at'])
+                ->map(fn (Order $o) => [
+                    'uuid' => $o->uuid,
+                    'buyer_name' => $o->buyer_name,
+                    'product' => $o->product?->title,
+                    'amount' => (float) $o->net_payout_amount,
+                    'paid_at' => $o->paid_at,
+                ]),
+            'plusOffer' => $creator->isSubAdmin() ? null : $this->plusOffer($owner, $tid),
         ]);
+    }
+
+    /**
+     * Free creator ko Plus ka sach wala faayda (commission ka fark + pichhle 30 din me kitna bachta).
+     * Plus user / plan na mile to null — card nahi dikhta.
+     */
+    private function plusOffer(User $owner, int $tid): ?array
+    {
+        if (PlanPricing::effectivePlan($owner) !== 'free') {
+            return null;
+        }
+
+        $plus = SubscriptionPlan::where('slug', 'plus')->where('is_active', true)->first();
+        if (! $plus) {
+            return null;
+        }
+
+        $current = PlanPricing::commissionRate($owner);
+        $plusRate = (float) $plus->commission_rate;
+        $sales = (float) Order::where('creator_id', $tid)->where('status', 'success')
+            ->where('paid_at', '>=', now()->subDays(30))->sum('total_amount');
+
+        return [
+            'current_rate' => $current,
+            'plus_rate' => $plusRate,
+            'monthly_price' => (float) $plus->monthly_price,
+            'saved_last_30' => round(max(0, $current - $plusRate) / 100 * $sales, 2),
+            'team_seats' => TeamSeats::LIMITS['plus'],
+        ];
     }
 
     /** ek window ke KPIs — current aur previous dono isi se nikalte hain taaki comparison apples-to-apples ho */

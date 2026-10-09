@@ -3,7 +3,15 @@ import { KpiCard } from '@/components/dashboard/kpi-card';
 import { RevenueChart } from '@/components/dashboard/revenue-chart';
 import { TopProducts } from '@/components/dashboard/top-products';
 import { TypeDonut } from '@/components/dashboard/type-donut';
-import { type Balance, type ChartPoint, type DashboardStats, type TopProduct, type TypeRevenue } from '@/components/dashboard/types';
+import {
+    type Balance,
+    type ChartPoint,
+    type DashboardStats,
+    type PlusOffer,
+    type RecentOrder,
+    type TopProduct,
+    type TypeRevenue,
+} from '@/components/dashboard/types';
 import { useCan } from '@/hooks/use-can';
 import AppLayout from '@/layouts/app-layout';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -11,45 +19,29 @@ import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowRight,
-    Banknote,
-    Bug,
     BookOpen,
+    Bug,
     CalendarDays,
     Check,
+    CircleAlert,
     CircleDollarSign,
     CreditCard,
     Eye,
     FileLock2,
     GraduationCap,
-    Lightbulb,
     Package,
     Percent,
     Plus,
     RefreshCw,
-    Rocket,
     ShoppingBag,
-    Sparkles,
-    Store,
-    UserRound,
     Users,
     Wallet,
+    Zap,
 } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Overview', href: '/dashboard' }];
-interface OrderProduct {
-    id: number;
-    title: string;
-    type: string;
-}
-interface RecentOrder {
-    id: number;
-    order_number: string;
-    buyer_name: string | null;
-    total_amount: string | number;
-    paid_at: string | null;
-    product: OrderProduct | null;
-}
+
 interface ProfileCompletion {
     percent: number;
     items: { store_profile: boolean; first_product: boolean; payout_method: boolean; kyc: boolean };
@@ -65,65 +57,27 @@ interface DashboardProps {
     totals: { customers: number; products: number };
     profileCompletion: ProfileCompletion;
     recentOrders: RecentOrder[];
+    plusOffer: PlusOffer | null;
 }
 
 const periods = [7, 30, 90] as const;
 const checklist = [
-    { key: 'store_profile', label: 'Store profile', description: 'Add your bio & avatar', href: '/dashboard/store' },
-    { key: 'first_product', label: 'First product', description: 'Start selling today', href: '/dashboard/products' },
-    { key: 'payout_method', label: 'Payout method', description: 'Bank account or UPI', href: '/dashboard/payments/account' },
-    { key: 'kyc', label: 'Creator KYC', description: 'Verify PAN & Aadhaar', href: '/dashboard/payments/account/kyc' },
+    { key: 'store_profile', label: 'Store profile', description: 'Add your bio & avatar', action: 'Finish store profile', href: '/dashboard/store' },
+    { key: 'first_product', label: 'First product', description: 'Start selling today', action: 'Create a product', href: '/dashboard/products' },
+    { key: 'payout_method', label: 'Payout method', description: 'Bank account or UPI', action: 'Add payout method', href: '/dashboard/payments/account' },
+    { key: 'kyc', label: 'Creator KYC', description: 'Verify PAN & bank', action: 'Verify KYC', href: '/dashboard/payments/account/kyc' },
 ] as const;
 const sellingOptions = [
-    {
-        title: 'Digital products',
-        description: 'PDFs, guides & templates',
-        href: '/dashboard/books',
-        icon: BookOpen,
-        tone: 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300',
-    },
-    {
-        title: '1:1 sessions',
-        description: 'Paid calls & mentorship',
-        href: '/dashboard/bookings/sessions',
-        icon: CalendarDays,
-        tone: 'bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300',
-    },
-    {
-        title: 'Courses',
-        description: 'Cohorts or self-paced',
-        href: '/dashboard/courses',
-        icon: GraduationCap,
-        tone: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300',
-    },
-    {
-        title: 'Events',
-        description: 'Workshops & masterclasses',
-        href: '/dashboard/events',
-        icon: Users,
-        tone: 'bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300',
-    },
-    {
-        title: 'Locked content',
-        description: 'Exclusive links & files',
-        href: '/dashboard/locked-content',
-        icon: FileLock2,
-        tone: 'bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300',
-    },
-    {
-        title: 'Payment pages',
-        description: 'Custom UPI payment links',
-        href: '/dashboard/payment-pages',
-        icon: CreditCard,
-        tone: 'bg-teal-100 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300',
-    },
+    { title: 'Digital products', description: 'PDFs, guides & templates', href: '/dashboard/books', icon: BookOpen, tone: 'bg-cp-warning-soft text-cp-warning-ink' },
+    { title: '1:1 sessions', description: 'Paid calls & mentorship', href: '/dashboard/bookings/sessions', icon: CalendarDays, tone: 'bg-cp-sky-soft text-cp-sky-ink' },
+    { title: 'Courses', description: 'Cohorts or self-paced', href: '/dashboard/courses', icon: GraduationCap, tone: 'bg-cp-brand-soft text-cp-brand-ink' },
+    { title: 'Events', description: 'Workshops & masterclasses', href: '/dashboard/events', icon: Users, tone: 'bg-cp-coral-soft text-cp-coral-ink' },
+    { title: 'Locked content', description: 'Exclusive links & files', href: '/dashboard/locked-content', icon: FileLock2, tone: 'bg-cp-accent-soft text-cp-accent-ink' },
+    { title: 'Payment pages', description: 'Custom UPI payment links', href: '/dashboard/payment-pages', icon: CreditCard, tone: 'bg-cp-teal-soft text-cp-teal-ink' },
 ];
-const quickLinks = [
-    { title: 'Customize store', href: '/dashboard/store', icon: Store },
-    { title: 'Edit profile', href: '/dashboard/settings/profile', icon: UserRound },
-    { title: 'Audience', href: '/dashboard/audience', icon: Users },
-    { title: 'Refer & earn', href: '/dashboard/refer-earn', icon: Sparkles },
-];
+
+/** "1 customer" / "2 customers" */
+const plural = (n: number, word: string) => `${n.toLocaleString('en-IN')} ${word}${n === 1 ? '' : 's'}`;
 
 function formatDate(value: string | null) {
     return value
@@ -142,6 +96,7 @@ export default function DashboardIndex({
     totals,
     profileCompletion,
     recentOrders,
+    plusOffer,
 }: DashboardProps) {
     const { auth } = usePage<SharedData>().props;
     const { can, isOwner, storeOwner } = useCan();
@@ -166,8 +121,8 @@ export default function DashboardIndex({
             value: formatCurrency(stats.revenue.value),
             change: stats.revenue.change,
             icon: CircleDollarSign,
-            color: 'var(--chart-1)',
-            tone: 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300',
+            color: 'var(--cp-brand)',
+            tone: 'bg-cp-brand-soft text-cp-brand-ink',
             series: chart.map((d) => d.revenue),
         },
         {
@@ -175,8 +130,8 @@ export default function DashboardIndex({
             value: stats.sales.value.toLocaleString('en-IN'),
             change: stats.sales.change,
             icon: ShoppingBag,
-            color: 'var(--chart-3)',
-            tone: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
+            color: 'var(--cp-success)',
+            tone: 'bg-cp-success-soft text-cp-success-ink',
             series: chart.map((d) => d.sales),
             hint: `Avg. order ${formatCurrency(stats.aov.value)}`,
         },
@@ -185,49 +140,56 @@ export default function DashboardIndex({
             value: stats.visits.value.toLocaleString('en-IN'),
             change: stats.visits.change,
             icon: Eye,
-            color: 'var(--chart-4)',
-            tone: 'bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300',
+            color: 'var(--cp-accent)',
+            tone: 'bg-cp-accent-soft text-cp-accent-ink',
             series: chart.map((d) => d.visits),
-            hint: `${stats.visitors.value.toLocaleString('en-IN')} unique visitors`,
+            hint: plural(stats.visitors.value, 'unique visitor'),
         },
         {
             label: 'Conversion rate',
             value: `${stats.conversion.value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}%`,
             change: stats.conversion.change,
             icon: Percent,
-            color: '#f59e0b',
-            tone: 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300',
-            series: chart.map((d) => (d.visits > 0 ? d.sales / d.visits : 0)),
+            color: 'var(--cp-warning-bright)',
+            tone: 'bg-cp-warning-soft text-cp-warning-ink',
+            // value unique visitors pe hai — visitors hi na hon to sparkline bhi nahi (0% ke saath lehrata graph galat lagta)
+            series: stats.visitors.value > 0 ? chart.map((d) => (d.visits > 0 ? d.sales / d.visits : 0)) : [],
             hint: 'Sales per unique visitor',
         },
     ].filter((k) => canSeeSales || k.label === 'Store visits');
+
+    const money = <MoneyPanel balance={balance} recentOrders={recentOrders} canSeeSales={canSeeSales} />;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="relative isolate min-h-full overflow-x-clip">
                 {/* background — landing (/) jaisa: upar halka blue wash, blue grid lines (neeche fade), beech me blue glow */}
-                <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] bg-linear-to-b from-blue-50/80 to-transparent dark:from-indigo-500/10" />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-140 bg-linear-to-b from-blue-50/80 to-transparent dark:from-indigo-500/10" />
                 <div aria-hidden="true" className="home-grid pointer-events-none absolute inset-0 -z-10 mask-[radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
-                <div aria-hidden="true" className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-blue-400/20 dark:bg-indigo-500/10 blur-3xl" />
+                <div aria-hidden="true" className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-130 w-225 -translate-x-1/2 rounded-full bg-blue-400/20 blur-3xl dark:bg-indigo-500/10" />
                 <main className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-8">
-                    {/* Hero */}
-                    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-secondary to-cp-accent p-6 text-white shadow-lg md:p-8 dark:from-[#1e2a6b] dark:via-[#2a2470] dark:to-[#3b1d6e]">
-                        {/* landing ke CTA band jaisi safed grid lines (pehle dots the) */}
+                    {/* Hero — sirf greeting, kamai aur ek kaam. Period / refresh neeche Overview me (wo usi data ke hain) */}
+                    <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-cp-brand-strong via-cp-brand to-cp-accent p-6 text-white shadow-lg md:p-8">
                         <div aria-hidden="true" className="home-grid-light pointer-events-none absolute inset-0 mask-[linear-gradient(to_left,black,transparent_75%)] opacity-40" />
-                        <div className="pointer-events-none absolute -top-16 -right-16 size-64 rounded-full bg-white/10 blur-2xl" />
-                        <div className="pointer-events-none absolute -bottom-24 left-1/3 size-72 rounded-full bg-white/5 blur-3xl" />
-                        <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+                        <div aria-hidden="true" className="pointer-events-none absolute -top-16 -right-16 size-64 rounded-full bg-white/10 blur-2xl" />
+                        <div className="relative flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
                             <div>
                                 <p className="text-sm font-medium text-white/70">Creator dashboard</p>
                                 <h1 className="mt-1 text-2xl font-bold tracking-tight md:text-3xl">
                                     {greeting}, {firstName} <span aria-hidden="true">👋</span>
                                 </h1>
-                                {canSeeSales ? (
+                                {canSeeSales && stats.sales.value === 0 ? (
+                                    // abhi koi sale nahi — "₹0 kamaye" ki jagah agla kaam batao
+                                    <p className="mt-2 max-w-xl text-sm text-white/80">
+                                        {totals.products === 0
+                                            ? 'Create your first product and share your store link — your first sale is a few steps away.'
+                                            : `No sales in the last ${days} days yet — share your store link to bring buyers in.`}
+                                    </p>
+                                ) : canSeeSales ? (
                                     <p className="mt-2 max-w-xl text-sm text-white/80">
                                         You earned <strong className="text-white">{formatCurrency(stats.revenue.value)}</strong> from{' '}
-                                        <strong className="text-white">{stats.sales.value.toLocaleString('en-IN')}</strong>{' '}
-                                        {stats.sales.value === 1 ? 'sale' : 'sales'} in the last {days} days.
+                                        <strong className="text-white">{plural(stats.sales.value, 'sale')}</strong> in the last {days} days.
                                     </p>
                                 ) : (
                                     <p className="mt-2 max-w-xl text-sm text-white/80">
@@ -238,220 +200,130 @@ export default function DashboardIndex({
                                     {can('audience.view') && (
                                         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 backdrop-blur">
                                             <Users className="size-3.5" />
-                                            {totals.customers.toLocaleString('en-IN')} customers
+                                            {plural(totals.customers, 'customer')}
                                         </span>
                                     )}
                                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 backdrop-blur">
                                         <Package className="size-3.5" />
-                                        {totals.products.toLocaleString('en-IN')} products
+                                        {plural(totals.products, 'product')}
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setCreating(true)}
-                                    className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-primary shadow-sm transition hover:bg-white/90 dark:text-[#1e2a6b]"
-                                >
-                                    <Plus className="size-4" /> Create a product
-                                </button>
-                                <div className="inline-flex rounded-xl bg-white/15 p-1 backdrop-blur">
-                                    {periods.map((p) => (
-                                        <button
-                                            key={p}
-                                            type="button"
-                                            onClick={() => p !== days && load(p)}
-                                            disabled={loading}
-                                            className={cn(
-                                                'rounded-lg px-3 py-1.5 text-xs font-semibold transition',
-                                                p === days ? 'bg-white text-primary shadow-sm dark:text-[#1e2a6b]' : 'text-white/80 hover:text-white',
-                                            )}
-                                        >
-                                            {p}D
-                                        </button>
-                                    ))}
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => load(days)}
-                                    disabled={loading}
-                                    aria-label="Refresh data"
-                                    className="flex size-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur transition hover:bg-white/25 disabled:opacity-60"
-                                >
-                                    <RefreshCw className={cn('size-4', loading && 'animate-spin')} />
-                                </button>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setCreating(true)}
+                                className="inline-flex h-10 w-fit shrink-0 items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-cp-brand shadow-sm transition hover:bg-white/90"
+                            >
+                                <Plus className="size-4" /> Create a product
+                            </button>
                         </div>
                     </section>
 
+                    {/* setup sirf store owner ka kaam — naye creator ke liye sabse pehle */}
+                    {isOwner && profileCompletion.percent < 100 && <SetupChecklist profileCompletion={profileCompletion} />}
+
                     <div className={cn('space-y-6 transition-opacity', loading && 'opacity-60')}>
-                        {/* KPIs */}
-                        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                            {kpis.map((k) => (
-                                <KpiCard key={k.label} {...k} />
-                            ))}
+                        {/* Overview — period + refresh yahin, kyunki neeche ka saara data inhi se badalta hai */}
+                        <section className="space-y-3">
+                            <div className="flex flex-wrap items-end justify-between gap-3">
+                                <div>
+                                    <h2 className="text-lg font-bold tracking-tight text-cp-ink">Overview</h2>
+                                    <p className="text-xs text-cp-muted">Last {days} days</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="inline-flex rounded-xl border border-cp-line bg-cp-surface p-1 shadow-sm">
+                                        {periods.map((p) => (
+                                            <button
+                                                key={p}
+                                                type="button"
+                                                onClick={() => p !== days && load(p)}
+                                                disabled={loading}
+                                                aria-pressed={p === days}
+                                                className={cn(
+                                                    'rounded-lg px-3 py-1 text-xs font-semibold transition',
+                                                    p === days ? 'bg-cp-brand text-white shadow-sm' : 'text-cp-subtle hover:text-cp-ink',
+                                                )}
+                                            >
+                                                {p}D
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => load(days)}
+                                        disabled={loading}
+                                        aria-label="Refresh data"
+                                        className="flex size-9 items-center justify-center rounded-xl border border-cp-line bg-cp-surface text-cp-subtle shadow-sm transition hover:text-cp-ink disabled:opacity-60"
+                                    >
+                                        <RefreshCw className={cn('size-4', loading && 'animate-spin')} />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
+                                {kpis.map((k) => (
+                                    <KpiCard key={k.label} {...k} />
+                                ))}
+                            </div>
                         </section>
+
+                        {/* mobile / tablet: paisa (payout + recent sales) KPI ke turant baad — desktop pe right column me */}
+                        <div className="space-y-6 xl:hidden">{money}</div>
 
                         <div className="grid items-start gap-6 xl:grid-cols-12">
                             <div className="min-w-0 space-y-6 xl:col-span-8">
-                                {/* payout / KYC checklist sirf store owner ke kaam ka — Performance ke upar, usi ki chaudai me */}
-                                {isOwner && profileCompletion.percent < 100 && <ProfileCard profileCompletion={profileCompletion} />}
-
                                 {canSeeSales && (
                                     <>
                                         <RevenueChart data={chart} days={days} />
-
-                                        <div className="grid gap-6 md:grid-cols-2">
+                                        <div className="grid items-start gap-6 md:grid-cols-2">
                                             <TopProducts products={topProducts} />
                                             <TypeDonut data={revenueByType} />
                                         </div>
                                     </>
                                 )}
 
-                                <section className="rounded-2xl border bg-card p-5 shadow-sm">
-                                    <h2 className="font-semibold">Start selling</h2>
-                                    <p className="mt-0.5 text-xs text-muted-foreground">Pick a format and launch in under 2 minutes.</p>
-                                    <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                <section className="rounded-2xl border border-cp-line bg-cp-surface p-5 shadow-sm">
+                                    <h2 className="font-semibold text-cp-ink">Start selling</h2>
+                                    <p className="mt-0.5 text-xs text-cp-muted">Pick a format and launch in under 2 minutes.</p>
+                                    <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
                                         {sellingOptions.map((item) => (
                                             <Link
                                                 key={item.title}
                                                 href={item.href}
-                                                className="group flex items-center gap-3 rounded-xl border p-3 transition hover:border-primary/40 hover:bg-accent/50"
+                                                className="group flex flex-col gap-2.5 rounded-xl border border-cp-line p-3 transition hover:border-cp-brand-line hover:bg-cp-surface-2 sm:flex-row sm:items-center sm:gap-3"
                                             >
-                                                <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-lg', item.tone)}>
-                                                    <item.icon className="size-5" />
+                                                <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-lg sm:size-10', item.tone)}>
+                                                    <item.icon className="size-4.5 sm:size-5" />
                                                 </span>
                                                 <span className="min-w-0 flex-1">
-                                                    <span className="block truncate text-sm font-semibold group-hover:text-primary">
-                                                        {item.title}
-                                                    </span>
-                                                    <span className="block truncate text-[11px] text-muted-foreground">{item.description}</span>
+                                                    <span className="block truncate text-sm font-semibold text-cp-ink group-hover:text-cp-brand-ink">{item.title}</span>
+                                                    <span className="block truncate text-[11px] text-cp-muted">{item.description}</span>
                                                 </span>
-                                                <ArrowRight className="size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+                                                <ArrowRight className="hidden size-4 shrink-0 text-cp-faint transition group-hover:translate-x-0.5 group-hover:text-cp-brand-ink sm:block" />
                                             </Link>
                                         ))}
                                     </div>
-                                </section>
-
-                                <section className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center">
-                                    <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
-                                        <Bug className="size-6" />
-                                    </span>
-                                    <div className="min-w-0 flex-1">
-                                        <h2 className="font-semibold">Bug Report or Feature Request</h2>
-                                        <p className="mt-0.5 text-xs text-muted-foreground">Let us know what can make your experience even better.</p>
-                                    </div>
-                                    <Link href="/dashboard/feedback" className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border px-5 text-sm font-semibold transition hover:border-primary/40 hover:text-primary">
-                                        Report
-                                    </Link>
                                 </section>
                             </div>
 
                             <aside className="min-w-0 space-y-6 xl:sticky xl:top-6 xl:col-span-4">
-                                {balance && <BalanceCard balance={balance} />}
-
-                                {canSeeSales && (
-                                <section className="rounded-2xl border bg-card p-5 shadow-sm">
-                                    <div className="mb-4 flex items-center justify-between border-b pb-3">
-                                        <h2 className="font-semibold">Recent activity</h2>
-                                        <span className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
-                                            <span className="relative flex size-2">
-                                                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                                                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-                                            </span>
-                                            Latest sales
-                                        </span>
-                                    </div>
-                                    {recentOrders.length === 0 ? (
-                                        <div className="flex flex-col items-center py-7 text-center">
-                                            <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                                <ShoppingBag className="size-5" />
-                                            </span>
-                                            <h3 className="mt-3 text-sm font-semibold">No orders yet</h3>
-                                            <p className="mt-1 max-w-56 text-xs leading-relaxed text-muted-foreground">
-                                                Once you make a sale, it&apos;ll show up here with buyer details.
-                                            </p>
-                                            <Link href="/dashboard/products" className="mt-4 text-xs font-semibold text-primary">
-                                                Create your first product <ArrowRight className="inline size-3" />
-                                            </Link>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-1">
-                                            {recentOrders.slice(0, 6).map((order) => (
-                                                <div key={order.id} className="flex items-start gap-3 rounded-lg p-2 transition hover:bg-muted/60">
-                                                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
-                                                        {(order.buyer_name ?? 'A').trim().charAt(0).toUpperCase() || <Banknote className="size-4" />}
-                                                    </span>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="flex justify-between gap-2">
-                                                            <p className="truncate text-sm font-semibold">{order.buyer_name ?? 'Anonymous'}</p>
-                                                            <p className="text-sm font-semibold whitespace-nowrap text-emerald-600 dark:text-emerald-400">
-                                                                +{formatCurrency(Number(order.total_amount))}
-                                                            </p>
-                                                        </div>
-                                                        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                                                            {order.product?.title ?? 'Product'}
-                                                        </p>
-                                                        <p className="mt-0.5 text-[10px] text-muted-foreground">{formatDate(order.paid_at)}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </section>
-                                )}
-
-                                <section className="rounded-2xl border bg-card p-5 shadow-sm">
-                                    <h2 className="font-semibold">Quick links</h2>
-                                    <div className="mt-3 grid grid-cols-2 gap-2">
-                                        {quickLinks.map((q) => (
-                                            <Link
-                                                key={q.title}
-                                                href={q.href}
-                                                className="group flex flex-col gap-2 rounded-xl border p-3 text-xs font-semibold transition hover:border-primary/40 hover:bg-accent/50 hover:text-primary"
-                                            >
-                                                <q.icon className="size-4 text-muted-foreground group-hover:text-primary" />
-                                                {q.title}
-                                            </Link>
-                                        ))}
-                                    </div>
-                                </section>
-
-                                <section className="rounded-2xl border-2 border-orange-200 bg-gradient-to-b from-card to-orange-50 p-5 shadow-sm dark:border-orange-900 dark:to-orange-950/20">
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-500 px-2 py-1 text-[10px] font-bold tracking-wide text-white uppercase">
-                                        <Rocket className="size-3" />
-                                        Plus membership
-                                    </span>
-                                    <h2 className="mt-3 text-base font-bold">Level up your business</h2>
-                                    <ul className="my-4 space-y-2 text-xs">
-                                        {['0% platform fee on all sales', 'Connect your custom domain', 'Automated WhatsApp reminders'].map(
-                                            (benefit) => (
-                                                <li key={benefit} className="flex gap-2">
-                                                    <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
-                                                        <Check className="size-2.5" />
-                                                    </span>
-                                                    {benefit}
-                                                </li>
-                                            ),
-                                        )}
-                                    </ul>
-                                    <Link
-                                        href="/dashboard/settings/billing"
-                                        className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-orange-500 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-600"
-                                    >
-                                        Explore Plus <ArrowRight className="size-3.5" />
-                                    </Link>
-                                </section>
-
-                                <section className="flex gap-3 rounded-2xl border bg-muted/50 p-4 text-xs leading-relaxed text-muted-foreground">
-                                    <Lightbulb className="size-5 shrink-0 text-amber-500" />
-                                    <p>
-                                        <strong className="block text-foreground">Pro tip for Indian creators</strong>UPI checkouts convert especially
-                                        well. Your store supports fast, familiar payment methods.
-                                    </p>
-                                </section>
+                                <div className="hidden space-y-6 xl:block">{money}</div>
+                                {plusOffer && <PlusCard offer={plusOffer} />}
                             </aside>
                         </div>
+
+                        {/* feedback — patli row, sabse neeche */}
+                        <section className="flex items-center gap-3 rounded-2xl border border-cp-line bg-cp-surface px-4 py-3 shadow-sm">
+                            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-cp-warning-soft text-cp-warning-ink">
+                                <Bug className="size-4" />
+                            </span>
+                            <p className="min-w-0 flex-1 text-xs text-cp-subtle">
+                                <strong className="font-semibold text-cp-ink">Found a bug or have an idea?</strong>{' '}
+                                <span className="hidden sm:inline">Tell us what would make CreatorPro better for you.</span>
+                            </p>
+                            <Link href="/dashboard/feedback" className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-cp-brand-ink hover:underline">
+                                Report <ArrowRight className="size-3" />
+                            </Link>
+                        </section>
                     </div>
                 </main>
             </div>
@@ -460,93 +332,204 @@ export default function DashboardIndex({
     );
 }
 
-function BalanceCard({ balance }: { balance: Balance }) {
+/** Payout + recent sales — ek hi component, mobile pe KPI ke baad aur desktop pe right column me */
+function MoneyPanel({ balance, recentOrders, canSeeSales }: { balance: Balance | null; recentOrders: RecentOrder[]; canSeeSales: boolean }) {
+    if (!balance && !canSeeSales) return null;
+
     return (
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] p-5 text-white shadow-lg">
-            <div className="pointer-events-none absolute -top-10 -right-10 size-40 rounded-full bg-emerald-400/20 blur-2xl" />
-            <div className="relative">
-                <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-xs font-medium text-white/70">
-                        <Wallet className="size-4" />
-                        Upcoming settlement
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-1">
+            {balance && <PayoutCard balance={balance} />}
+            {canSeeSales && <RecentActivity orders={recentOrders} />}
+        </div>
+    );
+}
+
+function PayoutCard({ balance }: { balance: Balance }) {
+    // payout kyun ruka hai — seedha theek karne ki jagah ka link
+    const blocked =
+        balance.blocked_reason === 'kyc'
+            ? { text: 'Verify your KYC to receive payouts', href: '/dashboard/payments/account/kyc' }
+            : balance.blocked_reason === 'payout_method'
+              ? { text: 'Add a bank account or UPI to receive payouts', href: '/dashboard/payments/account' }
+              : null;
+
+    return (
+        <section className="rounded-2xl border border-cp-line bg-cp-surface p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-sm font-semibold text-cp-ink">
+                    <span className="flex size-7 items-center justify-center rounded-lg bg-cp-success-soft text-cp-success-ink">
+                        <Wallet className="size-3.5" />
                     </span>
-                    <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">INR</span>
-                </div>
-                <p className="mt-2 text-3xl font-bold tracking-tight">{formatCurrency(balance.clearing + balance.ready)}</p>
-                <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-4 text-xs">
-                    <div>
-                        <p className="text-white/60">In transit</p>
-                        <p className="mt-0.5 font-semibold">{formatCurrency(balance.in_transit)}</p>
-                    </div>
-                    <div>
-                        <p className="text-white/60">Settled</p>
-                        <p className="mt-0.5 font-semibold">{formatCurrency(balance.settled)}</p>
-                    </div>
-                </div>
-                <Link
-                    href="/dashboard/settlements"
-                    className="mt-4 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-white text-xs font-semibold text-[#0f172a] transition hover:bg-white/90"
-                >
-                    View settlements <ArrowRight className="size-3.5" />
-                </Link>
+                    Upcoming payout
+                </span>
+                <span className="text-[11px] text-cp-muted">INR</span>
             </div>
+            <p className="mt-3 text-3xl font-bold tracking-tight text-cp-ink">{formatCurrency(balance.clearing + balance.ready)}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-lg bg-cp-surface-2 px-3 py-2">
+                    <p className="text-cp-muted">In transit</p>
+                    <p className="mt-0.5 font-semibold text-cp-ink">{formatCurrency(balance.in_transit)}</p>
+                </div>
+                <div className="rounded-lg bg-cp-surface-2 px-3 py-2">
+                    <p className="text-cp-muted">Settled</p>
+                    <p className="mt-0.5 font-semibold text-cp-success-ink">{formatCurrency(balance.settled)}</p>
+                </div>
+            </div>
+            {blocked && (
+                <Link href={blocked.href} className="mt-3 flex items-center gap-2 rounded-lg bg-cp-warning-soft px-3 py-2 text-xs font-medium text-cp-warning-ink">
+                    <CircleAlert className="size-3.5 shrink-0" />
+                    <span className="flex-1">{blocked.text}</span>
+                    <ArrowRight className="size-3 shrink-0" />
+                </Link>
+            )}
+            <Link
+                href="/dashboard/settlements"
+                className="mt-4 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-cp-solid text-xs font-semibold text-white transition hover:bg-cp-solid-hover"
+            >
+                View settlements <ArrowRight className="size-3.5" />
+            </Link>
         </section>
     );
 }
 
-function ProfileCard({ profileCompletion }: { profileCompletion: ProfileCompletion }) {
-    const pct = profileCompletion.percent;
+function RecentActivity({ orders }: { orders: RecentOrder[] }) {
     return (
-        <section className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 shadow-sm dark:border-amber-900 dark:bg-amber-950/20">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <div className="flex items-center gap-4">
-                    {/* conic ring = progress */}
-                    <div
-                        className="relative flex size-14 shrink-0 items-center justify-center rounded-full"
-                        style={{ background: `conic-gradient(#d97706 ${pct * 3.6}deg, rgba(217,119,6,0.15) 0)` }}
-                    >
-                        <span className="flex size-11 items-center justify-center rounded-full bg-background text-xs font-bold text-amber-700 dark:text-amber-300">
-                            {pct}%
+        <section className="rounded-2xl border border-cp-line bg-cp-surface p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+                <h2 className="font-semibold text-cp-ink">Recent sales</h2>
+                {orders.length > 0 && (
+                    <Link href="/dashboard/payments" className="inline-flex items-center gap-1 text-xs font-semibold text-cp-brand-ink">
+                        View all <ArrowRight className="size-3" />
+                    </Link>
+                )}
+            </div>
+            {orders.length === 0 ? (
+                <div className="flex items-center gap-3 rounded-xl bg-cp-surface-2 p-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-cp-brand-soft text-cp-brand-ink">
+                        <ShoppingBag className="size-4" />
+                    </span>
+                    <p className="text-xs text-cp-muted">Your sales will show up here with buyer details.</p>
+                </div>
+            ) : (
+                <ul className="-mx-2 space-y-0.5">
+                    {orders.map((order) => (
+                        <li key={order.uuid} className="flex items-center gap-3 rounded-lg p-2">
+                            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-cp-success-soft text-sm font-semibold text-cp-success-ink">
+                                {(order.buyer_name ?? 'A').trim().charAt(0).toUpperCase() || 'A'}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold text-cp-ink">{order.buyer_name ?? 'Anonymous'}</p>
+                                <p className="truncate text-[11px] text-cp-muted">{order.product ?? 'Product'}</p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                                <p className="text-sm font-semibold whitespace-nowrap text-cp-success-ink">+{formatCurrency(order.amount)}</p>
+                                <p className="text-[10px] whitespace-nowrap text-cp-faint">{formatDate(order.paid_at)}</p>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </section>
+    );
+}
+
+/** Sirf Free creator — Plus ke asli faayde (commission, themes, team), andaaze nahi */
+function PlusCard({ offer }: { offer: PlusOffer }) {
+    const fmtRate = (r: number) => `${r.toLocaleString('en-IN', { maximumFractionDigits: 2 })}%`;
+    const benefits = [
+        `Commission ${fmtRate(offer.current_rate)} → ${fmtRate(offer.plus_rate)} on every sale`,
+        'Premium web app themes',
+        `Up to ${offer.team_seats} team members`,
+    ];
+
+    return (
+        <section className="rounded-2xl border border-cp-coral-line bg-cp-surface p-5 shadow-sm">
+            <span className="inline-flex items-center gap-1 rounded-full bg-cp-coral-soft px-2 py-1 text-[10px] font-bold tracking-wide text-cp-coral-dark-ink uppercase">
+                <Zap className="size-3" /> CreatorPro Plus
+            </span>
+            <h2 className="mt-3 text-base font-bold text-cp-ink">Keep more of every sale</h2>
+            {offer.saved_last_30 > 0 && (
+                <p className="mt-1 text-xs text-cp-subtle">
+                    On your last 30 days of sales, Plus would have saved you{' '}
+                    <strong className="text-cp-success-ink">{formatCurrency(offer.saved_last_30)}</strong>.
+                </p>
+            )}
+            <ul className="my-4 space-y-2 text-xs text-cp-body">
+                {benefits.map((benefit) => (
+                    <li key={benefit} className="flex gap-2">
+                        <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-cp-coral-soft text-cp-coral-dark-ink">
+                            <Check className="size-2.5" />
                         </span>
-                    </div>
-                    <div>
-                        <h2 className="font-semibold text-amber-950 dark:text-amber-100">Complete your profile to start selling</h2>
-                        <p className="mt-1 text-xs leading-relaxed text-amber-800 dark:text-amber-200">
-                            Complete the essentials so buyers know who they&apos;re paying.
-                        </p>
+                        {benefit}
+                    </li>
+                ))}
+            </ul>
+            <Link
+                href="/dashboard/settings/billing"
+                className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-cp-coral text-xs font-semibold text-white shadow-sm transition hover:bg-cp-coral-hover"
+            >
+                See Plus · {formatCurrency(offer.monthly_price)}/month <ArrowRight className="size-3.5" />
+            </Link>
+        </section>
+    );
+}
+
+/** Setup ke 4 kadam — agla adhoora kadam highlight + ek seedha button */
+function SetupChecklist({ profileCompletion }: { profileCompletion: ProfileCompletion }) {
+    const done = checklist.filter((item) => profileCompletion.items[item.key]).length;
+    const next = checklist.find((item) => !profileCompletion.items[item.key]);
+
+    return (
+        <section className="rounded-2xl border border-cp-line bg-cp-surface p-5 shadow-sm">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div className="min-w-0">
+                    <h2 className="font-semibold text-cp-ink">Finish setting up your store</h2>
+                    <p className="mt-0.5 text-xs text-cp-muted">
+                        {done} of {checklist.length} done · complete these so buyers can pay you and you can get paid.
+                    </p>
+                    <div className="mt-3 h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-cp-surface-3">
+                        <div className="h-full rounded-full bg-cp-brand transition-all" style={{ width: `${profileCompletion.percent}%` }} />
                     </div>
                 </div>
+                {next && (
+                    <Link
+                        href={next.href}
+                        className="inline-flex h-10 w-fit shrink-0 items-center gap-1.5 rounded-xl bg-cp-brand px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-cp-brand-hover"
+                    >
+                        {next.action} <ArrowRight className="size-4" />
+                    </Link>
+                )}
             </div>
-            <div className="mt-4 grid gap-2 border-t border-amber-200/70 pt-4 sm:grid-cols-2 2xl:grid-cols-4 dark:border-amber-900/60">
+            <ol className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
                 {checklist.map((item, index) => {
-                    const done = profileCompletion.items[item.key];
+                    const isDone = profileCompletion.items[item.key];
+                    const isNext = item.key === next?.key;
                     return (
-                        <Link
-                            href={item.href}
-                            key={item.key}
-                            className={cn(
-                                'flex items-center gap-2 rounded-lg border p-2.5 transition hover:bg-background',
-                                done
-                                    ? 'border-emerald-200 bg-background/70 dark:border-emerald-900'
-                                    : 'border-amber-200 bg-background/40 dark:border-amber-900',
-                            )}
-                        >
-                            <span
+                        <li key={item.key}>
+                            <Link
+                                href={item.href}
                                 className={cn(
-                                    'flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
-                                    done ? 'bg-emerald-500 text-white' : 'border border-amber-500 text-amber-700 dark:text-amber-300',
+                                    'flex h-full items-center gap-2.5 rounded-xl border p-2.5 transition',
+                                    isNext ? 'border-cp-brand-line bg-cp-brand-soft' : 'border-cp-line hover:bg-cp-surface-2',
                                 )}
                             >
-                                {done ? <Check className="size-3" /> : index + 1}
-                            </span>
-                            <span className="min-w-0">
-                                <span className="block truncate text-xs font-semibold">{item.label}</span>
-                                <span className="block truncate text-[10px] text-muted-foreground">{done ? 'Done' : item.description}</span>
-                            </span>
-                        </Link>
+                                <span
+                                    className={cn(
+                                        'flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold',
+                                        isDone ? 'bg-cp-success text-white' : isNext ? 'bg-cp-brand text-white' : 'border border-cp-line-strong text-cp-muted',
+                                    )}
+                                >
+                                    {isDone ? <Check className="size-3.5" /> : index + 1}
+                                </span>
+                                <span className="min-w-0">
+                                    <span className={cn('block truncate text-xs font-semibold', isDone ? 'text-cp-muted line-through' : 'text-cp-ink')}>{item.label}</span>
+                                    <span className="block truncate text-[11px] text-cp-muted">{isDone ? 'Done' : isNext ? 'Next step' : item.description}</span>
+                                </span>
+                            </Link>
+                        </li>
                     );
                 })}
-            </div>
+            </ol>
         </section>
     );
 }
