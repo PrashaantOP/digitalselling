@@ -102,7 +102,7 @@ export function FileThumb({ file, path, className }: { file?: File | null; path?
         }
         setUrl(path ? assetUrl(path) : '');
     }, [file, path]);
-    return url ? <img src={url} alt="" className={cn('object-cover', className)} /> : <div className={cn('bg-[#ECEBE6]', className)} />;
+    return url ? <img src={url} alt="" className={cn('object-cover', className)} /> : <div className={cn('bg-cp-surface-3', className)} />;
 }
 
 function TextList({ type, draft, onChange }: { type: SectionType; draft: SectionDraft; onChange: (d: SectionDraft) => void }) {
@@ -119,15 +119,15 @@ function TextList({ type, draft, onChange }: { type: SectionType; draft: Section
     return (
         <div className="flex flex-col gap-2">
             {draft.items.map((it) => (
-                <div key={it.key} className="flex items-center gap-2 rounded-lg bg-[#F6F5F2] py-1 pr-1 pl-3">
+                <div key={it.key} className="flex items-center gap-2 rounded-lg bg-cp-canvas py-1 pr-1 pl-3">
                     <input
                         aria-label={`${SECTION_LABELS[type]} item`}
                         value={it.text ?? ''}
                         onChange={(e) => onChange({ ...draft, items: draft.items.map((x) => (x.key === it.key ? { ...x, text: e.target.value } : x)) })}
                         maxLength={255}
-                        className="h-8 flex-1 bg-transparent text-sm text-[#14141B] outline-none"
+                        className="h-8 flex-1 bg-transparent text-sm text-cp-ink outline-none"
                     />
-                    <button type="button" aria-label="Remove item" onClick={() => onChange({ ...draft, items: draft.items.filter((x) => x.key !== it.key) })} className="rounded p-1.5 text-[#D93838] hover:bg-white">
+                    <button type="button" aria-label="Remove item" onClick={() => onChange({ ...draft, items: draft.items.filter((x) => x.key !== it.key) })} className="rounded p-1.5 text-cp-red-ink hover:bg-cp-surface">
                         <X className="size-4" />
                     </button>
                 </div>
@@ -147,7 +147,7 @@ function TextList({ type, draft, onChange }: { type: SectionType; draft: Section
                     placeholder={placeholder}
                     className={INPUT}
                 />
-                <button type="button" onClick={add} disabled={!value.trim()} className="h-10 shrink-0 rounded-lg border border-[#E4E2DA] px-4 text-sm font-semibold text-[#14141B] transition hover:bg-[#F6F5F2] disabled:opacity-50">
+                <button type="button" onClick={add} disabled={!value.trim()} className="h-10 shrink-0 rounded-lg border border-cp-line px-4 text-sm font-semibold text-cp-ink transition hover:bg-cp-canvas disabled:opacity-50">
                     + Add
                 </button>
             </div>
@@ -160,17 +160,17 @@ function FaqList({ draft, onChange }: { draft: SectionDraft; onChange: (d: Secti
     return (
         <div className="flex flex-col gap-3">
             {draft.items.map((it, i) => (
-                <div key={it.key} className="flex flex-col gap-2 rounded-lg bg-[#F6F5F2] p-3">
+                <div key={it.key} className="flex flex-col gap-2 rounded-lg bg-cp-canvas p-3">
                     <div className="flex items-center gap-2">
                         <input aria-label={`Question ${i + 1}`} value={it.question ?? ''} maxLength={255} onChange={(e) => patch(it.key, { question: e.target.value })} placeholder="Question" className={INPUT} />
-                        <button type="button" aria-label={`Remove question ${i + 1}`} onClick={() => onChange({ ...draft, items: draft.items.filter((x) => x.key !== it.key) })} className="rounded p-1.5 text-[#D93838] hover:bg-white">
+                        <button type="button" aria-label={`Remove question ${i + 1}`} onClick={() => onChange({ ...draft, items: draft.items.filter((x) => x.key !== it.key) })} className="rounded p-1.5 text-cp-red-ink hover:bg-cp-surface">
                             <X className="size-4" />
                         </button>
                     </div>
                     <textarea aria-label={`Answer ${i + 1}`} value={it.answer ?? ''} maxLength={5000} rows={2} onChange={(e) => patch(it.key, { answer: e.target.value })} placeholder="Answer" className={TEXTAREA} />
                 </div>
             ))}
-            <button type="button" onClick={() => onChange({ ...draft, items: [...draft.items, { key: newKey(), question: '', answer: '' }] })} className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#DAD8D0] text-sm font-semibold text-[#4F46E5] hover:bg-[#EEF2FF]">
+            <button type="button" onClick={() => onChange({ ...draft, items: [...draft.items, { key: newKey(), question: '', answer: '' }] })} className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-dashed border-cp-line-strong text-sm font-semibold text-cp-brand-ink hover:bg-cp-brand-soft">
                 <Plus className="size-4" /> Add question
             </button>
         </div>
@@ -182,21 +182,21 @@ function TestimonialList({ draft, onChange }: { draft: SectionDraft; onChange: (
     return (
         <div className="flex flex-col gap-3">
             {draft.items.map((it, i) => (
-                <div key={it.key} className="flex flex-col gap-2 rounded-lg bg-[#F6F5F2] p-3">
+                <div key={it.key} className="flex flex-col gap-2 rounded-lg bg-cp-canvas p-3">
                     <div className="flex items-center gap-3">
-                        <label className="relative flex size-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-white text-[#8A8A96] hover:text-[#4F46E5]">
+                        <label className="relative flex size-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-cp-surface text-cp-muted hover:text-cp-brand-ink">
                             {it.file || it.imagePath ? <FileThumb file={it.file} path={it.imagePath} className="size-11" /> : <ImagePlus className="size-4" />}
                             <input type="file" accept="image/*" aria-label={`Avatar ${i + 1}`} className="sr-only" onChange={(e) => e.target.files?.[0] && patch(it.key, { file: e.target.files[0] })} />
                         </label>
                         <input aria-label={`Name ${i + 1}`} value={it.name ?? ''} maxLength={150} onChange={(e) => patch(it.key, { name: e.target.value })} placeholder="Student name" className={INPUT} />
-                        <button type="button" aria-label={`Remove testimonial ${i + 1}`} onClick={() => onChange({ ...draft, items: draft.items.filter((x) => x.key !== it.key) })} className="rounded p-1.5 text-[#D93838] hover:bg-white">
+                        <button type="button" aria-label={`Remove testimonial ${i + 1}`} onClick={() => onChange({ ...draft, items: draft.items.filter((x) => x.key !== it.key) })} className="rounded p-1.5 text-cp-red-ink hover:bg-cp-surface">
                             <X className="size-4" />
                         </button>
                     </div>
                     <textarea aria-label={`Message ${i + 1}`} value={it.message ?? ''} maxLength={2000} rows={2} onChange={(e) => patch(it.key, { message: e.target.value })} placeholder="What did they say?" className={TEXTAREA} />
                 </div>
             ))}
-            <button type="button" onClick={() => onChange({ ...draft, items: [...draft.items, { key: newKey(), name: '', message: '' }] })} className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#DAD8D0] text-sm font-semibold text-[#4F46E5] hover:bg-[#EEF2FF]">
+            <button type="button" onClick={() => onChange({ ...draft, items: [...draft.items, { key: newKey(), name: '', message: '' }] })} className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-dashed border-cp-line-strong text-sm font-semibold text-cp-brand-ink hover:bg-cp-brand-soft">
                 <Plus className="size-4" /> Add testimonial
             </button>
         </div>
@@ -215,14 +215,14 @@ function GalleryGrid({ draft, onChange }: { draft: SectionDraft; onChange: (d: S
     return (
         <div className="grid grid-cols-3 gap-2">
             {draft.items.map((it, i) => (
-                <div key={it.key} className="group relative aspect-square overflow-hidden rounded-lg bg-[#F6F5F2]">
+                <div key={it.key} className="group relative aspect-square overflow-hidden rounded-lg bg-cp-canvas">
                     <FileThumb file={it.file} path={it.imagePath} className="size-full" />
-                    <button type="button" aria-label={`Remove image ${i + 1}`} onClick={() => onChange({ ...draft, items: draft.items.filter((x) => x.key !== it.key) })} className="absolute top-1 right-1 rounded-full bg-white/90 p-1 text-[#D93838] shadow hover:bg-white">
+                    <button type="button" aria-label={`Remove image ${i + 1}`} onClick={() => onChange({ ...draft, items: draft.items.filter((x) => x.key !== it.key) })} className="absolute top-1 right-1 rounded-full bg-cp-surface/90 p-1 text-cp-red-ink shadow hover:bg-cp-surface">
                         <X className="size-3.5" />
                     </button>
                 </div>
             ))}
-            <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[#DAD8D0] text-xs font-semibold text-[#4F46E5] hover:bg-[#EEF2FF]">
+            <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-cp-line-strong text-xs font-semibold text-cp-brand-ink hover:bg-cp-brand-soft">
                 <ImagePlus className="size-5" /> Add images
                 <input type="file" accept="image/*" multiple aria-label="Add gallery images" className="sr-only" onChange={(e) => addFiles(e.target.files)} />
             </label>
@@ -232,16 +232,16 @@ function GalleryGrid({ draft, onChange }: { draft: SectionDraft; onChange: (d: S
 
 export function SectionEditor({ type, draft, onChange, error }: { type: SectionType; draft: SectionDraft; onChange: (d: SectionDraft) => void; error?: string | null }) {
     return (
-        <div className="rounded-xl border border-[#E4E2DA] bg-white p-4">
+        <div className="rounded-xl border border-cp-line bg-cp-surface p-4">
             <div className="flex items-center justify-between">
-                <h3 className="text-[13px] font-bold tracking-wide text-[#14141B] uppercase">{SECTION_LABELS[type]}</h3>
+                <h3 className="text-[13px] font-bold tracking-wide text-cp-ink uppercase">{SECTION_LABELS[type]}</h3>
                 <Toggle checked={draft.enabled} onChange={(enabled) => onChange({ ...draft, enabled })} label={`Show ${SECTION_LABELS[type]}`} />
             </div>
             {draft.enabled && (
                 <div className="mt-3">
                     {type === 'faqs' ? <FaqList draft={draft} onChange={onChange} /> : type === 'testimonials' ? <TestimonialList draft={draft} onChange={onChange} /> : type === 'gallery' ? <GalleryGrid draft={draft} onChange={onChange} /> : <TextList type={type} draft={draft} onChange={onChange} />}
                     {error && (
-                        <p role="alert" className="mt-2 text-xs text-[#D93838]">
+                        <p role="alert" className="mt-2 text-xs text-cp-red-ink">
                             {error}
                         </p>
                     )}

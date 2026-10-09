@@ -47,14 +47,14 @@ function CoverUploader({ productUuid, images, videoUrl, onVideoChange, videoErro
             {images.length > 0 && (
                 <div className="grid grid-cols-4 gap-2">
                     {images.map((img, i) => (
-                        <div key={img.id} className="group relative aspect-video overflow-hidden rounded-lg bg-[#F6F5F2]">
+                        <div key={img.id} className="group relative aspect-video overflow-hidden rounded-lg bg-cp-canvas">
                             <img src={assetUrl(img.image_path)} alt={`Cover ${i + 1}`} className="size-full object-cover" />
                             <button
                                 type="button"
                                 aria-label={`Remove cover image ${i + 1}`}
                                 disabled={busy !== null}
                                 onClick={() => remove(img)}
-                                className="absolute top-1 right-1 rounded-full bg-white/90 p-1 text-[#D93838] shadow hover:bg-white disabled:opacity-50"
+                                className="absolute top-1 right-1 rounded-full bg-cp-surface/90 p-1 text-cp-red-ink shadow hover:bg-cp-surface disabled:opacity-50"
                             >
                                 {busy === img.id ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
                             </button>
@@ -77,26 +77,26 @@ function CoverUploader({ productUuid, images, videoUrl, onVideoChange, videoErro
                     }}
                     className={cn(
                         'flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-8 text-center transition',
-                        dragging ? 'border-[#4F46E5] bg-[#EEF2FF]' : 'border-[#DAD8D0] bg-[#FAF9F5] hover:bg-[#F6F5F2]',
+                        dragging ? 'border-cp-brand bg-cp-brand-soft' : 'border-cp-line-strong bg-cp-surface-2 hover:bg-cp-canvas',
                     )}
                 >
-                    <span className="flex size-10 items-center justify-center rounded-full bg-[#EEF2FF] text-[#4F46E5]">{busy === 'upload' ? <Loader2 className="size-5 animate-spin" /> : <Upload className="size-5" />}</span>
-                    <span className="text-sm text-[#14141B]">
-                        <span className="font-semibold text-[#4F46E5]">Upload</span> or drag &amp; drop
+                    <span className="flex size-10 items-center justify-center rounded-full bg-cp-brand-soft text-cp-brand-ink">{busy === 'upload' ? <Loader2 className="size-5 animate-spin" /> : <Upload className="size-5" />}</span>
+                    <span className="text-sm text-cp-ink">
+                        <span className="font-semibold text-cp-brand-ink">Upload</span> or drag &amp; drop
                     </span>
                     <input ref={input} type="file" accept="image/*" multiple aria-label="Upload cover images" disabled={busy !== null} className="sr-only" onChange={(e) => upload(e.target.files)} />
                 </label>
             )}
             {error && <Notice tone="error">{error}</Notice>}
 
-            <div className="flex items-center gap-3 text-[11px] font-medium text-[#8A8A96]">
-                <span className="h-px flex-1 bg-[#E4E2DA]" /> OR <span className="h-px flex-1 bg-[#E4E2DA]" />
+            <div className="flex items-center gap-3 text-[11px] font-medium text-cp-muted">
+                <span className="h-px flex-1 bg-cp-line" /> OR <span className="h-px flex-1 bg-cp-line" />
             </div>
 
             <Field label="Video link" htmlFor="cover_video_url" error={videoError} hint="A video link replaces the images on your course page.">
                 <input id="cover_video_url" value={videoUrl} onChange={(e) => onVideoChange(e.target.value)} placeholder="Add a video link (YouTube, Vimeo…)" className={cn(INPUT, invalid(videoError))} />
             </Field>
-            <p className="text-[11px] text-[#8A8A96]">1280 × 720 (16:9) recommended · up to 5 MB each · up to {MAX_IMAGES} images shown as a carousel</p>
+            <p className="text-[11px] text-cp-muted">1280 × 720 (16:9) recommended · up to 5 MB each · up to {MAX_IMAGES} images shown as a carousel</p>
         </div>
     );
 }
@@ -129,7 +129,7 @@ export function PageTab({
             </Field>
 
             <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold tracking-wider text-[#14141B] uppercase">Cover images</span>
+                <span className="text-xs font-semibold tracking-wider text-cp-ink uppercase">Cover images</span>
                 <CoverUploader productUuid={item.uuid} images={item.cover_images} videoUrl={form.cover_video_url} onVideoChange={(v) => setField('cover_video_url', v)} videoError={errors.cover_video_url} />
             </div>
 

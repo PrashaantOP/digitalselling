@@ -55,12 +55,12 @@ export default function NotificationSettings({ preferences, email }: { preferenc
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Notifications" />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-[760px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     <div className="flex flex-col gap-1 pt-1">
-                        <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Notification preferences</h1>
-                        <p className="flex flex-wrap items-center gap-1.5 text-sm text-[#8A8A96]">
-                            <Mail className="size-4" /> Choose which emails you get at <span className="font-semibold text-[#4B4B57]">{email}</span>
+                        <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Notification preferences</h1>
+                        <p className="flex flex-wrap items-center gap-1.5 text-sm text-cp-muted">
+                            <Mail className="size-4" /> Choose which emails you get at <span className="font-semibold text-cp-body">{email}</span>
                         </p>
                     </div>
 
@@ -69,10 +69,10 @@ export default function NotificationSettings({ preferences, email }: { preferenc
                             const on = values[item.key];
 
                             return (
-                                <div key={item.key} className="flex items-center justify-between gap-4 rounded-xl border border-[#E4E2DA] bg-white p-4 shadow-sm">
+                                <div key={item.key} className="flex items-center justify-between gap-4 rounded-xl border border-cp-line bg-cp-surface p-4 shadow-sm">
                                     <div className="min-w-0">
-                                        <p className="text-sm font-semibold text-[#14141B]">{item.title}</p>
-                                        <p className="mt-0.5 text-[13px] text-[#6B6B78]">{item.description}</p>
+                                        <p className="text-sm font-semibold text-cp-ink">{item.title}</p>
+                                        <p className="mt-0.5 text-[13px] text-cp-subtle">{item.description}</p>
                                     </div>
                                     <button
                                         type="button"
@@ -81,7 +81,7 @@ export default function NotificationSettings({ preferences, email }: { preferenc
                                         aria-label={item.title}
                                         onClick={() => toggle(item.key)}
                                         disabled={saving === item.key}
-                                        className={cn('relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-60', on ? 'bg-[#4F46E5]' : 'bg-[#DAD8D0]')}
+                                        className={cn('relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-60', on ? 'bg-cp-brand' : 'bg-cp-line-strong')}
                                     >
                                         <span className={cn('absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform', on && 'translate-x-5')} />
                                     </button>
@@ -92,23 +92,23 @@ export default function NotificationSettings({ preferences, email }: { preferenc
 
                     <div className="flex min-h-5 items-center gap-2 text-xs font-medium">
                         {saving ? (
-                            <span className="flex items-center gap-1.5 text-[#8A8A96]">
+                            <span className="flex items-center gap-1.5 text-cp-muted">
                                 <Loader2 className="size-3.5 animate-spin" /> Saving…
                             </span>
                         ) : error ? (
-                            <span role="alert" className="text-[#C2410C]">
+                            <span role="alert" className="text-cp-coral-dark-ink">
                                 {error}
                             </span>
                         ) : saved ? (
-                            <span role="status" className="flex items-center gap-1.5 text-[#059669]">
+                            <span role="status" className="flex items-center gap-1.5 text-cp-success-ink">
                                 <CheckCircle2 className="size-3.5" /> Saved
                             </span>
                         ) : (
-                            <span className="text-[#8A8A96]">Changes save as soon as you flip a switch.</span>
+                            <span className="text-cp-muted">Changes save as soon as you flip a switch.</span>
                         )}
                     </div>
 
-                    <p className="text-xs text-[#8A8A96]">
+                    <p className="text-xs text-cp-muted">
                         Security emails (new sign-ins, password or payout changes) and 1:1 booking emails are always sent — they can’t be turned off.
                     </p>
                 </div>

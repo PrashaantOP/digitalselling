@@ -1,20 +1,17 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($darkScope ?? false) && ($appearance ?? 'light') == 'dark'])>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-        {{-- Inline script to detect system dark mode preference and apply it immediately --}}
+        {{-- Dark sirf dashboard pe. 'system' ho to pehli paint se pehle hi device ka rang (safed flash nahi) --}}
         <script nonce="{{ Vite::cspNonce() }}">
             (function() {
-                const appearance = '{{ $appearance ?? "system" }}';
+                const appearance = '{{ $appearance ?? "light" }}';
+                const dashboard = /^\/(dashboard|settings)(\/|$)/.test(window.location.pathname);
 
-                if (appearance === 'system') {
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-                    if (prefersDark) {
-                        document.documentElement.classList.add('dark');
-                    }
+                if (dashboard && appearance === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
                 }
             })();
         </script>
@@ -26,14 +23,15 @@
             }
 
             html.dark {
-                background-color: oklch(0.145 0 0);
+                background-color: #0f0f14;
             }
         </style>
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        {{-- CreatorPro brand icons — files public/ me (source: public/images/brand/source) --}}
+        <link rel="icon" href="/favicon.ico" sizes="48x48">
+        <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         <link rel="preconnect" href="https://fonts.bunny.net">

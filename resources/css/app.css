@@ -5,9 +5,9 @@
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark *):not(.light-island, .light-island *));
 
-@theme {
+@theme inline {
     --font-sans:
         'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
@@ -62,10 +62,96 @@
     --color-success: var(--success);
     --color-success-foreground: var(--success-foreground);
     --color-success-muted: var(--success-muted);
+
+    /* Creator dashboard tokens (light + dark) — neeche :root / .dark me values */
+    --color-cp-canvas: var(--cp-canvas);
+    --color-cp-surface: var(--cp-surface);
+    --color-cp-surface-2: var(--cp-surface-2);
+    --color-cp-surface-3: var(--cp-surface-3);
+    --color-cp-line: var(--cp-line);
+    --color-cp-line-strong: var(--cp-line-strong);
+    --color-cp-line-stronger: var(--cp-line-stronger);
+    --color-cp-ink: var(--cp-ink);
+    --color-cp-body: var(--cp-body);
+    --color-cp-subtle: var(--cp-subtle);
+    --color-cp-muted: var(--cp-muted);
+    --color-cp-faint: var(--cp-faint);
+    --color-cp-solid: var(--cp-solid);
+    --color-cp-solid-hover: var(--cp-solid-hover);
+    --color-cp-brand: var(--cp-brand);
+    --color-cp-brand-ink: var(--cp-brand-ink);
+    --color-cp-brand-hover: var(--cp-brand-hover);
+    --color-cp-brand-hover-ink: var(--cp-brand-hover-ink);
+    --color-cp-brand-strong: var(--cp-brand-strong);
+    --color-cp-brand-strong-ink: var(--cp-brand-strong-ink);
+    --color-cp-brand-soft: var(--cp-brand-soft);
+    --color-cp-brand-line: var(--cp-brand-line);
+    --color-cp-accent: var(--cp-accent);
+    --color-cp-accent-ink: var(--cp-accent-ink);
+    --color-cp-accent-strong: var(--cp-accent-strong);
+    --color-cp-accent-strong-ink: var(--cp-accent-strong-ink);
+    --color-cp-accent-soft: var(--cp-accent-soft);
+    --color-cp-accent-line: var(--cp-accent-line);
+    --color-cp-success: var(--cp-success);
+    --color-cp-success-ink: var(--cp-success-ink);
+    --color-cp-success-strong: var(--cp-success-strong);
+    --color-cp-success-strong-ink: var(--cp-success-strong-ink);
+    --color-cp-success-bright: var(--cp-success-bright);
+    --color-cp-success-bright-ink: var(--cp-success-bright-ink);
+    --color-cp-success-soft: var(--cp-success-soft);
+    --color-cp-success-line: var(--cp-success-line);
+    --color-cp-success-line-soft: var(--cp-success-line-soft);
+    --color-cp-warning: var(--cp-warning);
+    --color-cp-warning-ink: var(--cp-warning-ink);
+    --color-cp-warning-strong: var(--cp-warning-strong);
+    --color-cp-warning-strong-ink: var(--cp-warning-strong-ink);
+    --color-cp-warning-bright: var(--cp-warning-bright);
+    --color-cp-warning-bright-ink: var(--cp-warning-bright-ink);
+    --color-cp-warning-soft: var(--cp-warning-soft);
+    --color-cp-warning-line: var(--cp-warning-line);
+    --color-cp-warning-line-soft: var(--cp-warning-line-soft);
+    --color-cp-amber: var(--cp-amber);
+    --color-cp-amber-ink: var(--cp-amber-ink);
+    --color-cp-amber-soft: var(--cp-amber-soft);
+    --color-cp-danger: var(--cp-danger);
+    --color-cp-danger-ink: var(--cp-danger-ink);
+    --color-cp-danger-hover: var(--cp-danger-hover);
+    --color-cp-danger-hover-ink: var(--cp-danger-hover-ink);
+    --color-cp-red: var(--cp-red);
+    --color-cp-red-ink: var(--cp-red-ink);
+    --color-cp-danger-soft: var(--cp-danger-soft);
+    --color-cp-danger-tint: var(--cp-danger-tint);
+    --color-cp-danger-line: var(--cp-danger-line);
+    --color-cp-danger-line-soft: var(--cp-danger-line-soft);
+    --color-cp-coral: var(--cp-coral);
+    --color-cp-coral-ink: var(--cp-coral-ink);
+    --color-cp-coral-hover: var(--cp-coral-hover);
+    --color-cp-coral-dark: var(--cp-coral-dark);
+    --color-cp-coral-dark-ink: var(--cp-coral-dark-ink);
+    --color-cp-coral-strong: var(--cp-coral-strong);
+    --color-cp-coral-strong-ink: var(--cp-coral-strong-ink);
+    --color-cp-coral-soft: var(--cp-coral-soft);
+    --color-cp-coral-line: var(--cp-coral-line);
+    --color-cp-sky: var(--cp-sky);
+    --color-cp-sky-ink: var(--cp-sky-ink);
+    --color-cp-sky-strong: var(--cp-sky-strong);
+    --color-cp-sky-strong-ink: var(--cp-sky-strong-ink);
+    --color-cp-sky-soft: var(--cp-sky-soft);
+    --color-cp-sky-line: var(--cp-sky-line);
+    --color-cp-teal: var(--cp-teal);
+    --color-cp-teal-ink: var(--cp-teal-ink);
+    --color-cp-teal-soft: var(--cp-teal-soft);
+    --color-cp-teal-line: var(--cp-teal-line);
+    --color-cp-pink: var(--cp-pink);
+    --color-cp-pink-ink: var(--cp-pink-ink);
+    --color-cp-pink-strong: var(--cp-pink-strong);
+    --color-cp-pink-strong-ink: var(--cp-pink-strong-ink);
+    --color-cp-pink-soft: var(--cp-pink-soft);
 }
 
-:root {
-    /* CreatorFlow palette — light mode */
+:root,
+.light-island {
+    /* CreatorFlow palette — light mode (.light-island = dark dashboard ke andar light preview) */
     --background: #faf8ff;
     --foreground: #131b2e;
     --card: #ffffff;
@@ -105,41 +191,244 @@
 }
 
 .dark {
-    --background: #0e1424;
-    --foreground: #e7e9ff;
-    --card: #131b2e;
-    --card-foreground: #e7e9ff;
-    --popover: #131b2e;
-    --popover-foreground: #e7e9ff;
-    --primary: #b4c5ff;
-    --primary-foreground: #00174b;
-    --secondary: #4b41e1;
+    /* Neutral ink — cp-* tokens se mel (dialogs, dropdowns, charts) */
+    color-scheme: dark;
+    --background: #0f0f14;
+    --foreground: #f2f2f5;
+    --card: #17171e;
+    --card-foreground: #f2f2f5;
+    --popover: #17171e;
+    --popover-foreground: #f2f2f5;
+    --primary: #a5b4fc;
+    --primary-foreground: #14141b;
+    --secondary: #6366f1;
     --secondary-foreground: #ffffff;
-    --muted: #1c2438;
-    --muted-foreground: #9aa0b4;
-    --accent: #1c2438;
-    --accent-foreground: #e7e9ff;
-    --destructive: #ffb4ab;
-    --destructive-foreground: #690005;
-    --border: #2a3348;
-    --input: #2a3348;
-    --ring: #b4c5ff;
-    --chart-1: #b4c5ff;
-    --chart-2: #c3c0ff;
-    --chart-3: #62df7d;
-    --chart-4: #645efb;
-    --chart-5: #737686;
-    --sidebar: #131b2e;
-    --sidebar-foreground: #e7e9ff;
-    --sidebar-primary: #b4c5ff;
-    --sidebar-primary-foreground: #00174b;
-    --sidebar-accent: #1c2438;
-    --sidebar-accent-foreground: #b4c5ff;
-    --sidebar-border: #2a3348;
-    --sidebar-ring: #b4c5ff;
-    --success: #62df7d;
-    --success-foreground: #002109;
-    --success-muted: rgba(98, 223, 125, 0.18);
+    --muted: #1b1b23;
+    --muted-foreground: #a6a6b3;
+    --accent: #22222b;
+    --accent-foreground: #f2f2f5;
+    --destructive: #f87171;
+    --destructive-foreground: #14141b;
+    --border: #2c2c37;
+    --input: #363642;
+    --ring: #a5b4fc;
+    --chart-1: #a5b4fc;
+    --chart-2: #c4b5fd;
+    --chart-3: #34d399;
+    --chart-4: #818cf8;
+    --chart-5: #6c6c78;
+    --sidebar: #17171e;
+    --sidebar-foreground: #f2f2f5;
+    --sidebar-primary: #a5b4fc;
+    --sidebar-primary-foreground: #14141b;
+    --sidebar-accent: #22222b;
+    --sidebar-accent-foreground: #a5b4fc;
+    --sidebar-border: #2c2c37;
+    --sidebar-ring: #a5b4fc;
+    --success: #34d399;
+    --success-foreground: #052e1c;
+    --success-muted: rgba(52, 211, 153, 0.18);
+}
+
+/*
+ | Creator dashboard ke rang — naam wale tokens (`bg-cp-surface`, `text-cp-ink`, `border-cp-line` …).
+ | Light value = purana hex (light bilkul pehle jaisa). `.dark` me sirf variables badalte hain → poora dashboard dark.
+ | Naya dashboard UI likho to hex ki jagah inhi tokens se — dark apne aap chalega.
+ |   X       = background / border / ring
+ |   X-ink   = text (dark me halka, taaki kaale pe padha jaye)
+ |   X-soft  = halka background (chips, notices) · X-line = border
+ */
+:root,
+.light-island {
+    --cp-canvas: #f6f5f2;
+    --cp-surface: #ffffff;
+    --cp-surface-2: #fafaf8;
+    --cp-surface-3: #f0efea;
+    --cp-line: #e4e2da;
+    --cp-line-strong: #dad8d0;
+    --cp-line-stronger: #c9c6bc;
+    --cp-ink: #14141b;
+    --cp-body: #4b4b57;
+    --cp-subtle: #6b6b78;
+    --cp-muted: #8a8a96;
+    --cp-faint: #a3a3ad;
+    --cp-solid: #14141b;
+    --cp-solid-hover: #2a2a35;
+
+    --cp-brand: #4f46e5;
+    --cp-brand-ink: #4f46e5;
+    --cp-brand-hover: #4338ca;
+    --cp-brand-hover-ink: #4338ca;
+    --cp-brand-strong: #3730a3;
+    --cp-brand-strong-ink: #3730a3;
+    --cp-brand-soft: #eef2ff;
+    --cp-brand-line: #c7cbfb;
+
+    --cp-accent: #7c3aed;
+    --cp-accent-ink: #7c3aed;
+    --cp-accent-strong: #6d28d9;
+    --cp-accent-strong-ink: #6d28d9;
+    --cp-accent-soft: #f1eafe;
+    --cp-accent-line: #d9c6fb;
+
+    --cp-success: #059669;
+    --cp-success-ink: #059669;
+    --cp-success-strong: #047857;
+    --cp-success-strong-ink: #047857;
+    --cp-success-bright: #10b981;
+    --cp-success-bright-ink: #10b981;
+    --cp-success-soft: #e6f6ec;
+    --cp-success-line: #a7e3c2;
+    --cp-success-line-soft: #d5f0e0;
+
+    --cp-warning: #b46e00;
+    --cp-warning-ink: #b46e00;
+    --cp-warning-strong: #8a5300;
+    --cp-warning-strong-ink: #8a5300;
+    --cp-warning-bright: #f59e0b;
+    --cp-warning-bright-ink: #f59e0b;
+    --cp-warning-soft: #fff4db;
+    --cp-warning-line: #f5d99a;
+    --cp-warning-line-soft: #fdebc2;
+    --cp-amber: #b45309;
+    --cp-amber-ink: #b45309;
+    --cp-amber-soft: #fef3c7;
+
+    --cp-danger: #b42318;
+    --cp-danger-ink: #b42318;
+    --cp-danger-hover: #912018;
+    --cp-danger-hover-ink: #912018;
+    --cp-red: #d93838;
+    --cp-red-ink: #d93838;
+    --cp-danger-soft: #fdecec;
+    --cp-danger-tint: #fffafa;
+    --cp-danger-line: #f3b4ae;
+    --cp-danger-line-soft: #f6d6d3;
+
+    --cp-coral: #ff6b4a;
+    --cp-coral-ink: #ff6b4a;
+    --cp-coral-hover: #e85d3d;
+    --cp-coral-dark: #c2410c;
+    --cp-coral-dark-ink: #c2410c;
+    --cp-coral-strong: #9a3412;
+    --cp-coral-strong-ink: #9a3412;
+    --cp-coral-soft: #ffede8;
+    --cp-coral-line: #fbc9bc;
+
+    --cp-sky: #0284c7;
+    --cp-sky-ink: #0284c7;
+    --cp-sky-strong: #0369a1;
+    --cp-sky-strong-ink: #0369a1;
+    --cp-sky-soft: #e6f2ff;
+    --cp-sky-line: #b6daf7;
+    --cp-teal: #0d9488;
+    --cp-teal-ink: #0d9488;
+    --cp-teal-soft: #e1f6f3;
+    --cp-teal-line: #a9e5dc;
+    --cp-pink: #db2777;
+    --cp-pink-ink: #db2777;
+    --cp-pink-strong: #be185d;
+    --cp-pink-strong-ink: #be185d;
+    --cp-pink-soft: #fde8f1;
+}
+
+/* Neutral ink dark — brand ke #14141B se mel */
+.dark {
+
+    --cp-canvas: #0f0f14;
+    --cp-surface: #17171e;
+    --cp-surface-2: #1b1b23;
+    --cp-surface-3: #22222b;
+    --cp-line: #2c2c37;
+    --cp-line-strong: #363642;
+    --cp-line-stronger: #44444f;
+    --cp-ink: #f2f2f5;
+    --cp-body: #c8c8d2;
+    --cp-subtle: #a6a6b3;
+    --cp-muted: #8c8c99;
+    --cp-faint: #6c6c78;
+    --cp-solid: #2e2e3a;
+    --cp-solid-hover: #3a3a47;
+
+    --cp-brand: #6366f1;
+    --cp-brand-ink: #a5b4fc;
+    --cp-brand-hover: #4f46e5;
+    --cp-brand-hover-ink: #c7d2fe;
+    --cp-brand-strong: #4338ca;
+    --cp-brand-strong-ink: #c7d2fe;
+    --cp-brand-soft: rgb(99 102 241 / 0.16);
+    --cp-brand-line: rgb(129 140 248 / 0.4);
+
+    --cp-accent: #8b5cf6;
+    --cp-accent-ink: #c4b5fd;
+    --cp-accent-strong: #7c3aed;
+    --cp-accent-strong-ink: #ddd6fe;
+    --cp-accent-soft: rgb(139 92 246 / 0.16);
+    --cp-accent-line: rgb(167 139 250 / 0.4);
+
+    --cp-success: #10b981;
+    --cp-success-ink: #34d399;
+    --cp-success-strong: #059669;
+    --cp-success-strong-ink: #6ee7b7;
+    --cp-success-bright: #10b981;
+    --cp-success-bright-ink: #34d399;
+    --cp-success-soft: rgb(16 185 129 / 0.14);
+    --cp-success-line: rgb(52 211 153 / 0.35);
+    --cp-success-line-soft: rgb(52 211 153 / 0.2);
+
+    --cp-warning: #d97706;
+    --cp-warning-ink: #fbbf24;
+    --cp-warning-strong: #b45309;
+    --cp-warning-strong-ink: #fcd34d;
+    --cp-warning-bright: #f59e0b;
+    --cp-warning-bright-ink: #fbbf24;
+    --cp-warning-soft: rgb(245 158 11 / 0.14);
+    --cp-warning-line: rgb(251 191 36 / 0.35);
+    --cp-warning-line-soft: rgb(251 191 36 / 0.2);
+    --cp-amber: #d97706;
+    --cp-amber-ink: #fcd34d;
+    --cp-amber-soft: rgb(245 158 11 / 0.14);
+
+    --cp-danger: #dc2626;
+    --cp-danger-ink: #f87171;
+    --cp-danger-hover: #b91c1c;
+    --cp-danger-hover-ink: #fca5a5;
+    --cp-red: #ef4444;
+    --cp-red-ink: #f87171;
+    --cp-danger-soft: rgb(239 68 68 / 0.14);
+    --cp-danger-tint: rgb(239 68 68 / 0.06);
+    --cp-danger-line: rgb(248 113 113 / 0.4);
+    --cp-danger-line-soft: rgb(248 113 113 / 0.25);
+
+    --cp-coral: #ff6b4a;
+    --cp-coral-ink: #ff8a6b;
+    --cp-coral-hover: #e85d3d;
+    --cp-coral-dark: #ea580c;
+    --cp-coral-dark-ink: #fb923c;
+    --cp-coral-strong: #c2410c;
+    --cp-coral-strong-ink: #fdba74;
+    --cp-coral-soft: rgb(255 107 74 / 0.14);
+    --cp-coral-line: rgb(255 138 107 / 0.35);
+
+    --cp-sky: #0ea5e9;
+    --cp-sky-ink: #38bdf8;
+    --cp-sky-strong: #0284c7;
+    --cp-sky-strong-ink: #7dd3fc;
+    --cp-sky-soft: rgb(56 189 248 / 0.14);
+    --cp-sky-line: rgb(56 189 248 / 0.35);
+    --cp-teal: #14b8a6;
+    --cp-teal-ink: #2dd4bf;
+    --cp-teal-soft: rgb(45 212 191 / 0.14);
+    --cp-teal-line: rgb(45 212 191 / 0.35);
+    --cp-pink: #ec4899;
+    --cp-pink-ink: #f472b6;
+    --cp-pink-strong: #db2777;
+    --cp-pink-strong-ink: #f9a8d4;
+    --cp-pink-soft: rgb(244 114 182 / 0.14);
+}
+
+.light-island {
+    color-scheme: light;
 }
 
 @layer base {
@@ -161,19 +450,6 @@
     display: none;
 }
 
-/* Dashboard: premium dotted background — dots theme ke border color se, upar primary glow, neeche fade */
-.dashboard-dots {
-    background-image: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--foreground) 16%, transparent) 1px, transparent 0);
-    background-size: 22px 22px;
-    mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
-}
-.dashboard-glow {
-    background:
-        radial-gradient(60% 40% at 20% 0%, color-mix(in srgb, var(--primary) 14%, transparent), transparent 70%),
-        radial-gradient(45% 35% at 90% 10%, color-mix(in srgb, var(--secondary) 12%, transparent), transparent 70%);
-}
-
 /* Poori app me scrollbar hidden — scroll (wheel/touch/keyboard) chalta rahega, bas bar nahi dikhega */
 * {
     scrollbar-width: none;
@@ -192,6 +468,12 @@ html:has(.home-page) {
         linear-gradient(to right, rgb(37 99 235 / 0.07) 1px, transparent 1px),
         linear-gradient(to bottom, rgb(37 99 235 / 0.07) 1px, transparent 1px);
     background-size: 44px 44px;
+}
+/* dashboard dark me grid lines halki indigo (public pages kabhi dark nahi hote) */
+.dark .home-grid {
+    background-image:
+        linear-gradient(to right, rgb(129 140 248 / 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgb(129 140 248 / 0.06) 1px, transparent 1px);
 }
 .home-grid-light {
     background-image:

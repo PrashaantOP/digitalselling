@@ -9,9 +9,9 @@ import type { SaveStatus } from './use-auto-save';
 type Status = 'draft' | 'unpublished' | 'published';
 
 const STATUS_BADGE: Record<Status, { label: string; cls: string }> = {
-    draft: { label: 'Draft', cls: 'bg-[#FFF4DB] text-[#B46E00]' },
-    published: { label: 'Published', cls: 'bg-[#E6F6EC] text-[#059669]' },
-    unpublished: { label: 'Unpublished', cls: 'bg-[#F0EFEA] text-[#6B6B78]' },
+    draft: { label: 'Draft', cls: 'bg-cp-warning-soft text-cp-warning-ink' },
+    published: { label: 'Published', cls: 'bg-cp-success-soft text-cp-success-ink' },
+    unpublished: { label: 'Unpublished', cls: 'bg-cp-surface-3 text-cp-subtle' },
 };
 
 /**
@@ -59,25 +59,25 @@ export function EditorShell({
     const statusMeta = STATUS_BADGE[status] ?? STATUS_BADGE.draft;
 
     return (
-        <div className="h-screen overflow-hidden bg-white">
+        <div className="h-screen overflow-hidden bg-cp-surface">
             <Head title={headTitle} />
 
             {/* full-bleed split — left is the form, right is the dark preview */}
             <div className="flex h-full min-h-0 flex-col overflow-hidden lg:flex-row">
                 {/* LEFT — editor */}
-                <section className="flex min-h-0 w-full flex-col overflow-hidden border-r border-[#E4E2DA] bg-white lg:w-[520px] lg:shrink-0">
+                <section className="flex min-h-0 w-full flex-col overflow-hidden border-r border-cp-line bg-cp-surface lg:w-[520px] lg:shrink-0">
                     {/* top bar */}
-                    <div className="flex items-center justify-between border-b border-[#E4E2DA] px-4 py-3 md:px-6">
+                    <div className="flex items-center justify-between border-b border-cp-line px-4 py-3 md:px-6">
                         <div className="flex min-w-0 items-center gap-3">
                             <button
                                 type="button"
                                 onClick={onBack}
                                 aria-label={backLabel}
-                                className="rounded-lg p-1 text-[#8A8A96] transition hover:bg-[#F6F5F2] hover:text-[#14141B]"
+                                className="rounded-lg p-1 text-cp-muted transition hover:bg-cp-canvas hover:text-cp-ink"
                             >
                                 <X className="size-5" />
                             </button>
-                            <h2 className="truncate text-[13px] font-semibold tracking-wider text-[#14141B] uppercase">{title}</h2>
+                            <h2 className="truncate text-[13px] font-semibold tracking-wider text-cp-ink uppercase">{title}</h2>
                         </div>
                         <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase', statusMeta.cls)}>
                             {statusMeta.label}
@@ -87,12 +87,12 @@ export function EditorShell({
                     {/* scrollable form body */}
                     <div className="flex-1 [scrollbar-width:none] overflow-y-auto px-4 py-5 md:px-6 md:py-6 [&::-webkit-scrollbar]:hidden">
                         <div className="mx-auto flex max-w-[440px] flex-col gap-5">
-                            <h1 className="text-xl font-bold tracking-tight text-[#14141B]">{heading}</h1>
+                            <h1 className="text-xl font-bold tracking-tight text-cp-ink">{heading}</h1>
 
                             {children}
 
                             {publishError && (
-                                <div className="flex items-start gap-2 rounded-lg border border-[#FFEDE8] bg-[#FFF6F1] p-3 text-[12px] font-semibold text-[#C2410C]">
+                                <div className="flex items-start gap-2 rounded-lg border border-cp-coral-soft bg-cp-coral-soft p-3 text-[12px] font-semibold text-cp-coral-dark-ink">
                                     <Info className="mt-px size-4 shrink-0" />
                                     {publishError}
                                 </div>
@@ -101,8 +101,8 @@ export function EditorShell({
                     </div>
 
                     {/* bottom action bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E4E2DA] bg-white px-4 py-3 md:px-6">
-                        <div className="flex items-center gap-2 text-[11px] text-[#8A8A96]">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-cp-line bg-cp-surface px-4 py-3 md:px-6">
+                        <div className="flex items-center gap-2 text-[11px] text-cp-muted">
                             <SaveStatusPill status={saveStatus} />
                             <span>All changes saved automatically</span>
                         </div>
@@ -111,11 +111,11 @@ export function EditorShell({
                                 variant="outline"
                                 onClick={onSaveDraft}
                                 disabled={saveStatus === 'saving'}
-                                className="border-[#E4E2DA] text-[#4B4B57] hover:bg-[#F6F5F2]"
+                                className="border-cp-line text-cp-body hover:bg-cp-canvas"
                             >
                                 <Save className="size-4" /> Save draft
                             </Button>
-                            <Button onClick={onPublish} disabled={publishing} className="bg-[#4F46E5] hover:bg-[#4338CA]">
+                            <Button onClick={onPublish} disabled={publishing} className="text-white bg-cp-brand hover:bg-cp-brand-hover">
                                 {publishing ? <Loader2 className="size-4 animate-spin" /> : <Rocket className="size-4" />}
                                 {publishing ? 'Publishing…' : 'Publish'} <ArrowRight className="size-3.5" />
                             </Button>
@@ -159,7 +159,7 @@ export function EditorShell({
                     {/* helper tip */}
                     <div className="border-t border-white/5 px-4 py-2.5 md:px-6">
                         <p className="flex items-center gap-1.5 text-[11px] text-white/40">
-                            <Sparkles className="size-3 text-[#FF6B4A]" />
+                            <Sparkles className="size-3 text-cp-coral-ink" />
                             {tip}
                         </p>
                     </div>

@@ -84,10 +84,10 @@ function QuestionRow({ productUuid, question, onCancel }: { productUuid: string;
     }
 
     return (
-        <div className="flex flex-col gap-2 rounded-xl border border-[#E4E2DA] bg-white p-3">
+        <div className="flex flex-col gap-2 rounded-xl border border-cp-line bg-cp-surface p-3">
             <div className="flex items-center gap-2">
                 <input aria-label="Question label" value={label} maxLength={150} disabled={isState} onChange={(e) => setLabel(e.target.value)} placeholder="Question label" className={INPUT} />
-                <select aria-label="Answer type" value={type} disabled={isLocked || isState} onChange={(e) => setType(e.target.value as CheckoutQuestion['field_type'])} className="h-10 shrink-0 rounded-lg border border-[#E4E2DA] bg-white px-2 text-sm text-[#14141B] outline-none focus:border-[#4F46E5] disabled:bg-[#F6F5F2] disabled:text-[#8A8A96]">
+                <select aria-label="Answer type" value={type} disabled={isLocked || isState} onChange={(e) => setType(e.target.value as CheckoutQuestion['field_type'])} className="h-10 shrink-0 rounded-lg border border-cp-line bg-cp-surface px-2 text-sm text-cp-ink outline-none focus:border-cp-brand disabled:bg-cp-canvas disabled:text-cp-muted">
                     {FIELD_TYPES.map((t) => (
                         <option key={t.key} value={t.key}>
                             {t.label}
@@ -104,21 +104,21 @@ function QuestionRow({ productUuid, question, onCancel }: { productUuid: string;
                     readOnly={isState}
                     onChange={(e) => setOptions(e.target.value)}
                     placeholder={'One option per line\nBeginner\nIntermediate'}
-                    className={cn(TEXTAREA, isState && 'cursor-default bg-[#F6F5F2] text-[#8A8A96] focus:border-[#E4E2DA] focus:ring-0')}
+                    className={cn(TEXTAREA, isState && 'cursor-default bg-cp-canvas text-cp-muted focus:border-cp-line focus:ring-0')}
                 />
             )}
             <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 text-xs font-semibold text-[#14141B]">
+                <label className="flex items-center gap-2 text-xs font-semibold text-cp-ink">
                     Required <Toggle checked={effectiveRequired} onChange={setRequired} label="Required" disabled={isLocked} />
                 </label>
-                {question && <label className="flex items-center gap-2 text-xs font-semibold text-[#14141B]">
+                {question && <label className="flex items-center gap-2 text-xs font-semibold text-cp-ink">
                     Show <Toggle checked={effectiveEnabled} onChange={setEnabled} label={`Show ${label || 'question'}`} disabled={isLocked} />
                 </label>}
-                {isLocked && <span className="text-[11px] text-[#8A8A96]">Always collected</span>}
-                {isState && <span className="text-[11px] text-[#8A8A96]">States list is fixed</span>}
+                {isLocked && <span className="text-[11px] text-cp-muted">Always collected</span>}
+                {isState && <span className="text-[11px] text-cp-muted">States list is fixed</span>}
                 <span className="flex-1" />
                 {dirty && (
-                    <button type="button" onClick={save} disabled={!valid || busy} className="flex h-8 items-center gap-1 rounded-lg bg-[#4F46E5] px-3 text-xs font-semibold text-white hover:bg-[#4338CA] disabled:opacity-50">
+                    <button type="button" onClick={save} disabled={!valid || busy} className="flex h-8 items-center gap-1 rounded-lg bg-cp-brand px-3 text-xs font-semibold text-white hover:bg-cp-brand-hover disabled:opacity-50">
                         {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} {question ? 'Save' : 'Add'}
                     </button>
                 )}
@@ -136,13 +136,13 @@ function CheckoutQuestions({ productUuid, questions }: { productUuid: string; qu
     return (
         <div className="flex flex-col gap-3">
             <PanelTitle>Checkout experience</PanelTitle>
-            <p className="-mt-2 text-sm text-[#6B6B78]">Buyers sign in with phone OTP, then answer these questions before payment.</p>
+            <p className="-mt-2 text-sm text-cp-subtle">Buyers sign in with phone OTP, then answer these questions before payment.</p>
             {questions.map((q) => (
                 <QuestionRow key={`${q.id}:${q.label}:${q.field_type}:${q.is_required}:${q.is_enabled}:${(q.options ?? []).join('|')}`} productUuid={productUuid} question={q} />
             ))}
             {adding && <QuestionRow productUuid={productUuid} question={null} onCancel={() => setAdding(false)} />}
             {!adding && (
-                <button type="button" onClick={() => setAdding(true)} className="w-fit text-sm font-semibold text-[#4F46E5] hover:underline">
+                <button type="button" onClick={() => setAdding(true)} className="w-fit text-sm font-semibold text-cp-brand-ink hover:underline">
                     + Add question
                 </button>
             )}
@@ -211,18 +211,18 @@ function Coupons({ productUuid, coupons }: { productUuid: string; coupons: Coupo
         <div className="flex flex-col gap-3">
             <PanelTitle>Discount coupons</PanelTitle>
             {error && <Notice tone="error">{error}</Notice>}
-            {coupons.length === 0 && !open && <p className="rounded-xl border border-dashed border-[#DAD8D0] bg-[#FAF9F5] p-4 text-center text-xs text-[#8A8A96]">No coupons yet. Create one to run a launch offer.</p>}
+            {coupons.length === 0 && !open && <p className="rounded-xl border border-dashed border-cp-line-strong bg-cp-surface-2 p-4 text-center text-xs text-cp-muted">No coupons yet. Create one to run a launch offer.</p>}
             {coupons.map((c) => {
                 const expired = isExpired(c);
                 return (
-                    <div key={c.id} className="flex items-center gap-3 rounded-xl border border-[#E4E2DA] bg-white px-3 py-2.5">
+                    <div key={c.id} className="flex items-center gap-3 rounded-xl border border-cp-line bg-cp-surface px-3 py-2.5">
                         <div className="min-w-0 flex-1">
-                            <p className="flex items-center gap-2 text-sm font-bold text-[#14141B]">
+                            <p className="flex items-center gap-2 text-sm font-bold text-cp-ink">
                                 <span className="font-mono">{c.code}</span>
-                                <span className="rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[10px] font-bold text-[#4F46E5]">{Number(c.discount_percent)}% off</span>
-                                {expired && <span className="rounded-full bg-[#FFEDE8] px-2 py-0.5 text-[10px] font-bold text-[#C2410C]">Expired</span>}
+                                <span className="rounded-full bg-cp-brand-soft px-2 py-0.5 text-[10px] font-bold text-cp-brand-ink">{Number(c.discount_percent)}% off</span>
+                                {expired && <span className="rounded-full bg-cp-coral-soft px-2 py-0.5 text-[10px] font-bold text-cp-coral-dark-ink">Expired</span>}
                             </p>
-                            <p className="text-xs text-[#8A8A96]">
+                            <p className="text-xs text-cp-muted">
                                 {c.used_count}
                                 {c.usage_limit ? ` / ${c.usage_limit}` : ''} used · {c.expires_at ? `expires ${new Date(c.expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : 'no expiry'}
                             </p>
@@ -236,7 +236,7 @@ function Coupons({ productUuid, coupons }: { productUuid: string; coupons: Coupo
             })}
 
             {open ? (
-                <div className="flex flex-col gap-3 rounded-xl border border-[#4F46E5]/30 bg-[#F8F8FF] p-3">
+                <div className="flex flex-col gap-3 rounded-xl border border-cp-brand/30 bg-cp-surface-2 p-3">
                     <div className="grid grid-cols-2 gap-3">
                         <Field label="Code" htmlFor="coupon_code" required error={errors.code}>
                             <input id="coupon_code" value={code} maxLength={30} onChange={(e) => setCode(e.target.value.replace(/[^A-Za-z0-9_-]/g, '').toUpperCase())} placeholder="LAUNCH20" className={cn(INPUT, 'font-mono', invalid(errors.code))} />
@@ -252,16 +252,16 @@ function Coupons({ productUuid, coupons }: { productUuid: string; coupons: Coupo
                         </Field>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button type="button" onClick={create} disabled={!valid || busy === 'new'} className="flex h-9 items-center gap-1.5 rounded-lg bg-[#4F46E5] px-4 text-sm font-semibold text-white hover:bg-[#4338CA] disabled:opacity-50">
+                        <button type="button" onClick={create} disabled={!valid || busy === 'new'} className="flex h-9 items-center gap-1.5 rounded-lg bg-cp-brand px-4 text-sm font-semibold text-white hover:bg-cp-brand-hover disabled:opacity-50">
                             {busy === 'new' && <Loader2 className="size-4 animate-spin" />} Create coupon
                         </button>
-                        <button type="button" onClick={() => setOpen(false)} className="h-9 rounded-lg px-3 text-sm font-semibold text-[#4B4B57] hover:bg-white">
+                        <button type="button" onClick={() => setOpen(false)} className="h-9 rounded-lg px-3 text-sm font-semibold text-cp-body hover:bg-cp-surface">
                             Cancel
                         </button>
                     </div>
                 </div>
             ) : (
-                <button type="button" onClick={() => setOpen(true)} className="flex h-10 w-fit items-center gap-1.5 rounded-lg border border-[#E4E2DA] bg-white px-4 text-sm font-semibold text-[#14141B] hover:bg-[#F6F5F2]">
+                <button type="button" onClick={() => setOpen(true)} className="flex h-10 w-fit items-center gap-1.5 rounded-lg border border-cp-line bg-cp-surface px-4 text-sm font-semibold text-cp-ink hover:bg-cp-canvas">
                     <Plus className="size-4" /> Create coupon
                 </button>
             )}
@@ -298,19 +298,19 @@ export function SettingsTab({
                     {THEMES.map((t) => {
                         const active = form.theme === t.key;
                         return (
-                            <button key={t.key} type="button" role="radio" aria-checked={active} onClick={() => setField('theme', t.key)} className={cn('flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition', active ? 'border-[#4F46E5] bg-[#EEF2FF]' : 'border-[#E4E2DA] bg-white hover:bg-[#F6F5F2]')}>
-                                <span className="flex w-full items-center justify-between text-sm font-bold text-[#14141B]">
+                            <button key={t.key} type="button" role="radio" aria-checked={active} onClick={() => setField('theme', t.key)} className={cn('flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition', active ? 'border-cp-brand bg-cp-brand-soft' : 'border-cp-line bg-cp-surface hover:bg-cp-canvas')}>
+                                <span className="flex w-full items-center justify-between text-sm font-bold text-cp-ink">
                                     {t.title}
-                                    <span className={cn('flex size-4 items-center justify-center rounded-full border', active ? 'border-[#4F46E5] bg-[#4F46E5] text-white' : 'border-[#DAD8D0]')}>{active && <Check className="size-3" />}</span>
+                                    <span className={cn('flex size-4 items-center justify-center rounded-full border', active ? 'border-cp-brand bg-cp-brand text-white' : 'border-cp-line-strong')}>{active && <Check className="size-3" />}</span>
                                 </span>
-                                <span className="text-[11px] text-[#6B6B78]">{t.hint}</span>
+                                <span className="text-[11px] text-cp-subtle">{t.hint}</span>
                             </button>
                         );
                     })}
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <span className="text-xs font-semibold text-[#14141B]">Accent colour</span>
+                    <span className="text-xs font-semibold text-cp-ink">Accent colour</span>
                     <div className="flex flex-wrap items-center gap-2.5">
                         {SWATCHES.map((c) => (
                             <button
@@ -320,32 +320,32 @@ export function SettingsTab({
                                 aria-pressed={form.accent_color.toLowerCase() === c.toLowerCase()}
                                 onClick={() => setField('accent_color', c)}
                                 style={{ background: c }}
-                                className={cn('flex size-9 items-center justify-center rounded-full text-white ring-offset-2 transition', form.accent_color.toLowerCase() === c.toLowerCase() ? 'ring-2 ring-[#14141B]' : 'hover:scale-105')}
+                                className={cn('flex size-9 items-center justify-center rounded-full text-white ring-offset-2 ring-offset-cp-surface transition', form.accent_color.toLowerCase() === c.toLowerCase() ? 'ring-2 ring-cp-solid' : 'hover:scale-105')}
                             >
                                 {form.accent_color.toLowerCase() === c.toLowerCase() && <Check className="size-4" />}
                             </button>
                         ))}
-                        <label className="relative size-9 cursor-pointer overflow-hidden rounded-md border border-[#E4E2DA]" style={{ background: accentValid ? form.accent_color : DEFAULT_ACCENT }}>
+                        <label className="relative size-9 cursor-pointer overflow-hidden rounded-md border border-cp-line" style={{ background: accentValid ? form.accent_color : DEFAULT_ACCENT }}>
                             <input type="color" aria-label="Custom accent colour" value={accentValid ? form.accent_color : DEFAULT_ACCENT} onChange={(e) => setField('accent_color', e.target.value.toUpperCase())} className="absolute inset-0 size-full cursor-pointer opacity-0" />
                         </label>
                     </div>
-                    <span className="text-[11px] text-[#8A8A96]">Used on your public course page for buttons and highlights.</span>
-                    {errors.accent_color && <span className="text-xs text-[#D93838]">{errors.accent_color}</span>}
+                    <span className="text-[11px] text-cp-muted">Used on your public course page for buttons and highlights.</span>
+                    {errors.accent_color && <span className="text-xs text-cp-red-ink">{errors.accent_color}</span>}
                 </div>
             </div>
 
             <div className="flex flex-col gap-3">
                 <PanelTitle>Page URL</PanelTitle>
                 <Field label="Slug" htmlFor="course_slug" required error={errors.slug} hint="Required before you can publish. Lowercase letters, numbers and dashes only.">
-                    <div className={cn('flex overflow-hidden rounded-lg border bg-white shadow-sm focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/15', errors.slug ? 'border-[#D93838]' : 'border-[#E4E2DA]')}>
-                        <span className="flex items-center border-r border-[#E4E2DA] bg-[#F6F5F2] px-3 text-sm text-[#6B6B78]">/c/</span>
+                    <div className={cn('flex overflow-hidden rounded-lg border bg-cp-surface shadow-sm focus-within:border-cp-brand focus-within:ring-2 focus-within:ring-cp-brand/15', errors.slug ? 'border-cp-red' : 'border-cp-line')}>
+                        <span className="flex items-center border-r border-cp-line bg-cp-canvas px-3 text-sm text-cp-subtle">/c/</span>
                         <input
                             id="course_slug"
                             value={form.slug}
                             maxLength={150}
                             onChange={(e) => setField('slug', e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9_-]/g, ''))}
                             placeholder="gym-training-course"
-                            className="h-10 min-w-0 flex-1 px-3 text-sm text-[#14141B] outline-none placeholder:text-[#8A8A96]"
+                            className="h-10 min-w-0 flex-1 px-3 text-sm text-cp-ink outline-none placeholder:text-cp-muted"
                         />
                     </div>
                 </Field>

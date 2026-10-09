@@ -23,7 +23,7 @@ export function StoreTabs({ active }: { active: StoreTabKey }) {
     return (
         // 5 tabs phone pe nahi samaate — side me scroll (scrollbar chhupa)
         <nav
-            className="no-scrollbar flex items-center gap-6 overflow-x-auto border-b border-[#E4E2DA]"
+            className="no-scrollbar flex items-center gap-6 overflow-x-auto border-b border-cp-line"
             aria-label="Store sections"
         >
             {TABS.map((tab) => {
@@ -37,12 +37,12 @@ export function StoreTabs({ active }: { active: StoreTabKey }) {
                         onClick={() => router.get(tab.href, {}, { preserveScroll: true })}
                         className={cn(
                             'flex shrink-0 items-center gap-1.5 border-b-2 py-3 text-sm font-medium whitespace-nowrap transition-colors',
-                            isActive ? 'border-[#4F46E5] text-[#4F46E5]' : 'border-transparent text-[#8A8A96] hover:border-[#E4E2DA] hover:text-[#14141B]',
+                            isActive ? 'border-cp-brand text-cp-brand-ink' : 'border-transparent text-cp-muted hover:border-cp-line hover:text-cp-ink',
                         )}
                     >
                         {tab.label}
                         {tab.key === 'webapp' && !onPlus && (
-                            <span className="rounded-full bg-[#F1EAFE] px-1.5 py-px text-[10px] font-bold tracking-wide text-[#7C3AED] uppercase">Plus</span>
+                            <span className="rounded-full bg-cp-accent-soft px-1.5 py-px text-[10px] font-bold tracking-wide text-cp-accent-ink uppercase">Plus</span>
                         )}
                     </button>
                 );
@@ -54,7 +54,7 @@ export function StoreTabs({ active }: { active: StoreTabKey }) {
 /** Sticky header jisme tab bar hai — dono pages pe ek jaisa. */
 export function StoreTabsHeader({ active }: { active: StoreTabKey }) {
     return (
-        <div className="sticky top-0 z-30 border-b border-[#E4E2DA] bg-[#F6F5F2]/95 backdrop-blur-md">
+        <div className="sticky top-14 z-30 border-b border-cp-line bg-cp-canvas/95 backdrop-blur-md lg:top-0">
             <div className="mx-auto w-full max-w-[1600px] px-4 md:px-6">
                 <StoreTabs active={active} />
             </div>

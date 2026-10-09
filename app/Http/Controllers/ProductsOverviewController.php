@@ -7,6 +7,8 @@ use App\Models\Product;
 use App\Support\TeamAccess;
 use App\Support\TeamPermissions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 /**
@@ -39,13 +41,21 @@ class ProductsOverviewController extends Controller
 
     public function index(Request $request)
     {
-        $type = $request->query('type');
-        $search = $request->query('search');
+        $filters = $request->validate([
+            'type' => ['nullable', Rule::in(array_keys(self::EDIT_BASE))],
+            'status' => ['nullable', Rule::in(['published', 'draft', 'unpublished'])],
+            'search' => ['nullable', 'string', 'max:100'],
+        ]);
+        $type = $filters['type'] ?? null;
+        $status = $filters['status'] ?? null;
+        $search = $filters['search'] ?? null;
 
         $canSeeSales = TeamAccess::can(auth()->user(), 'payments.view');
 
         $products = $this->baseQuery()
+            ->with(['coverImages' => fn ($q) => $q->orderBy('sort_order')])
             ->when($type, fn ($q, $v) => $q->where('type', $v))
+            ->when($status, fn ($q, $v) => $q->where('status', $v))
             ->when($search, fn ($q, $v) => $q->where('title', 'like', "%{$v}%"))
             ->latest()
             ->paginate(15)
@@ -53,13 +63,17 @@ class ProductsOverviewController extends Controller
             ->through(function (Product $p) use ($canSeeSales) {
                 // URL me hamesha uuid — numeric id kabhi nahi
                 $editUrl = '/dashboard/' . self::EDIT_BASE[$p->type] . "/{$p->uuid}/edit";
+                $cover = $p->coverImages->first()?->image_path;
 
                 return [
                     'id' => $p->id,
+                    'uuid' => $p->uuid,
                     'title' => $p->title,
                     'type' => $p->type,
-                    'coverImage' => $p->coverImages()->orderBy('sort_order')->value('image_path'),
+                    // image public/assets me hai — poora path do (pehle raw path jaata tha, thumbnail toot-ta tha)
+                    'coverImage' => $cover ? (Str::startsWith($cover, ['http://', 'https://']) ? $cover : '/assets/' . ltrim($cover, '/')) : null,
                     'price' => (float) $p->price,
+                    'discountedPrice' => $p->discounted_price !== null ? (float) $p->discounted_price : null,
                     'pricingType' => $p->pricing_type,
                     // bikri ke numbers sirf payments.view wale ko
                     'salesCount' => $canSeeSales ? $p->sales_count : null,
@@ -67,9 +81,8 @@ class ProductsOverviewController extends Controller
                     'status' => $p->status,
                     'createdAt' => $p->created_at->format('M j, Y'),
                     'editUrl' => $editUrl,
-                    // No separate analytics page yet per type — the builder's own
-                    // "Analytics"/sales cards live on the same edit screen for now.
-                    'analyticsUrl' => $editUrl,
+                    // us type ka apna page (duplicate, delete, publish wahan)
+                    'typeUrl' => '/dashboard/' . self::EDIT_BASE[$p->type],
                 ];
             });
 
@@ -77,6 +90,11 @@ class ProductsOverviewController extends Controller
             ->selectRaw('type, COUNT(*) as c')
             ->groupBy('type')
             ->pluck('c', 'type');
+
+        $byStatus = (clone $this->baseQuery())
+            ->selectRaw('status, COUNT(*) as c')
+            ->groupBy('status')
+            ->pluck('c', 'status');
 
         return Inertia::render('Products/Index', [
             'products' => $products,
@@ -89,7 +107,19 @@ class ProductsOverviewController extends Controller
                 'payment_page' => (int) $counts->get('payment_page', 0),
                 'booking' => (int) $counts->get('booking', 0),
             ],
-            'filters' => ['type' => $type, 'search' => $search],
+            'statusCounts' => [
+                'published' => (int) $byStatus->get('published', 0),
+                'draft' => (int) $byStatus->get('draft', 0),
+                'unpublished' => (int) $byStatus->get('unpublished', 0),
+            ],
+            // upar ke tiles — bikri sirf payments.view wale ko
+            'totals' => $canSeeSales ? [
+                'revenue' => (float) (clone $this->baseQuery())->sum('revenue_total'),
+                'sales' => (int) (clone $this->baseQuery())->sum('sales_count'),
+            ] : null,
+            // kaun se types ye user bana / dekh sakta hai (filter chips aur empty state ke liye)
+            'types' => collect(TeamPermissions::PRODUCT_TYPES)->filter(fn (string $module) => TeamAccess::can(auth()->user(), "{$module}.view"))->keys()->values(),
+            'filters' => ['type' => $type, 'status' => $status, 'search' => $search],
         ]);
     }
 }

@@ -117,15 +117,15 @@ function PreviewPane({ item, host, device }: { item: PaymentPageItem; host: stri
     const main = (
         <div className="flex min-w-0 flex-col gap-8">
             <div>
-                <h1 className="text-3xl font-extrabold tracking-tight break-words text-[#14141B]">{title}</h1>
-                {subtitle && <p className="mt-2 text-lg leading-snug text-[#4B4B57]">{subtitle}</p>}
+                <h1 className="text-3xl font-extrabold tracking-tight break-words text-cp-ink">{title}</h1>
+                {subtitle && <p className="mt-2 text-lg leading-snug text-cp-body">{subtitle}</p>}
             </div>
 
             {/* video, cover ke bajaye "shown instead of the first image" */}
             <VideoEmbed url={videoUrl} accent={accent} />
 
             {covers.length > 0 && (
-                <div className="relative aspect-video overflow-hidden rounded-xl border border-[#E4E2DA] bg-[#F6F5F2]">
+                <div className="relative aspect-video overflow-hidden rounded-xl border border-cp-line bg-cp-canvas">
                     <img src={assetUrl(covers[0].image_path)} alt="" className="size-full object-cover" />
                 </div>
             )}
@@ -134,11 +134,11 @@ function PreviewPane({ item, host, device }: { item: PaymentPageItem; host: stri
                 {label('About this page')}
                 {description ? (
                     <div
-                        className="text-[15px] leading-relaxed text-[#14141B] [&_li]:ml-4 [&_p]:mb-2 [&_ul]:list-disc"
+                        className="text-[15px] leading-relaxed text-cp-ink [&_li]:ml-4 [&_p]:mb-2 [&_ul]:list-disc"
                         dangerouslySetInnerHTML={{ __html: description }}
                     />
                 ) : (
-                    <p className="text-[15px] leading-relaxed text-[#6B6B78]">Describe your page so buyers know what they're paying for.</p>
+                    <p className="text-[15px] leading-relaxed text-cp-subtle">Describe your page so buyers know what they're paying for.</p>
                 )}
             </div>
 
@@ -149,7 +149,7 @@ function PreviewPane({ item, host, device }: { item: PaymentPageItem; host: stri
                     {label("What's included")}
                     <ul className="flex flex-col gap-2.5">
                         {points.map((point, i) => (
-                            <li key={i} className="flex items-start gap-3 text-[15px] text-[#14141B]">
+                            <li key={i} className="flex items-start gap-3 text-[15px] text-cp-ink">
                                 <span
                                     className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-white"
                                     style={{ background: accent }}
@@ -168,11 +168,11 @@ function PreviewPane({ item, host, device }: { item: PaymentPageItem; host: stri
                     {label('FAQ')}
                     <div className="flex flex-col gap-2">
                         {faqs.map((faq, i) => (
-                            <div key={i} className="rounded-xl border border-[#E4E2DA] bg-white px-4 py-3">
-                                <div className="flex items-center justify-between gap-2 text-sm font-semibold text-[#14141B]">
-                                    {faq.question} <ChevronDown className="size-4 shrink-0 text-[#6B6B78]" />
+                            <div key={i} className="rounded-xl border border-cp-line bg-cp-surface px-4 py-3">
+                                <div className="flex items-center justify-between gap-2 text-sm font-semibold text-cp-ink">
+                                    {faq.question} <ChevronDown className="size-4 shrink-0 text-cp-subtle" />
                                 </div>
-                                {faq.answer && <p className="mt-1.5 text-sm whitespace-pre-line text-[#6B6B78]">{faq.answer}</p>}
+                                {faq.answer && <p className="mt-1.5 text-sm whitespace-pre-line text-cp-subtle">{faq.answer}</p>}
                             </div>
                         ))}
                     </div>
@@ -368,9 +368,9 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
             <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
                     <label htmlFor="pp_title" className={LABEL_CLASS}>
-                        Payment page title <span className="text-[#D93838]">*</span>
+                        Payment page title <span className="text-cp-red-ink">*</span>
                     </label>
-                    <span className={cn('text-[11px]', titleOk ? 'text-[#8A8A96]' : 'text-[#D93838]')}>{titleCount}/75</span>
+                    <span className={cn('text-[11px]', titleOk ? 'text-cp-muted' : 'text-cp-red-ink')}>{titleCount}/75</span>
                 </div>
                 <input
                     id="pp_title"
@@ -443,9 +443,9 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
             <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
                     <label htmlFor="pp_desc" className={LABEL_CLASS}>
-                        Description <span className="text-[#D93838]">*</span>
+                        Description <span className="text-cp-red-ink">*</span>
                     </label>
-                    <span className="text-[11px] text-[#8A8A96]">{descCount}/20000</span>
+                    <span className="text-[11px] text-cp-muted">{descCount}/20000</span>
                 </div>
                 <RichText
                     id="pp_desc"
@@ -494,7 +494,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
                         patch({ delivery_files: form.delivery_files.map((f, i) => (i === index ? { ...f, ...next } : f)) });
 
                     return (
-                        <div key={index} className="flex items-start gap-2 rounded-lg border border-[#E4E2DA] p-2">
+                        <div key={index} className="flex items-start gap-2 rounded-lg border border-cp-line p-2">
                             <div className="flex min-w-0 flex-1 flex-col gap-2">
                                 <input
                                     value={entry.label}
@@ -548,15 +548,15 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
                             className={cn(
                                 'flex h-14 items-center justify-between rounded-xl border px-4 text-sm font-semibold transition',
                                 active
-                                    ? 'border-[#4F46E5] bg-[#EEF2FF] text-[#14141B]'
-                                    : 'border-[#E4E2DA] bg-white text-[#14141B] hover:border-[#4F46E5]/45',
+                                    ? 'border-cp-brand bg-cp-brand-soft text-cp-ink'
+                                    : 'border-cp-line bg-cp-surface text-cp-ink hover:border-cp-brand/45',
                             )}
                         >
                             {option.label}
                             <span
                                 className={cn(
                                     'flex size-5 items-center justify-center rounded-full border',
-                                    active ? 'border-[#4F46E5] bg-[#4F46E5] text-white' : 'border-[#D9D7CE]',
+                                    active ? 'border-cp-brand bg-cp-brand text-white' : 'border-cp-line-strong',
                                 )}
                             >
                                 {active && <Check className="size-3" />}
@@ -568,7 +568,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
 
             <div className="flex flex-col gap-1.5">
                 <label htmlFor="pp_price" className={LABEL_CLASS}>
-                    {form.pricing_type === 'customer_decides' ? 'Minimum amount (₹)' : 'Amount (₹)'} <span className="text-[#D93838]">*</span>
+                    {form.pricing_type === 'customer_decides' ? 'Minimum amount (₹)' : 'Amount (₹)'} <span className="text-cp-red-ink">*</span>
                 </label>
                 <input
                     id="pp_price"
@@ -585,12 +585,12 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
 
             {form.pricing_type === 'fixed' && (
                 <>
-                    <label className="flex cursor-pointer items-center gap-2.5 text-[13px] font-semibold text-[#14141B]">
+                    <label className="flex cursor-pointer items-center gap-2.5 text-[13px] font-semibold text-cp-ink">
                         <input
                             type="checkbox"
                             checked={form.has_discount}
                             onChange={(e) => patch({ has_discount: e.target.checked })}
-                            className="size-4 rounded border-[#D9D7CE] text-[#4F46E5] focus:ring-[#4F46E5]"
+                            className="size-4 rounded border-cp-line-strong text-cp-brand-ink focus:ring-cp-brand"
                         />
                         Offer discounted price
                     </label>
@@ -623,21 +623,21 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
             {/* What to collect from the buyer */}
             <div className="flex flex-col gap-2">
                 <label className={LABEL_CLASS}>What to collect from the buyer</label>
-                <label className="flex cursor-pointer items-center gap-2.5 text-[13px] font-semibold text-[#14141B]">
+                <label className="flex cursor-pointer items-center gap-2.5 text-[13px] font-semibold text-cp-ink">
                     <input
                         type="checkbox"
                         checked={form.collect_full_name}
                         onChange={(e) => patch({ collect_full_name: e.target.checked })}
-                        className="size-4 rounded border-[#D9D7CE] text-[#4F46E5] focus:ring-[#4F46E5]"
+                        className="size-4 rounded border-cp-line-strong text-cp-brand-ink focus:ring-cp-brand"
                     />
                     Full name
                 </label>
-                <label className="flex cursor-pointer items-center gap-2.5 text-[13px] font-semibold text-[#14141B]">
+                <label className="flex cursor-pointer items-center gap-2.5 text-[13px] font-semibold text-cp-ink">
                     <input
                         type="checkbox"
                         checked={form.collect_note}
                         onChange={(e) => patch({ collect_note: e.target.checked })}
-                        className="size-4 rounded border-[#D9D7CE] text-[#4F46E5] focus:ring-[#4F46E5]"
+                        className="size-4 rounded border-cp-line-strong text-cp-brand-ink focus:ring-cp-brand"
                     />
                     A short note / reference
                 </label>
@@ -648,7 +648,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
             <div className="flex flex-col gap-2">
                 <label className={LABEL_CLASS}>FAQs</label>
                 {form.faqs.map((faq, index) => (
-                    <div key={index} className="flex flex-col gap-2 rounded-xl border border-[#E4E2DA] bg-[#F8F7F4] p-3">
+                    <div key={index} className="flex flex-col gap-2 rounded-xl border border-cp-line bg-cp-surface-2 p-3">
                         <div className="flex items-center gap-2">
                             <input
                                 value={faq.question}
@@ -705,7 +705,7 @@ export default function PaymentPagesEdit({ item, publicUrl }: PaymentPagesEditPr
                     <label htmlFor="pp_button_text" className={LABEL_CLASS}>
                         Button text
                     </label>
-                    <span className="text-[11px] text-[#8A8A96]">{form.button_text.length}/25</span>
+                    <span className="text-[11px] text-cp-muted">{form.button_text.length}/25</span>
                 </div>
                 <input
                     id="pp_button_text"

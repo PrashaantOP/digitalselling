@@ -1,3 +1,4 @@
+import { BrandIcon, BrandLogo } from '@/components/brand';
 import { cn } from '@/lib/utils';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { CalendarDays, GraduationCap, LogOut, ShoppingBag, UserRound } from 'lucide-react';
@@ -17,7 +18,7 @@ const NAV = [
  * phone pe neeche tab bar (installed app jaisa). Buyer yahan sirf apni kharid dekhta hai.
  */
 export default function CustomerLayout({ title, children, wide = false }: { title: string; children: ReactNode; wide?: boolean }) {
-    const { name, buyer, flash } = usePage<CustomerShared>().props;
+    const { buyer, flash } = usePage<CustomerShared>().props;
     const path = usePage().url.split('?')[0];
     const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 
@@ -28,7 +29,7 @@ export default function CustomerLayout({ title, children, wide = false }: { titl
             <header className="sticky top-0 z-30 border-b border-[#E4E2DA] bg-white/90 backdrop-blur">
                 <div className={cn('mx-auto flex h-14 items-center justify-between gap-4 px-4 md:px-6', wide ? 'max-w-[1400px]' : 'max-w-5xl')}>
                     <Link href="/me/courses" className="flex min-w-0 items-center gap-2.5">
-                        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#4F46E5] text-sm font-bold text-white">{name.charAt(0)}</span>
+                        <BrandIcon className="size-8" />
                         <span className="truncate text-sm font-bold">My learning</span>
                     </Link>
 
@@ -87,14 +88,11 @@ export default function CustomerLayout({ title, children, wide = false }: { titl
 
 /** Login / verify / done page ka chhota centered card (bina nav ke). */
 export function CustomerCard({ title, children }: { title: string; children: ReactNode }) {
-    const { name } = usePage<CustomerShared>().props;
-
     return (
         <div className="flex min-h-screen flex-col items-center bg-[#F6F5F2] px-4 py-10 text-[#14141B]">
             <Head title={title} />
-            <div className="mb-6 flex items-center gap-2.5">
-                <span className="flex size-9 items-center justify-center rounded-lg bg-[#4F46E5] text-sm font-bold text-white">{name.charAt(0)}</span>
-                <span className="text-base font-bold">{name}</span>
+            <div className="mb-6 flex items-center">
+                <BrandLogo className="h-9" />
             </div>
             <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm sm:p-8">{children}</div>
         </div>

@@ -1,5 +1,6 @@
+import { BrandIcon } from '@/components/brand';
 import { Head, useForm } from '@inertiajs/react';
-import { Loader2, ShieldCheck } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { type FormEvent } from 'react';
 
 export function AdminAuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
@@ -8,9 +9,7 @@ export function AdminAuthShell({ title, subtitle, children }: { title: string; s
             <Head title={`${title} · Admin`} />
             <main className="flex min-h-screen items-center justify-center bg-slate-900 px-4 py-10">
                 <div className="w-full max-w-sm rounded-2xl bg-white p-7 shadow-2xl">
-                    <span className="flex size-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                        <ShieldCheck className="size-6" />
-                    </span>
+                    <BrandIcon className="size-11" label="CreatorPro" />
                     <h1 className="mt-4 text-xl font-bold text-slate-900">{title}</h1>
                     <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
                     <div className="mt-6">{children}</div>

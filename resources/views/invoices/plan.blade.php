@@ -70,6 +70,7 @@
     <div class="sheet">
         <div class="head">
             <div>
+                <img src="{{ url('/images/brand/creatorpro-logo.png') }}" alt="{{ $seller['name'] ?? config('app.name') }}" style="display:block;height:34px;width:auto;margin-bottom:14px">
                 <h1>Tax Invoice</h1>
                 <div class="muted small">Invoice no. <span class="strong" style="color:#14141B">{{ $invoice->invoice_number }}</span></div>
                 <div class="muted small">Date {{ $issuedAt?->format('d M Y') }}</div>

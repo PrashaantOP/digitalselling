@@ -84,30 +84,30 @@ interface EventsIndexProps {
 
 type Notice = { kind: 'success' | 'error'; text: string };
 
-const LABEL_CLASS = 'text-xs font-semibold tracking-wider text-[#14141B] uppercase';
+const LABEL_CLASS = 'text-xs font-semibold tracking-wider text-cp-ink uppercase';
 const INPUT_CLASS =
-    'h-10 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15';
+    'h-10 w-full rounded-lg border border-cp-line bg-cp-surface px-3 text-sm text-cp-ink shadow-sm outline-none transition placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15';
 
 const STATUS_TABS: { key: 'all' | EventStatus; label: string; dot: string }[] = [
-    { key: 'all', label: 'All', dot: 'bg-[#FF6B4A]' },
-    { key: 'published', label: 'Published', dot: 'bg-[#059669]' },
+    { key: 'all', label: 'All', dot: 'bg-cp-coral' },
+    { key: 'published', label: 'Published', dot: 'bg-cp-success' },
     { key: 'draft', label: 'Draft', dot: 'bg-amber-500' },
-    { key: 'unpublished', label: 'Unpublished', dot: 'bg-[#8A8A96]' },
+    { key: 'unpublished', label: 'Unpublished', dot: 'bg-cp-muted' },
 ];
 
 const STATUS_META: Record<EventStatus, { label: string; chip: string; dot: string }> = {
-    published: { label: 'Published', chip: 'bg-[#E6F6EC] text-[#059669]', dot: 'bg-[#059669]' },
-    draft: { label: 'Draft', chip: 'bg-[#FFF4DB] text-[#B46E00]', dot: 'bg-amber-500' },
-    unpublished: { label: 'Unpublished', chip: 'bg-[#F0EFEA] text-[#6B6B78]', dot: 'bg-current' },
+    published: { label: 'Published', chip: 'bg-cp-success-soft text-cp-success-ink', dot: 'bg-cp-success' },
+    draft: { label: 'Draft', chip: 'bg-cp-warning-soft text-cp-warning-ink', dot: 'bg-amber-500' },
+    unpublished: { label: 'Unpublished', chip: 'bg-cp-surface-3 text-cp-subtle', dot: 'bg-current' },
 };
 
 const TILE_TONES = [
-    'bg-[#EEF2FF] text-[#4F46E5]',
-    'bg-[#E6F2FF] text-[#0284C7]',
-    'bg-[#FFF4DB] text-[#B46E00]',
-    'bg-[#FFEDE8] text-[#C2410C]',
-    'bg-[#F1EAFE] text-[#7C3AED]',
-    'bg-[#E1F6F3] text-[#0D9488]',
+    'bg-cp-brand-soft text-cp-brand-ink',
+    'bg-cp-sky-soft text-cp-sky-ink',
+    'bg-cp-warning-soft text-cp-warning-ink',
+    'bg-cp-coral-soft text-cp-coral-dark-ink',
+    'bg-cp-accent-soft text-cp-accent-ink',
+    'bg-cp-teal-soft text-cp-teal-ink',
 ];
 
 /* ------------------------------------------------------------------ */
@@ -159,7 +159,7 @@ function StatusPill({ status }: { status: EventStatus }) {
 
 function FieldError({ message }: { message?: string }) {
     if (!message) return null;
-    return <span className="text-xs text-[#D93838]">{message}</span>;
+    return <span className="text-xs text-cp-red-ink">{message}</span>;
 }
 
 function Drawer({
@@ -193,24 +193,24 @@ function Drawer({
             />
             <div
                 className={cn(
-                    'fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-[420px] flex-col justify-between overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-out',
+                    'fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-[420px] flex-col justify-between overflow-y-auto bg-cp-surface shadow-2xl transition-transform duration-300 ease-out',
                     open ? 'translate-x-0' : 'translate-x-full',
                 )}
             >
                 <div className="flex flex-col gap-5 p-6">
-                    <div className="flex items-center justify-between border-b border-[#E4E2DA]/70 pb-4">
-                        <span className="text-base font-semibold text-[#14141B]">{title}</span>
+                    <div className="flex items-center justify-between border-b border-cp-line/70 pb-4">
+                        <span className="text-base font-semibold text-cp-ink">{title}</span>
                         <button
                             onClick={onClose}
                             aria-label="Close"
-                            className="rounded-lg p-1 text-[#8A8A96] transition hover:bg-[#F0EFEA] hover:text-[#14141B]"
+                            className="rounded-lg p-1 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink"
                         >
                             <X className="size-5" />
                         </button>
                     </div>
                     {children}
                 </div>
-                {footer && <div className="flex flex-col gap-2 border-t border-[#E4E2DA] bg-white p-5">{footer}</div>}
+                {footer && <div className="flex flex-col gap-2 border-t border-cp-line bg-cp-surface p-5">{footer}</div>}
             </div>
         </>
     );
@@ -274,11 +274,11 @@ function CreateDrawer({ open, onClose }: { open: boolean; onClose: () => void })
             title="Create event"
             footer={
                 <>
-                    <Button onClick={() => submit()} disabled={!canSubmit} className="w-full bg-[#4F46E5] hover:bg-[#4338CA]">
+                    <Button onClick={() => submit()} disabled={!canSubmit} className="w-full text-white bg-cp-brand hover:bg-cp-brand-hover">
                         {submitting ? <Loader2 className="size-4 animate-spin" /> : <Rocket className="size-4" />}
                         {submitting ? 'Creating…' : 'Create draft & continue'}
                     </Button>
-                    <p className="text-center text-[11px] text-[#8A8A96]">Your event stays a private draft until you publish it.</p>
+                    <p className="text-center text-[11px] text-cp-muted">Your event stays a private draft until you publish it.</p>
                 </>
             }
         >
@@ -286,9 +286,9 @@ function CreateDrawer({ open, onClose }: { open: boolean; onClose: () => void })
                 <div className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="event_title" className={LABEL_CLASS}>
-                            Event title <span className="text-[#D93838]">*</span>
+                            Event title <span className="text-cp-red-ink">*</span>
                         </Label>
-                        <span className="text-[11px] text-[#8A8A96]">{title.length}/150</span>
+                        <span className="text-[11px] text-cp-muted">{title.length}/150</span>
                     </div>
                     <input
                         id="event_title"
@@ -323,14 +323,14 @@ function CreateDrawer({ open, onClose }: { open: boolean; onClose: () => void })
                                 className={cn(
                                     'flex h-auto items-start gap-2.5 rounded-lg border p-3 text-left transition-colors',
                                     mode === opt.key
-                                        ? 'border-[#4F46E5] bg-[#EEF2FF] text-[#4F46E5]'
-                                        : 'border-[#E4E2DA] bg-white text-[#4B4B57] hover:bg-[#F6F5F2]',
+                                        ? 'border-cp-brand bg-cp-brand-soft text-cp-brand-ink'
+                                        : 'border-cp-line bg-cp-surface text-cp-body hover:bg-cp-canvas',
                                 )}
                             >
                                 <opt.icon className="mt-0.5 size-4 shrink-0" />
                                 <span className="flex flex-col">
                                     <span className="text-sm font-semibold">{opt.label}</span>
-                                    <span className={cn('text-[11px]', mode === opt.key ? 'text-[#4F46E5]/80' : 'text-[#8A8A96]')}>{opt.hint}</span>
+                                    <span className={cn('text-[11px]', mode === opt.key ? 'text-cp-brand-ink/80' : 'text-cp-muted')}>{opt.hint}</span>
                                 </span>
                             </button>
                         ))}
@@ -356,8 +356,8 @@ function CreateDrawer({ open, onClose }: { open: boolean; onClose: () => void })
                                 className={cn(
                                     'h-11 rounded-lg border text-sm font-semibold transition-colors',
                                     pricing === opt.key
-                                        ? 'border-[#4F46E5] bg-[#EEF2FF] text-[#4F46E5]'
-                                        : 'border-[#E4E2DA] bg-white text-[#4B4B57] hover:bg-[#F6F5F2]',
+                                        ? 'border-cp-brand bg-cp-brand-soft text-cp-brand-ink'
+                                        : 'border-cp-line bg-cp-surface text-cp-body hover:bg-cp-canvas',
                                 )}
                             >
                                 {opt.label}
@@ -373,7 +373,7 @@ function CreateDrawer({ open, onClose }: { open: boolean; onClose: () => void })
                             Price
                         </Label>
                         <div className="relative">
-                            <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-[#8A8A96]">₹</span>
+                            <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-cp-muted">₹</span>
                             <input
                                 id="event_price"
                                 inputMode="decimal"
@@ -384,7 +384,7 @@ function CreateDrawer({ open, onClose }: { open: boolean; onClose: () => void })
                             />
                         </div>
                         <FieldError message={dirty ? undefined : errors.price} />
-                        <span className="text-[11px] text-[#8A8A96]">
+                        <span className="text-[11px] text-cp-muted">
                             You can change this later — it must be above ₹0 to publish a paid event.
                         </span>
                     </div>
@@ -422,22 +422,22 @@ function DeleteModal({
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <div onClick={() => !busy && onCancel()} className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-            <div role="alertdialog" aria-modal="true" aria-labelledby="delete-event-title" className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
-                <span className="flex size-10 items-center justify-center rounded-lg bg-[#FFEDE8] text-[#C2410C]">
+            <div role="alertdialog" aria-modal="true" aria-labelledby="delete-event-title" className="relative w-full max-w-sm rounded-2xl bg-cp-surface p-6 shadow-2xl">
+                <span className="flex size-10 items-center justify-center rounded-lg bg-cp-coral-soft text-cp-coral-dark-ink">
                     <Trash2 className="size-5" />
                 </span>
-                <h3 id="delete-event-title" className="mt-4 text-base font-semibold text-[#14141B]">
+                <h3 id="delete-event-title" className="mt-4 text-base font-semibold text-cp-ink">
                     Delete this event?
                 </h3>
-                <p className="mt-1.5 text-sm text-[#6B6B78]">
-                    <span className="font-semibold text-[#14141B]">{event.title || 'Untitled event'}</span> will be removed from your store. Past orders
+                <p className="mt-1.5 text-sm text-cp-subtle">
+                    <span className="font-semibold text-cp-ink">{event.title || 'Untitled event'}</span> will be removed from your store. Past orders
                     and registrations stay on record.
                 </p>
                 <div className="mt-6 flex justify-end gap-2">
-                    <Button variant="outline" onClick={onCancel} disabled={busy} className="border-[#E4E2DA]">
+                    <Button variant="outline" onClick={onCancel} disabled={busy} className="border-cp-line">
                         Cancel
                     </Button>
-                    <Button onClick={onConfirm} disabled={busy} className="bg-[#D93838] text-white hover:bg-[#B92D2D]">
+                    <Button onClick={onConfirm} disabled={busy} className="bg-cp-red text-white hover:bg-cp-danger">
                         {busy ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
                         {busy ? 'Deleting…' : 'Delete event'}
                     </Button>
@@ -453,17 +453,17 @@ function DeleteModal({
 
 function PriceCell({ event }: { event: EventRow }) {
     if (event.pricing_type === 'free')
-        return <span className="text-[13px] font-semibold text-[#059669]">Free</span>;
+        return <span className="text-[13px] font-semibold text-cp-success-ink">Free</span>;
     if (event.pricing_type === 'customer_decides')
-        return <span className="text-[13px] font-semibold text-[#14141B]">Pay what you want</span>;
+        return <span className="text-[13px] font-semibold text-cp-ink">Pay what you want</span>;
 
     const discounted = event.has_discount && event.discounted_price !== null && Number(event.discounted_price) < Number(event.price);
     return (
         <div className="flex flex-col">
-            <span className="text-[13px] font-semibold text-[#14141B]">
+            <span className="text-[13px] font-semibold text-cp-ink">
                 {money(discounted ? event.discounted_price : event.price)}
             </span>
-            {discounted && <span className="text-xs text-[#8A8A96] line-through">{money(event.price)}</span>}
+            {discounted && <span className="text-xs text-cp-muted line-through">{money(event.price)}</span>}
         </div>
     );
 }
@@ -473,7 +473,7 @@ function ScheduleCell({ event }: { event: EventRow }) {
     const ends = event.event_detail?.ends_at ?? null;
     if (!starts) {
         return (
-            <span className="inline-flex items-center gap-1 rounded-md bg-[#FFF4DB] px-2 py-0.5 text-[11px] font-semibold text-[#B46E00]">
+            <span className="inline-flex items-center gap-1 rounded-md bg-cp-warning-soft px-2 py-0.5 text-[11px] font-semibold text-cp-warning-ink">
                 <CalendarDays className="size-3" /> TBA
             </span>
         );
@@ -483,15 +483,15 @@ function ScheduleCell({ event }: { event: EventRow }) {
         const endLabel = new Date(ends).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
         return (
             <div className="flex flex-col">
-                <span className="text-[13px] font-semibold text-[#14141B]">{startLabel}</span>
-                <span className="text-[11px] text-[#8A8A96]">→ {endLabel}</span>
+                <span className="text-[13px] font-semibold text-cp-ink">{startLabel}</span>
+                <span className="text-[11px] text-cp-muted">→ {endLabel}</span>
             </div>
         );
     }
     return (
         <div className="flex flex-col">
-            <span className="text-[13px] font-semibold text-[#14141B]">{startLabel}</span>
-            <span className="text-[11px] text-[#8A8A96]">Open ended</span>
+            <span className="text-[13px] font-semibold text-cp-ink">{startLabel}</span>
+            <span className="text-[11px] text-cp-muted">Open ended</span>
         </div>
     );
 }
@@ -500,13 +500,13 @@ function ModeChip({ event }: { event: EventRow }) {
     const mode = event.event_detail?.mode;
     if (mode === 'in_person') {
         return (
-            <span className="inline-flex items-center gap-1 rounded-md bg-[#F1EAFE] px-2 py-0.5 text-[11px] font-semibold text-[#7C3AED]">
+            <span className="inline-flex items-center gap-1 rounded-md bg-cp-accent-soft px-2 py-0.5 text-[11px] font-semibold text-cp-accent-ink">
                 <MapPin className="size-3" /> In person
             </span>
         );
     }
     return (
-        <span className="inline-flex items-center gap-1 rounded-md bg-[#E6F2FF] px-2 py-0.5 text-[11px] font-semibold text-[#0284C7]">
+        <span className="inline-flex items-center gap-1 rounded-md bg-cp-sky-soft px-2 py-0.5 text-[11px] font-semibold text-cp-sky-ink">
             <Globe2 className="size-3" /> Online
         </span>
     );
@@ -523,7 +523,7 @@ function RowActions({
 }) {
     const published = event.status === 'published';
     const itemClass =
-        'cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-[#4B4B57] focus:bg-[#F6F5F2] focus:text-[#14141B] [&_svg]:text-[#8A8A96]';
+        'cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-cp-body focus:bg-cp-canvas focus:text-cp-ink [&_svg]:text-cp-muted';
 
     return (
         <div className="">
@@ -533,7 +533,7 @@ function RowActions({
                         type="button"
                         aria-label={`More actions for ${event.title}`}
                         disabled={busy}
-                        className="rounded-lg p-1.5 text-[#8A8A96] transition hover:bg-[#F0EFEA] hover:text-[#14141B] disabled:opacity-50"
+                        className="rounded-lg p-1.5 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink disabled:opacity-50"
                     >
                         {busy ? <Loader2 className="size-[18px] animate-spin" /> : <MoreHorizontal className="size-[18px]" />}
                     </button>
@@ -568,7 +568,7 @@ function RowActions({
                     onSelect={() => onAction('delete')}
                     className={cn(
                         itemClass,
-                        'text-[#C2410C] focus:bg-[#FFEDE8] focus:text-[#C2410C] [&_svg]:!text-[#C2410C]',
+                        'text-cp-coral-dark-ink focus:bg-cp-coral-soft focus:text-cp-coral-dark-ink [&_svg]:!text-cp-coral-dark-ink',
                     )}
                 >
                     <Trash2 className="size-4" /> Delete
@@ -700,22 +700,22 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Events" />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     {/* Title */}
                     <div className="flex flex-col justify-between gap-3 pt-1 md:flex-row md:items-center">
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
-                                <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Events</h1>
-                                <span className="rounded-full bg-[#FFEDE8] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#C2410C] uppercase">
+                                <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Events</h1>
+                                <span className="rounded-full bg-cp-coral-soft px-2 py-0.5 text-[10px] font-semibold tracking-wider text-cp-coral-dark-ink uppercase">
                                     Live Workshops
                                 </span>
                             </div>
-                            <p className="text-sm text-[#8A8A96]">
+                            <p className="text-sm text-cp-muted">
                                 Host paid workshops, webinars, or in-person meetups — track registrations from one place.
                             </p>
                         </div>
-                        <Button onClick={createEvent} disabled={creating} className="w-fit bg-[#4F46E5] hover:bg-[#4338CA]">
+                        <Button onClick={createEvent} disabled={creating} className="w-fit text-white bg-cp-brand hover:bg-cp-brand-hover">
                             {creating ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
                             {creating ? 'Opening editor…' : 'Create event'}
                         </Button>
@@ -727,7 +727,7 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                             role={notice.kind === 'error' ? 'alert' : 'status'}
                             className={cn(
                                 'flex items-start justify-between gap-3 rounded-xl p-3.5 text-[13px] font-semibold',
-                                notice.kind === 'success' ? 'bg-[#E6F6EC] text-[#059669]' : 'bg-[#FFEDE8] text-[#C2410C]',
+                                notice.kind === 'success' ? 'bg-cp-success-soft text-cp-success-ink' : 'bg-cp-coral-soft text-cp-coral-dark-ink',
                             )}
                         >
                             <span className="flex items-start gap-2">
@@ -741,7 +741,7 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                             <button
                                 onClick={() => setNotice(null)}
                                 aria-label="Dismiss"
-                                className="rounded p-0.5 hover:bg-white/60"
+                                className="rounded p-0.5 hover:bg-cp-surface/60"
                             >
                                 <X className="size-4" />
                             </button>
@@ -750,23 +750,23 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
 
                     {/* First-run empty state */}
                     {totalEvents === 0 && !hasFilters ? (
-                        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-white px-6 py-14 text-center shadow-sm">
-                            <span className="flex size-14 items-center justify-center rounded-2xl bg-[#FFEDE8] text-[#FF6B4A]">
+                        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-cp-surface px-6 py-14 text-center shadow-sm">
+                            <span className="flex size-14 items-center justify-center rounded-2xl bg-cp-coral-soft text-cp-coral-ink">
                                 <Calendar className="size-7" />
                             </span>
-                            <h2 className="text-lg font-semibold text-[#14141B]">Create your first event</h2>
-                            <p className="max-w-md text-sm text-[#8A8A96]">
+                            <h2 className="text-lg font-semibold text-cp-ink">Create your first event</h2>
+                            <p className="max-w-md text-sm text-cp-muted">
                                 Sell seats to a live workshop, host a free webinar, or run an in-person meetup — buyers register and get a join
                                 link automatically.
                             </p>
-                            <div className="mt-1 flex flex-wrap items-center justify-center gap-2 text-xs font-medium text-[#4B4B57]">
+                            <div className="mt-1 flex flex-wrap items-center justify-center gap-2 text-xs font-medium text-cp-body">
                                 {['Online & in-person', 'Capacity & join links', 'Coupons & addons', 'Refund policies'].map((f) => (
-                                    <span key={f} className="rounded-full bg-[#F6F5F2] px-2.5 py-1">
+                                    <span key={f} className="rounded-full bg-cp-canvas px-2.5 py-1">
                                         {f}
                                     </span>
                                 ))}
                             </div>
-                            <Button onClick={createEvent} disabled={creating} className="mt-3 bg-[#4F46E5] hover:bg-[#4338CA]">
+                            <Button onClick={createEvent} disabled={creating} className="mt-3 text-white bg-cp-brand hover:bg-cp-brand-hover">
                                 {creating ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
                                 {creating ? 'Opening editor…' : 'Create event'}
                             </Button>
@@ -774,8 +774,8 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                     ) : (
                         <>
                             {/* Filters */}
-                            <div className="flex flex-col gap-4 rounded-xl bg-white p-4 shadow-sm">
-                                <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-[#F6F5F2] p-1">
+                            <div className="flex flex-col gap-4 rounded-xl bg-cp-surface p-4 shadow-sm">
+                                <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
                                     {STATUS_TABS.map((tab) => {
                                         const active = activeStatus === tab.key;
                                         return (
@@ -786,13 +786,13 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                                 className={cn(
                                                     'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
                                                     active
-                                                        ? 'bg-white text-[#4F46E5] shadow-sm'
-                                                        : 'text-[#8A8A96] hover:text-[#14141B]',
+                                                        ? 'bg-cp-surface text-cp-brand-ink shadow-sm'
+                                                        : 'text-cp-muted hover:text-cp-ink',
                                                 )}
                                             >
                                                 <span className={cn('size-2 rounded-full', tab.dot)} />
                                                 {tab.label}
-                                                <span className={cn('font-semibold', active ? 'text-[#4F46E5]' : 'text-[#8A8A96]')}>
+                                                <span className={cn('font-semibold', active ? 'text-cp-brand-ink' : 'text-cp-muted')}>
                                                     {countOf(tab.key)}
                                                 </span>
                                             </button>
@@ -800,13 +800,13 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                     })}
                                 </div>
                                 <form onSubmit={submitSearch} className="relative max-w-sm">
-                                    <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#8A8A96]" />
+                                    <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-cp-muted" />
                                     <input
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Search events by title…"
                                         aria-label="Search events"
-                                        className="w-full rounded-lg bg-[#F6F5F2] py-2 pr-9 pl-9 text-sm text-[#14141B] outline-none placeholder:text-[#8A8A96] focus:bg-white focus:ring-2 focus:ring-[#4F46E5]/20"
+                                        className="w-full rounded-lg bg-cp-canvas py-2 pr-9 pl-9 text-sm text-cp-ink outline-none placeholder:text-cp-muted focus:bg-cp-surface focus:ring-2 focus:ring-cp-brand/20"
                                     />
                                     {search && (
                                         <button
@@ -816,7 +816,7 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                                 if (filters.search) applyFilters({ search: null });
                                             }}
                                             aria-label="Clear search"
-                                            className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 text-[#8A8A96] hover:text-[#14141B]"
+                                            className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 text-cp-muted hover:text-cp-ink"
                                         >
                                             <X className="size-3.5" />
                                         </button>
@@ -825,11 +825,11 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                             </div>
 
                             {/* Events table */}
-                            <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-                                <div className="flex items-center justify-between border-b border-[#E4E2DA]/70 px-6 py-4">
+                            <div className="overflow-hidden rounded-xl bg-cp-surface shadow-sm">
+                                <div className="flex items-center justify-between border-b border-cp-line/70 px-6 py-4">
                                     <div>
-                                        <h2 className="text-base font-semibold text-[#14141B]">Your events</h2>
-                                        <p className="mt-0.5 text-xs text-[#8A8A96]">
+                                        <h2 className="text-base font-semibold text-cp-ink">Your events</h2>
+                                        <p className="mt-0.5 text-xs text-cp-muted">
                                             {items.total > 0
                                                 ? `Showing ${items.from ?? 0}–${items.to ?? 0} of ${items.total} events`
                                                 : 'No events match these filters'}
@@ -839,7 +839,7 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                 <div className="overflow-x-auto">
                                     <table className="w-full border-collapse text-left text-sm">
                                         <thead>
-                                            <tr className="bg-[#F6F5F2]/60 text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">
+                                            <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
                                                 <th className="px-6 py-3">Event</th>
                                                 <th className="px-4 py-3">Schedule</th>
                                                 <th className="px-4 py-3">Price</th>
@@ -849,23 +849,23 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                                 <th className="px-6 py-3 text-right">Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-[#E4E2DA]/50">
+                                        <tbody className="divide-y divide-cp-line/50">
                                             {items.data.length === 0 && (
                                                 <tr>
                                                     <td colSpan={7} className="px-6 py-8">
-                                                        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#E4E2DA] bg-[#FAF9F5] py-8 text-center">
-                                                            <span className="flex size-10 items-center justify-center rounded-full bg-[#ECEBE6] text-[#8A8A96]">
+                                                        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+                                                            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
                                                                 <Inbox className="size-5" />
                                                             </span>
-                                                            <p className="mt-1 text-sm font-semibold text-[#14141B]">No events found</p>
-                                                            <p className="max-w-xs px-4 text-xs text-[#8A8A96]">
+                                                            <p className="mt-1 text-sm font-semibold text-cp-ink">No events found</p>
+                                                            <p className="max-w-xs px-4 text-xs text-cp-muted">
                                                                 Try a different search or status filter.
                                                             </p>
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
                                                                 onClick={clearFilters}
-                                                                className="mt-3 border-[#E4E2DA]"
+                                                                className="mt-3 border-cp-line"
                                                             >
                                                                 Clear filters
                                                             </Button>
@@ -882,7 +882,7 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                                     <tr
                                                         key={event.id}
                                                         onClick={() => router.visit(editUrl)}
-                                                        className="group cursor-pointer transition hover:bg-[#F6F5F2]/60"
+                                                        className="group cursor-pointer transition hover:bg-cp-canvas/60"
                                                     >
                                                         <td className="px-6 py-3.5">
                                                             <div className="flex min-w-[260px] items-center gap-3">
@@ -890,7 +890,7 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                                                     className={cn(
                                                                         'flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl',
                                                                         event.cover_image
-                                                                            ? 'bg-[#F6F5F2]'
+                                                                            ? 'bg-cp-canvas'
                                                                             : tileTone(event.title || String(event.id)),
                                                                     )}
                                                                 >
@@ -905,10 +905,10 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                                                     )}
                                                                 </span>
                                                                 <div className="min-w-0">
-                                                                    <span className="block max-w-[280px] truncate text-[13px] font-semibold text-[#14141B] group-hover:text-[#4F46E5]">
+                                                                    <span className="block max-w-[280px] truncate text-[13px] font-semibold text-cp-ink group-hover:text-cp-brand-ink">
                                                                         {event.title || 'Untitled event'}
                                                                     </span>
-                                                                    <span className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-[#8A8A96]">
+                                                                    <span className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-cp-muted">
                                                                         <ModeChip event={event} />
                                                                         {detail?.venue_address && (
                                                                             <span className="inline-flex max-w-[180px] items-center gap-1 truncate">
@@ -926,10 +926,10 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                                             <PriceCell event={event} />
                                                         </td>
                                                         <td className="px-4 py-3.5 whitespace-nowrap">
-                                                            <span className="block text-[13px] font-bold text-[#14141B]">
+                                                            <span className="block text-[13px] font-bold text-cp-ink">
                                                                 {money(event.revenue_total)}
                                                             </span>
-                                                            <span className="text-xs text-[#8A8A96]">
+                                                            <span className="text-xs text-cp-muted">
                                                                 {event.sales_count} {event.sales_count === 1 ? 'sale' : 'sales'} ·{' '}
                                                                 {conversion === null
                                                                     ? 'no views'
@@ -937,10 +937,10 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                                             </span>
                                                         </td>
                                                         <td className="px-4 py-3.5 whitespace-nowrap">
-                                                            <span className="block text-[13px] font-semibold text-[#14141B]">
+                                                            <span className="block text-[13px] font-semibold text-cp-ink">
                                                                 {event.registrations_count ?? 0}
                                                             </span>
-                                                            <span className="text-xs text-[#8A8A96]">registered</span>
+                                                            <span className="text-xs text-cp-muted">registered</span>
                                                         </td>
                                                         <td className="px-4 py-3.5 text-center whitespace-nowrap">
                                                             <StatusPill status={event.status} />
@@ -954,7 +954,7 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                                                     href={`${BASE}/${event.uuid}/attendees`}
                                                                     title="Attendees"
                                                                     aria-label={`Attendees of ${event.title}`}
-                                                                    className="rounded-lg p-1.5 text-[#8A8A96] transition hover:bg-[#F0EFEA] hover:text-[#14141B]"
+                                                                    className="rounded-lg p-1.5 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink"
                                                                 >
                                                                     <Users className="size-[18px]" />
                                                                 </Link>
@@ -962,7 +962,7 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                                                     href={editUrl}
                                                                     title="Edit event"
                                                                     aria-label={`Edit ${event.title}`}
-                                                                    className="rounded-lg p-1.5 text-[#8A8A96] transition hover:bg-[#F0EFEA] hover:text-[#14141B]"
+                                                                    className="rounded-lg p-1.5 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink"
                                                                 >
                                                                     <Pencil className="size-[18px]" />
                                                                 </Link>
@@ -980,10 +980,10 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                     </table>
                                 </div>
                                 {items.total > 0 && (
-                                    <div className="flex flex-col items-center justify-between gap-3 border-t border-[#E4E2DA]/60 p-4 sm:flex-row">
-                                        <p className="text-xs text-[#8A8A96]">
-                                            Page <span className="font-semibold text-[#14141B]">{items.current_page}</span> of{' '}
-                                            <span className="font-semibold text-[#14141B]">{items.last_page}</span>
+                                    <div className="flex flex-col items-center justify-between gap-3 border-t border-cp-line/60 p-4 sm:flex-row">
+                                        <p className="text-xs text-cp-muted">
+                                            Page <span className="font-semibold text-cp-ink">{items.current_page}</span> of{' '}
+                                            <span className="font-semibold text-cp-ink">{items.last_page}</span>
                                         </p>
                                         <div className="flex items-center gap-2">
                                             <Button
@@ -991,7 +991,7 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                                 size="sm"
                                                 disabled={items.current_page <= 1}
                                                 onClick={() => goToPage(items.current_page - 1)}
-                                                className="border-[#E4E2DA]"
+                                                className="border-cp-line"
                                             >
                                                 Previous
                                             </Button>
@@ -1000,7 +1000,7 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                                 size="sm"
                                                 disabled={items.current_page >= items.last_page}
                                                 onClick={() => goToPage(items.current_page + 1)}
-                                                className="border-[#E4E2DA]"
+                                                className="border-cp-line"
                                             >
                                                 Next <ArrowUpRight className="size-3.5" />
                                             </Button>
@@ -1009,8 +1009,8 @@ export default function EventsIndex({ items, counts, filters }: EventsIndexProps
                                 )}
                             </div>
 
-                            <p className="flex items-center gap-1.5 text-xs text-[#8A8A96]">
-                                <Ticket className="size-3.5 text-[#FF6B4A]" />
+                            <p className="flex items-center gap-1.5 text-xs text-cp-muted">
+                                <Ticket className="size-3.5 text-cp-coral-ink" />
                                 Attendees get a join link or venue address the moment their payment settles.
                             </p>
                         </>
@@ -1047,7 +1047,7 @@ function DropdownMenuShim({ trigger, children }: { trigger: React.ReactNode; chi
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 rounded-xl border-[#E4E2DA] bg-white p-1.5 shadow-lg">
+            <DropdownMenuContent align="end" className="w-52 rounded-xl border-cp-line bg-cp-surface p-1.5 shadow-lg">
                 {children}
             </DropdownMenuContent>
         </DropdownMenu>
@@ -1073,5 +1073,5 @@ function DropdownItemShim({
 }
 
 function DropdownDividerShim() {
-    return <DropdownMenuSeparator className="bg-[#E4E2DA]/70" />;
+    return <DropdownMenuSeparator className="bg-cp-line/70" />;
 }

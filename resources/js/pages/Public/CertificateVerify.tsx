@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/brand';
 import { type SharedData } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { BadgeCheck, CircleSlash, SearchX, ShieldCheck } from 'lucide-react';
@@ -34,9 +35,8 @@ export default function CertificateVerify({ number, result }: { number: string |
                 <meta name="robots" content="noindex" />
             </Head>
 
-            <div className="mb-6 flex items-center gap-2.5">
-                <span className="flex size-9 items-center justify-center rounded-lg bg-[#4F46E5] text-sm font-bold text-white">{appName.charAt(0)}</span>
-                <span className="text-base font-bold">{appName}</span>
+            <div className="mb-6 flex items-center">
+                <BrandLogo className="h-9" />
             </div>
 
             <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-sm sm:p-8">

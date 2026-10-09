@@ -1,6 +1,7 @@
+import { BrandIcon } from '@/components/brand';
 import { cn } from '@/lib/utils';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { BadgeCheck, Banknote, CreditCard, FileClock, LayoutDashboard, LogOut, Menu, MessageSquareWarning, Receipt, ShieldCheck, Users, Wallet, X } from 'lucide-react';
+import { BadgeCheck, Banknote, CreditCard, FileClock, LayoutDashboard, LogOut, Menu, MessageSquareWarning, Receipt, Users, Wallet, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 type AdminShared = { admin: { uuid: string; name: string; email: string } | null; flash?: { status?: string | null } };
@@ -60,7 +61,7 @@ export default function AdminLayout({ title, children }: { title: string; childr
                 >
                     <div className="flex h-14 items-center justify-between gap-2 border-b border-white/10 px-4">
                         <span className="flex items-center gap-2 text-sm font-bold text-white">
-                            <ShieldCheck className="size-5 text-indigo-400" /> Platform admin
+                            <BrandIcon className="size-7" /> Platform admin
                         </span>
                         <button onClick={() => setOpen(false)} className="text-slate-400 lg:hidden" aria-label="Close menu">
                             <X className="size-5" />

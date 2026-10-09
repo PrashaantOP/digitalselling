@@ -47,11 +47,11 @@ function SaveRow({ busy, saved, error, onSave, disabled, label = 'Save content' 
         <div className="flex flex-col gap-2">
             {error && <Notice tone="error">{error}</Notice>}
             <div className="flex items-center gap-3">
-                <button type="button" onClick={onSave} disabled={busy || disabled} className="flex h-9 items-center gap-1.5 rounded-lg bg-[#4F46E5] px-4 text-sm font-semibold text-white transition hover:bg-[#4338CA] disabled:opacity-50">
+                <button type="button" onClick={onSave} disabled={busy || disabled} className="flex h-9 items-center gap-1.5 rounded-lg bg-cp-brand px-4 text-sm font-semibold text-white transition hover:bg-cp-brand-hover disabled:opacity-50">
                     {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} {busy ? 'Saving…' : label}
                 </button>
                 {saved && !busy && (
-                    <span role="status" className="text-xs font-medium text-[#059669]">
+                    <span role="status" className="text-xs font-medium text-cp-success-ink">
                         Content saved
                     </span>
                 )}
@@ -63,15 +63,15 @@ function SaveRow({ busy, saved, error, onSave, disabled, label = 'Save content' 
 function FilePicker({ label, accept, files, onChange, multiple = true, hint }: { label: string; accept: string; files: File[]; onChange: (f: File[]) => void; multiple?: boolean; hint?: string }) {
     return (
         <div className="flex flex-col gap-2">
-            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-[#DAD8D0] bg-[#FAF9F5] px-3 py-4 text-sm font-semibold text-[#4F46E5] hover:bg-[#EEF2FF]">
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-cp-line-strong bg-cp-surface-2 px-3 py-4 text-sm font-semibold text-cp-brand-ink hover:bg-cp-brand-soft">
                 <Upload className="size-4" /> {label}
                 <input type="file" accept={accept} multiple={multiple} aria-label={label} className="sr-only" onChange={(e) => e.target.files && onChange(multiple ? [...files, ...Array.from(e.target.files)] : Array.from(e.target.files).slice(0, 1))} />
             </label>
-            {hint && <span className="text-[11px] text-[#8A8A96]">{hint}</span>}
+            {hint && <span className="text-[11px] text-cp-muted">{hint}</span>}
             {files.map((f, i) => (
-                <div key={`${f.name}-${i}`} className="flex items-center gap-2 rounded-lg bg-[#F6F5F2] px-3 py-1.5 text-xs text-[#14141B]">
-                    <FileText className="size-3.5 shrink-0 text-[#8A8A96]" /> <span className="min-w-0 flex-1 truncate">{f.name}</span>
-                    <button type="button" aria-label={`Remove ${f.name}`} onClick={() => onChange(files.filter((_, j) => j !== i))} className="text-[#D93838]">
+                <div key={`${f.name}-${i}`} className="flex items-center gap-2 rounded-lg bg-cp-canvas px-3 py-1.5 text-xs text-cp-ink">
+                    <FileText className="size-3.5 shrink-0 text-cp-muted" /> <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                    <button type="button" aria-label={`Remove ${f.name}`} onClick={() => onChange(files.filter((_, j) => j !== i))} className="text-cp-red-ink">
                         <X className="size-3.5" />
                     </button>
                 </div>
@@ -125,9 +125,9 @@ function TextEditor({ lesson, onSaved, startSaved }: EditorProps) {
                     {existing
                         .filter((i) => !removed.includes(i.id))
                         .map((img) => (
-                            <div key={img.id} className="relative aspect-square overflow-hidden rounded-lg bg-[#F6F5F2]">
+                            <div key={img.id} className="relative aspect-square overflow-hidden rounded-lg bg-cp-canvas">
                                 <img src={assetUrl(img.image_path)} alt="" className="size-full object-cover" />
-                                <button type="button" aria-label="Remove image" onClick={() => (setRemoved([...removed, img.id]), s.touch())} className="absolute top-1 right-1 rounded-full bg-white/90 p-1 text-[#D93838] shadow">
+                                <button type="button" aria-label="Remove image" onClick={() => (setRemoved([...removed, img.id]), s.touch())} className="absolute top-1 right-1 rounded-full bg-cp-surface/90 p-1 text-cp-red-ink shadow">
                                     <X className="size-3.5" />
                                 </button>
                             </div>
@@ -195,22 +195,22 @@ function NotesEditor({ lesson, onSaved, startSaved }: EditorProps) {
             {existing
                 .filter((f) => !removed.includes(f.id))
                 .map((f) => (
-                    <div key={f.id} className="flex items-center gap-2 rounded-lg bg-[#F6F5F2] px-3 py-1.5 text-xs text-[#14141B]">
-                        <FileText className="size-3.5 shrink-0 text-[#8A8A96]" /> <span className="min-w-0 flex-1 truncate">{f.original_name}</span>
-                        {!allow && !readableInApp(f.original_name) && <span className="shrink-0 rounded-full bg-[#FFEDE8] px-2 py-0.5 text-[10px] font-semibold text-[#C2410C]">Learners can’t open</span>}
-                        <button type="button" aria-label={`Remove ${f.original_name}`} onClick={() => (setRemoved([...removed, f.id]), s.touch())} className="text-[#D93838]">
+                    <div key={f.id} className="flex items-center gap-2 rounded-lg bg-cp-canvas px-3 py-1.5 text-xs text-cp-ink">
+                        <FileText className="size-3.5 shrink-0 text-cp-muted" /> <span className="min-w-0 flex-1 truncate">{f.original_name}</span>
+                        {!allow && !readableInApp(f.original_name) && <span className="shrink-0 rounded-full bg-cp-coral-soft px-2 py-0.5 text-[10px] font-semibold text-cp-coral-dark-ink">Learners can’t open</span>}
+                        <button type="button" aria-label={`Remove ${f.original_name}`} onClick={() => (setRemoved([...removed, f.id]), s.touch())} className="text-cp-red-ink">
                             <X className="size-3.5" />
                         </button>
                     </div>
                 ))}
             <FilePicker label="Add files" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip" files={files} onChange={(f) => (setFiles(f), s.touch())} hint="PDF preferred — learners read it inside the lesson. Also doc, ppt, xls, txt or zip · up to 50 MB each" />
-            <div className="flex items-center justify-between rounded-lg bg-[#F6F5F2] px-3 py-2.5">
-                <span className="text-sm text-[#14141B]">Let learners download these files</span>
+            <div className="flex items-center justify-between rounded-lg bg-cp-canvas px-3 py-2.5">
+                <span className="text-sm text-cp-ink">Let learners download these files</span>
                 <Toggle checked={allow} onChange={(v) => (setAllow(v), s.touch())} label="Allow download" />
             </div>
-            <p className="text-xs text-[#8A8A96]">{allow ? 'PDF and txt files also open inside the lesson. Other files are download-only.' : 'Learners read PDF and txt files inside the lesson, with no download button.'}</p>
+            <p className="text-xs text-cp-muted">{allow ? 'PDF and txt files also open inside the lesson. Other files are download-only.' : 'Learners read PDF and txt files inside the lesson, with no download button.'}</p>
             {blocked.length > 0 && (
-                <div role="alert" className="flex items-start gap-2 rounded-lg border border-[#F5C6B8] bg-[#FFEDE8] p-3 text-xs text-[#9A3412]">
+                <div role="alert" className="flex items-start gap-2 rounded-lg border border-cp-coral-line bg-cp-coral-soft p-3 text-xs text-cp-coral-strong-ink">
                     <AlertTriangle className="mt-px size-4 shrink-0" />
                     <div className="min-w-0">
                         <p className="font-semibold">
@@ -238,8 +238,8 @@ function AssignmentEditor({ lesson, onSaved, startSaved }: EditorProps) {
             <Field label="Assignment prompt" htmlFor={`prompt-${lesson.id}`} required error={s.fieldErrors.assignment_prompt}>
                 <textarea id={`prompt-${lesson.id}`} rows={4} value={prompt} onChange={(e) => (setPrompt(e.target.value), s.touch())} placeholder="What should the student submit?" className={cn(TEXTAREA, invalid(s.fieldErrors.assignment_prompt))} />
             </Field>
-            <div className="flex items-center justify-between rounded-lg bg-[#F6F5F2] px-3 py-2.5">
-                <span className="text-sm text-[#14141B]">Allow file upload</span>
+            <div className="flex items-center justify-between rounded-lg bg-cp-canvas px-3 py-2.5">
+                <span className="text-sm text-cp-ink">Allow file upload</span>
                 <Toggle checked={allow} onChange={(v) => (setAllow(v), s.touch())} label="Allow file upload" />
             </div>
             <SaveRow busy={s.busy} saved={s.saved} error={s.error} disabled={prompt.trim() === ''} onSave={() => s.save({ assignment_prompt: prompt.trim(), allow_file_upload: allow })} />
@@ -291,45 +291,45 @@ function QuestionForm({ lessonUuid, question, onDone }: { lessonUuid: string; qu
     }
 
     return (
-        <div className="flex flex-col gap-3 rounded-xl border border-[#4F46E5]/30 bg-[#F8F8FF] p-3">
+        <div className="flex flex-col gap-3 rounded-xl border border-cp-brand/30 bg-cp-surface-2 p-3">
             <Field label="Question" htmlFor={`q-text-${question?.id ?? 'new'}`} required>
                 <textarea id={`q-text-${question?.id ?? 'new'}`} rows={2} maxLength={2000} value={text} onChange={(e) => setText(e.target.value)} className={TEXTAREA} />
             </Field>
             <div className="grid grid-cols-2 gap-2">
                 {([['single_choice', 'Single answer'], ['multiple_choice', 'Multiple answers']] as const).map(([k, label]) => (
-                    <button key={k} type="button" aria-pressed={type === k} onClick={() => setType(k)} className={cn('h-9 rounded-lg border text-xs font-semibold', type === k ? 'border-[#4F46E5] bg-white text-[#4F46E5]' : 'border-[#E4E2DA] bg-white text-[#4B4B57]')}>
+                    <button key={k} type="button" aria-pressed={type === k} onClick={() => setType(k)} className={cn('h-9 rounded-lg border text-xs font-semibold', type === k ? 'border-cp-brand bg-cp-surface text-cp-brand-ink' : 'border-cp-line bg-cp-surface text-cp-body')}>
                         {label}
                     </button>
                 ))}
             </div>
             <div className="flex flex-col gap-2">
-                <span className="text-[11px] text-[#8A8A96]">Tick the correct {type === 'single_choice' ? 'answer' : 'answers'}.</span>
+                <span className="text-[11px] text-cp-muted">Tick the correct {type === 'single_choice' ? 'answer' : 'answers'}.</span>
                 {options.map((o, i) => (
                     <div key={i} className="flex items-center gap-2">
-                        <button type="button" role={type === 'single_choice' ? 'radio' : 'checkbox'} aria-checked={o.is_correct} aria-label={`Option ${i + 1} is correct`} onClick={() => toggleCorrect(i)} className={cn('flex size-6 shrink-0 items-center justify-center border', type === 'single_choice' ? 'rounded-full' : 'rounded-md', o.is_correct ? 'border-[#059669] bg-[#059669] text-white' : 'border-[#DAD8D0] bg-white text-transparent')}>
+                        <button type="button" role={type === 'single_choice' ? 'radio' : 'checkbox'} aria-checked={o.is_correct} aria-label={`Option ${i + 1} is correct`} onClick={() => toggleCorrect(i)} className={cn('flex size-6 shrink-0 items-center justify-center border', type === 'single_choice' ? 'rounded-full' : 'rounded-md', o.is_correct ? 'border-cp-success bg-cp-success text-white' : 'border-cp-line-strong bg-cp-surface text-transparent')}>
                             <Check className="size-3.5" />
                         </button>
                         <input aria-label={`Option ${i + 1}`} value={o.text} maxLength={500} onChange={(e) => setOptions(options.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} placeholder={`Option ${i + 1}`} className={INPUT} />
-                        <button type="button" aria-label={`Remove option ${i + 1}`} disabled={options.length <= 2} onClick={() => setOptions(options.filter((_, j) => j !== i))} className="rounded p-1.5 text-[#D93838] hover:bg-white disabled:opacity-30">
+                        <button type="button" aria-label={`Remove option ${i + 1}`} disabled={options.length <= 2} onClick={() => setOptions(options.filter((_, j) => j !== i))} className="rounded p-1.5 text-cp-red-ink hover:bg-cp-surface disabled:opacity-30">
                             <X className="size-4" />
                         </button>
                     </div>
                 ))}
                 {options.length < 8 && (
-                    <button type="button" onClick={() => setOptions([...options, { text: '', is_correct: false }])} className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#DAD8D0] text-xs font-semibold text-[#4F46E5] hover:bg-white">
+                    <button type="button" onClick={() => setOptions([...options, { text: '', is_correct: false }])} className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-dashed border-cp-line-strong text-xs font-semibold text-cp-brand-ink hover:bg-cp-surface">
                         <Plus className="size-3.5" /> Add option
                     </button>
                 )}
             </div>
             {error && <Notice tone="error">{error}</Notice>}
             <div className="flex items-center gap-2">
-                <button type="button" onClick={submit} disabled={busy || Boolean(problem)} className="flex h-9 items-center gap-1.5 rounded-lg bg-[#4F46E5] px-4 text-sm font-semibold text-white hover:bg-[#4338CA] disabled:opacity-50">
+                <button type="button" onClick={submit} disabled={busy || Boolean(problem)} className="flex h-9 items-center gap-1.5 rounded-lg bg-cp-brand px-4 text-sm font-semibold text-white hover:bg-cp-brand-hover disabled:opacity-50">
                     {busy && <Loader2 className="size-4 animate-spin" />} {question ? 'Update question' : 'Add question'}
                 </button>
-                <button type="button" onClick={onDone} disabled={busy} className="h-9 rounded-lg px-3 text-sm font-semibold text-[#4B4B57] hover:bg-white">
+                <button type="button" onClick={onDone} disabled={busy} className="h-9 rounded-lg px-3 text-sm font-semibold text-cp-body hover:bg-cp-surface">
                     Cancel
                 </button>
-                {problem && <span className="text-[11px] text-[#8A8A96]">{problem}</span>}
+                {problem && <span className="text-[11px] text-cp-muted">{problem}</span>}
             </div>
         </div>
     );
@@ -362,30 +362,30 @@ function QuizEditor({ lesson, onSaved, startSaved }: EditorProps) {
 
             <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold tracking-wider text-[#14141B] uppercase">Questions ({questions.length})</span>
+                    <span className="text-xs font-semibold tracking-wider text-cp-ink uppercase">Questions ({questions.length})</span>
                 </div>
                 {error && <Notice tone="error">{error}</Notice>}
-                {questions.length === 0 && editing !== 'new' && <p className="rounded-lg border border-dashed border-[#E4E2DA] p-4 text-center text-xs text-[#8A8A96]">No questions yet. Add the first one — quizzes are auto-graded.</p>}
+                {questions.length === 0 && editing !== 'new' && <p className="rounded-lg border border-dashed border-cp-line p-4 text-center text-xs text-cp-muted">No questions yet. Add the first one — quizzes are auto-graded.</p>}
                 {questions.map((q, i) =>
                     editing === q.id ? (
                         <QuestionForm key={q.id} lessonUuid={lesson.uuid} question={q} onDone={() => setEditing(null)} />
                     ) : (
-                        <div key={q.id} className="rounded-lg border border-[#E4E2DA] bg-white p-3">
+                        <div key={q.id} className="rounded-lg border border-cp-line bg-cp-surface p-3">
                             <div className="flex items-start justify-between gap-2">
-                                <p className="text-sm font-medium text-[#14141B]">
-                                    <span className="mr-1.5 text-[#8A8A96]">{i + 1}.</span>
+                                <p className="text-sm font-medium text-cp-ink">
+                                    <span className="mr-1.5 text-cp-muted">{i + 1}.</span>
                                     {q.question_text}
                                 </p>
                                 <div className="flex shrink-0 items-center gap-0.5">
-                                    <button type="button" aria-label={`Edit question ${i + 1}`} onClick={() => setEditing(q.id)} className="rounded p-1.5 text-[#8A8A96] hover:bg-[#F0EFEA] hover:text-[#14141B]">
+                                    <button type="button" aria-label={`Edit question ${i + 1}`} onClick={() => setEditing(q.id)} className="rounded p-1.5 text-cp-muted hover:bg-cp-surface-3 hover:text-cp-ink">
                                         <Pencil className="size-3.5" />
                                     </button>
                                     {confirmId === q.id ? (
-                                        <button type="button" onClick={() => remove(q)} className="rounded bg-[#D93838] px-2 py-1 text-[11px] font-semibold text-white">
+                                        <button type="button" onClick={() => remove(q)} className="rounded bg-cp-red px-2 py-1 text-[11px] font-semibold text-white">
                                             Confirm delete
                                         </button>
                                     ) : (
-                                        <button type="button" aria-label={`Delete question ${i + 1}`} onClick={() => setConfirmId(q.id)} className="rounded p-1.5 text-[#8A8A96] hover:bg-[#FFEDE8] hover:text-[#C2410C]">
+                                        <button type="button" aria-label={`Delete question ${i + 1}`} onClick={() => setConfirmId(q.id)} className="rounded p-1.5 text-cp-muted hover:bg-cp-coral-soft hover:text-cp-coral-dark-ink">
                                             <Trash2 className="size-3.5" />
                                         </button>
                                     )}
@@ -393,8 +393,8 @@ function QuizEditor({ lesson, onSaved, startSaved }: EditorProps) {
                             </div>
                             <ul className="mt-2 flex flex-col gap-1">
                                 {q.options.map((o) => (
-                                    <li key={o.id} className={cn('flex items-center gap-2 text-xs', o.is_correct ? 'font-semibold text-[#059669]' : 'text-[#6B6B78]')}>
-                                        <span className={cn('flex size-4 items-center justify-center rounded-full', o.is_correct ? 'bg-[#E6F6EC]' : 'bg-[#F0EFEA]')}>{o.is_correct && <Check className="size-3" />}</span>
+                                    <li key={o.id} className={cn('flex items-center gap-2 text-xs', o.is_correct ? 'font-semibold text-cp-success-ink' : 'text-cp-subtle')}>
+                                        <span className={cn('flex size-4 items-center justify-center rounded-full', o.is_correct ? 'bg-cp-success-soft' : 'bg-cp-surface-3')}>{o.is_correct && <Check className="size-3" />}</span>
                                         {o.option_text}
                                     </li>
                                 ))}
@@ -405,7 +405,7 @@ function QuizEditor({ lesson, onSaved, startSaved }: EditorProps) {
                 {editing === 'new' ? (
                     <QuestionForm lessonUuid={lesson.uuid} onDone={() => setEditing(null)} />
                 ) : (
-                    <button type="button" onClick={() => setEditing('new')} className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#DAD8D0] text-sm font-semibold text-[#4F46E5] hover:bg-[#EEF2FF]">
+                    <button type="button" onClick={() => setEditing('new')} className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-dashed border-cp-line-strong text-sm font-semibold text-cp-brand-ink hover:bg-cp-brand-soft">
                         <Plus className="size-4" /> Add question
                     </button>
                 )}

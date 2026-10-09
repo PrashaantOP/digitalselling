@@ -49,29 +49,29 @@ export function PdfViewer({ url, title }: { url: string; title: string }) {
     }, [url]);
 
     if (failed) {
-        return <p className="rounded-xl bg-[#FFEDE8] p-4 text-sm font-medium text-[#C2410C]">Could not open this file. Refresh the page and try again.</p>;
+        return <p className="rounded-xl bg-cp-coral-soft p-4 text-sm font-medium text-cp-coral-dark-ink">Could not open this file. Refresh the page and try again.</p>;
     }
 
     if (!pdf) {
         return (
-            <p className="flex items-center justify-center gap-2 rounded-xl bg-[#F6F5F2] py-16 text-sm text-[#8A8A96]">
+            <p className="flex items-center justify-center gap-2 rounded-xl bg-cp-canvas py-16 text-sm text-cp-muted">
                 <Loader2 className="size-4 animate-spin" /> Opening {title}…
             </p>
         );
     }
 
     return (
-        <div className="overflow-hidden rounded-xl border border-[#E4E2DA] bg-[#ECEBE6]">
-            <div className="flex items-center justify-between gap-3 border-b border-[#E4E2DA] bg-white px-3 py-2">
-                <p className="min-w-0 truncate text-xs font-semibold text-[#4B4B57]">
+        <div className="overflow-hidden rounded-xl border border-cp-line bg-cp-surface-3">
+            <div className="flex items-center justify-between gap-3 border-b border-cp-line bg-cp-surface px-3 py-2">
+                <p className="min-w-0 truncate text-xs font-semibold text-cp-body">
                     {title} · {pdf.numPages} {pdf.numPages === 1 ? 'page' : 'pages'}
                 </p>
                 <div className="flex shrink-0 items-center gap-1">
-                    <button type="button" onClick={() => setZoom((z) => Math.max(0, z - 1))} disabled={zoom === 0} aria-label="Zoom out" className="flex size-8 items-center justify-center rounded-lg text-[#4B4B57] hover:bg-[#F6F5F2] disabled:opacity-40">
+                    <button type="button" onClick={() => setZoom((z) => Math.max(0, z - 1))} disabled={zoom === 0} aria-label="Zoom out" className="flex size-8 items-center justify-center rounded-lg text-cp-body hover:bg-cp-canvas disabled:opacity-40">
                         <Minus className="size-4" />
                     </button>
-                    <span className="w-11 text-center text-xs font-semibold text-[#4B4B57] tabular-nums">{ZOOMS[zoom] * 100}%</span>
-                    <button type="button" onClick={() => setZoom((z) => Math.min(ZOOMS.length - 1, z + 1))} disabled={zoom === ZOOMS.length - 1} aria-label="Zoom in" className="flex size-8 items-center justify-center rounded-lg text-[#4B4B57] hover:bg-[#F6F5F2] disabled:opacity-40">
+                    <span className="w-11 text-center text-xs font-semibold text-cp-body tabular-nums">{ZOOMS[zoom] * 100}%</span>
+                    <button type="button" onClick={() => setZoom((z) => Math.min(ZOOMS.length - 1, z + 1))} disabled={zoom === ZOOMS.length - 1} aria-label="Zoom in" className="flex size-8 items-center justify-center rounded-lg text-cp-body hover:bg-cp-canvas disabled:opacity-40">
                         <Plus className="size-4" />
                     </button>
                 </div>
@@ -147,10 +147,10 @@ function PdfPage({ pdf, number, ratio }: { pdf: PDFDocumentProxy; number: number
     }, [near, pdf, number]);
 
     return (
-        <div ref={box} className="relative w-full overflow-hidden rounded bg-white shadow-sm" style={{ aspectRatio: `1 / ${pageRatio}` }}>
+        <div ref={box} className="relative w-full overflow-hidden rounded bg-cp-surface shadow-sm" style={{ aspectRatio: `1 / ${pageRatio}` }}>
             <canvas ref={canvas} role="img" aria-label={`Page ${number}`} className="block size-full" />
             {!drawn && (
-                <span className="absolute inset-0 flex items-center justify-center text-xs text-[#8A8A96]">
+                <span className="absolute inset-0 flex items-center justify-center text-xs text-cp-muted">
                     <Loader2 className="mr-1.5 size-3.5 animate-spin" /> Page {number}
                 </span>
             )}
@@ -178,8 +178,8 @@ export function TextFileViewer({ url }: { url: string }) {
         };
     }, [url]);
 
-    if (failed) return <p className="rounded-xl bg-[#FFEDE8] p-4 text-sm font-medium text-[#C2410C]">Could not open this file. Refresh the page and try again.</p>;
-    if (text === null) return <p className="rounded-xl bg-[#F6F5F2] py-10 text-center text-sm text-[#8A8A96]">Opening…</p>;
+    if (failed) return <p className="rounded-xl bg-cp-coral-soft p-4 text-sm font-medium text-cp-coral-dark-ink">Could not open this file. Refresh the page and try again.</p>;
+    if (text === null) return <p className="rounded-xl bg-cp-canvas py-10 text-center text-sm text-cp-muted">Opening…</p>;
 
-    return <pre className="max-h-[78vh] overflow-auto rounded-xl border border-[#E4E2DA] bg-[#FAFAF8] p-4 font-sans text-sm leading-relaxed break-words whitespace-pre-wrap text-[#14141B]">{text}</pre>;
+    return <pre className="max-h-[78vh] overflow-auto rounded-xl border border-cp-line bg-cp-surface-2 p-4 font-sans text-sm leading-relaxed break-words whitespace-pre-wrap text-cp-ink">{text}</pre>;
 }

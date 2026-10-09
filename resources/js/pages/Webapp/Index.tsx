@@ -66,19 +66,19 @@ export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Web App" />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <StoreTabsHeader active="webapp" />
                 <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     {/* Title */}
                     <div className="flex flex-col justify-between gap-3 pt-1 md:flex-row md:items-center">
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
-                                <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Web App</h1>
-                                <span className="rounded-full bg-[#EEF0FF] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#4F46E5] uppercase">
+                                <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Web App</h1>
+                                <span className="rounded-full bg-cp-brand-soft px-2 py-0.5 text-[10px] font-semibold tracking-wider text-cp-brand-ink uppercase">
                                     Installable
                                 </span>
                             </div>
-                            <p className="text-sm text-[#8A8A96]">
+                            <p className="text-sm text-cp-muted">
                                 Pick a design — your products, sessions and store details fill it in automatically.
                             </p>
                         </div>
@@ -86,32 +86,32 @@ export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) 
                             href={preview.webappUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex h-9 w-fit items-center gap-1.5 rounded-lg border border-[#E4E2DA] bg-white px-3.5 text-sm font-medium text-[#4B4B57] transition hover:bg-[#F6F5F2]"
+                            className="inline-flex h-9 w-fit items-center gap-1.5 rounded-lg border border-cp-line bg-cp-surface px-3.5 text-sm font-medium text-cp-body transition hover:bg-cp-canvas"
                         >
                             <ExternalLink className="size-3.5" /> Open web app
                         </a>
                     </div>
 
                     {notice && (
-                        <div role="status" className="flex items-center gap-2 rounded-xl bg-[#E6F6EC] p-3.5 text-[13px] font-semibold text-[#059669]">
+                        <div role="status" className="flex items-center gap-2 rounded-xl bg-cp-success-soft p-3.5 text-[13px] font-semibold text-cp-success-ink">
                             <Check className="size-4" /> {notice}
                         </div>
                     )}
 
                     {!isLive && (
-                        <div className="flex flex-col justify-between gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+                        <div className="flex flex-col justify-between gap-3 rounded-xl bg-cp-surface p-4 shadow-sm sm:flex-row sm:items-center">
                             <div className="flex items-start gap-3.5">
-                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#FFF4DB] text-[#B46E00]">
+                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-cp-warning-soft text-cp-warning-ink">
                                     <EyeOff className="size-5" />
                                 </span>
                                 <div>
-                                    <p className="text-sm font-semibold text-[#14141B]">Your store is offline</p>
-                                    <p className="mt-0.5 text-xs text-[#8A8A96]">Only you can see the web app — visitors get a 404 until your store is live.</p>
+                                    <p className="text-sm font-semibold text-cp-ink">Your store is offline</p>
+                                    <p className="mt-0.5 text-xs text-cp-muted">Only you can see the web app — visitors get a 404 until your store is live.</p>
                                 </div>
                             </div>
                             <Link
                                 href="/dashboard/store"
-                                className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-[#4F46E5] px-4 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+                                className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-cp-brand px-4 text-sm font-medium text-white transition hover:bg-cp-brand-hover"
                             >
                                 Go live
                             </Link>
@@ -132,8 +132,8 @@ export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) 
                                         <div
                                             key={theme.slug}
                                             className={cn(
-                                                'flex flex-col overflow-hidden rounded-xl bg-white shadow-sm transition',
-                                                isActive ? 'ring-2 ring-[#4F46E5]' : 'ring-1 ring-black/5 hover:shadow-md',
+                                                'flex flex-col overflow-hidden rounded-xl bg-cp-surface shadow-sm transition',
+                                                isActive ? 'ring-2 ring-cp-brand' : 'ring-1 ring-black/5 hover:shadow-md',
                                             )}
                                         >
                                             <button
@@ -149,8 +149,8 @@ export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) 
                                                     </span>
                                                 </span>
                                                 {theme.locked && (
-                                                    <span className="absolute inset-0 flex items-center justify-center bg-white/65 backdrop-blur-[1px]">
-                                                        <span className="flex items-center gap-1.5 rounded-full bg-[#14141B] px-3 py-1 text-[11px] font-bold text-white">
+                                                    <span className="absolute inset-0 flex items-center justify-center bg-cp-surface/65 backdrop-blur-[1px]">
+                                                        <span className="flex items-center gap-1.5 rounded-full bg-cp-solid px-3 py-1 text-[11px] font-bold text-white">
                                                             <Lock className="size-3" /> PLUS
                                                         </span>
                                                     </span>
@@ -160,18 +160,18 @@ export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) 
                                             <div className="flex flex-1 flex-col gap-3 p-4">
                                                 <div className="flex items-start justify-between gap-2">
                                                     <div className="min-w-0">
-                                                        <p className="flex items-center gap-1.5 text-sm font-bold text-[#14141B]">
+                                                        <p className="flex items-center gap-1.5 text-sm font-bold text-cp-ink">
                                                             {theme.name}
                                                             {theme.plus && (
-                                                                <span className="rounded bg-[#F1EAFE] px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-[#7C3AED] uppercase">
+                                                                <span className="rounded bg-cp-accent-soft px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-cp-accent-ink uppercase">
                                                                     Plus
                                                                 </span>
                                                             )}
                                                         </p>
-                                                        <p className="mt-0.5 text-xs text-[#8A8A96]">{theme.tagline}</p>
+                                                        <p className="mt-0.5 text-xs text-cp-muted">{theme.tagline}</p>
                                                     </div>
                                                     {isActive && !theme.locked && (
-                                                        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#4F46E5] text-white">
+                                                        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-cp-brand text-white">
                                                             <Check className="size-3" />
                                                         </span>
                                                     )}
@@ -180,7 +180,7 @@ export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) 
                                                 {theme.locked ? (
                                                     <Link
                                                         href="/dashboard/settings/billing"
-                                                        className="mt-auto inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#FF6B4A] px-3 text-xs font-bold text-white transition hover:bg-[#E85D3D]"
+                                                        className="mt-auto inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-cp-coral px-3 text-xs font-bold text-white transition hover:bg-cp-coral-hover"
                                                     >
                                                         <Zap className="size-3.5" /> Unlock with Plus
                                                     </Link>
@@ -189,7 +189,7 @@ export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) 
                                                         onClick={() => apply(theme)}
                                                         disabled={busy || isActive}
                                                         variant={isActive ? 'outline' : 'default'}
-                                                        className={cn('mt-auto w-full', isActive ? 'border-[#E4E2DA] text-[#4B4B57]' : 'bg-[#4F46E5] hover:bg-[#4338CA]')}
+                                                        className={cn('mt-auto w-full', isActive ? 'border-cp-line text-cp-body' : 'text-white bg-cp-brand hover:bg-cp-brand-hover')}
                                                     >
                                                         {busy ? <Loader2 className="size-4 animate-spin" /> : isActive ? 'Applied' : 'Apply theme'}
                                                     </Button>
@@ -201,14 +201,14 @@ export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) 
                             </div>
 
                             {!isPlus && (
-                                <div className="flex flex-col justify-between gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+                                <div className="flex flex-col justify-between gap-3 rounded-xl bg-cp-surface p-4 shadow-sm sm:flex-row sm:items-center">
                                     <div className="flex items-start gap-3.5">
-                                        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#F1EAFE] text-[#7C3AED]">
+                                        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-cp-accent-soft text-cp-accent-ink">
                                             <Sparkles className="size-5" />
                                         </span>
                                         <div>
-                                            <p className="text-sm font-semibold text-[#14141B]">{themes.filter((theme) => theme.locked).length} more designs with Plus</p>
-                                            <p className="mt-0.5 text-xs text-[#8A8A96]">
+                                            <p className="text-sm font-semibold text-cp-ink">{themes.filter((theme) => theme.locked).length} more designs with Plus</p>
+                                            <p className="mt-0.5 text-xs text-cp-muted">
                                                 Premium themes unlock the moment you upgrade — and if Plus ends, your web app falls back to the free
                                                 theme on its own.
                                             </p>
@@ -216,7 +216,7 @@ export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) 
                                     </div>
                                     <Link
                                         href="/dashboard/settings/billing"
-                                        className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#FF6B4A] px-4 text-sm font-bold text-white transition hover:bg-[#E85D3D]"
+                                        className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-cp-coral px-4 text-sm font-bold text-white transition hover:bg-cp-coral-hover"
                                     >
                                         <Zap className="size-4" /> Upgrade to Plus
                                     </Link>
@@ -225,7 +225,7 @@ export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) 
                         </div>
 
                         {/* Live preview */}
-                        <div className="flex flex-col gap-3 rounded-xl bg-[#14141B] p-4 shadow-sm xl:sticky xl:top-6">
+                        <div className="flex flex-col gap-3 rounded-xl bg-cp-solid p-4 shadow-sm xl:sticky xl:top-6">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-[13px] font-semibold text-white">Live preview</p>
@@ -240,7 +240,7 @@ export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) 
                                             aria-pressed={device === key}
                                             className={cn(
                                                 'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition',
-                                                device === key ? 'bg-white text-[#14141B]' : 'text-white/60 hover:text-white',
+                                                device === key ? 'light-island bg-cp-surface text-cp-ink' : 'text-white/60 hover:text-white',
                                             )}
                                         >
                                             {key === 'mobile' ? <Smartphone className="size-3.5" /> : <Monitor className="size-3.5" />}
@@ -253,9 +253,9 @@ export default function WebappIndex({ themes, isPlus, isLive, preview }: Props) 
                             <div className="flex justify-center">
                                 <div
                                     className={cn(
-                                        'overflow-hidden bg-white shadow-2xl transition-all duration-300',
+                                        'light-island overflow-hidden bg-cp-surface shadow-2xl transition-all duration-300',
                                         device === 'mobile'
-                                            ? 'h-[680px] w-[340px] rounded-[2.2rem] border-[10px] border-[#2A2A35]'
+                                            ? 'h-[680px] w-[340px] rounded-[2.2rem] border-[10px] border-cp-solid-hover'
                                             : 'h-[680px] w-full rounded-xl border border-white/10',
                                     )}
                                 >

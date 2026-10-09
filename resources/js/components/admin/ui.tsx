@@ -56,7 +56,7 @@ export function Badge({ value, label }: { value: string; label?: string }) {
 
 export function Card({ title, action, children, className }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string }) {
     return (
-        <section className={cn('rounded-xl border border-slate-200 bg-white', className)}>
+        <section className={cn('rounded-xl border border-slate-200 bg-cp-surface', className)}>
             {(title || action) && (
                 <header className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5">
                     <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
@@ -101,7 +101,7 @@ export function FilterTabs({ base, tabs, active, params = {} }: { base: string; 
                     preserveState
                     className={cn(
                         'shrink-0 rounded-md px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition',
-                        active === t.key ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900',
+                        active === t.key ? 'bg-cp-surface text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900',
                     )}
                 >
                     {t.label}
@@ -126,7 +126,7 @@ export function SearchBox({ base, value, params = {}, placeholder }: { base: str
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder={placeholder}
-                className="h-9 w-full rounded-lg border border-slate-200 bg-white pr-3 pl-9 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15"
+                className="h-9 w-full rounded-lg border border-slate-200 bg-cp-surface pr-3 pl-9 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15"
             />
         </form>
     );
@@ -185,7 +185,7 @@ export const TD = 'px-5 py-3 text-sm text-slate-700';
 export const BUTTON = {
     primary: 'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50',
     danger: 'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-50',
-    ghost: 'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50',
+    ghost: 'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-cp-surface px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50',
 };
 
 /* ------------------------------------------------------------------ */
@@ -254,7 +254,7 @@ export function ConfirmAction({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div onClick={onClose} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
-            <form onSubmit={submit} role="dialog" aria-modal="true" aria-label={title} className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <form onSubmit={submit} role="dialog" aria-modal="true" aria-label={title} className="relative w-full max-w-md rounded-2xl bg-cp-surface p-6 shadow-2xl">
                 <div className="flex items-start justify-between gap-3">
                     <h3 className="text-base font-bold text-slate-900">{title}</h3>
                     <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700">

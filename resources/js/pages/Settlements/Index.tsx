@@ -82,14 +82,14 @@ interface SettlementsIndexProps {
 }
 
 const STATUS_META: Record<string, { label: string; chip: string; dot: string }> = {
-    pending: { label: 'Awaiting transfer', chip: 'bg-[#FFF4DB] text-[#B46E00]', dot: 'bg-amber-500 animate-pulse' },
-    processing: { label: 'Processing', chip: 'bg-[#E6F2FF] text-[#0284C7]', dot: 'bg-sky-500 animate-pulse' },
-    paid: { label: 'Paid', chip: 'bg-[#E6F6EC] text-[#059669]', dot: 'bg-[#059669]' },
-    failed: { label: 'Failed', chip: 'bg-[#FFEDE8] text-[#C2410C]', dot: 'bg-[#FF6B4A]' },
+    pending: { label: 'Awaiting transfer', chip: 'bg-cp-warning-soft text-cp-warning-ink', dot: 'bg-amber-500 animate-pulse' },
+    processing: { label: 'Processing', chip: 'bg-cp-sky-soft text-cp-sky-ink', dot: 'bg-sky-500 animate-pulse' },
+    paid: { label: 'Paid', chip: 'bg-cp-success-soft text-cp-success-ink', dot: 'bg-cp-success' },
+    failed: { label: 'Failed', chip: 'bg-cp-coral-soft text-cp-coral-dark-ink', dot: 'bg-cp-coral' },
 };
 
 export function statusMeta(status: string) {
-    return STATUS_META[status] ?? { label: status.charAt(0).toUpperCase() + status.slice(1), chip: 'bg-[#F0EFEA] text-[#6B6B78]', dot: 'bg-current' };
+    return STATUS_META[status] ?? { label: status.charAt(0).toUpperCase() + status.slice(1), chip: 'bg-cp-surface-3 text-cp-subtle', dot: 'bg-current' };
 }
 
 const KYC_BANNER: Record<Exclude<KycStatus, 'verified'>, { title: string; body: string; cta: string; tone: string; icon: React.ReactNode }> = {
@@ -97,21 +97,21 @@ const KYC_BANNER: Record<Exclude<KycStatus, 'verified'>, { title: string; body: 
         title: 'Complete KYC to receive your settlements',
         body: 'Verify your PAN and bank details once. Until then, your earnings are held safely.',
         cta: 'Start KYC verification',
-        tone: 'bg-[#FFF4DB] text-[#B46E00]',
+        tone: 'bg-cp-warning-soft text-cp-warning-ink',
         icon: <ShieldCheck className="size-5" />,
     },
     pending: {
         title: 'KYC is under review',
         body: 'Your next settlement will be created automatically once verification is approved.',
         cta: 'View KYC status',
-        tone: 'bg-[#FFF4DB] text-[#B46E00]',
+        tone: 'bg-cp-warning-soft text-cp-warning-ink',
         icon: <Clock className="size-5" />,
     },
     rejected: {
         title: 'KYC needs your attention',
         body: 'Your verification was not approved. Please correct your details and resubmit.',
         cta: 'Fix KYC details',
-        tone: 'bg-[#FFEDE8] text-[#C2410C]',
+        tone: 'bg-cp-coral-soft text-cp-coral-dark-ink',
         icon: <Info className="size-5" />,
     },
 };
@@ -165,13 +165,13 @@ export function StatusPill({ status }: { status: string }) {
 
 function KpiCard({ label, value, sub, icon, tone }: { label: string; value: string; sub: string; icon: React.ReactNode; tone: string }) {
     return (
-        <div className="flex flex-col justify-between rounded-xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+        <div className="flex flex-col justify-between rounded-xl bg-cp-surface p-4 shadow-sm transition-shadow hover:shadow-md">
             <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">{label}</span>
+                <span className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">{label}</span>
                 <span className={cn('flex size-6 items-center justify-center rounded-md', tone)}>{icon}</span>
             </div>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-[#14141B]">{value}</span>
-            <span className="mt-1 text-xs text-[#8A8A96]">{sub}</span>
+            <span className="mt-3 text-2xl font-semibold tracking-tight text-cp-ink">{value}</span>
+            <span className="mt-1 text-xs text-cp-muted">{sub}</span>
         </div>
     );
 }
@@ -194,30 +194,30 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Settlements" />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     {/* Title */}
                     <div className="flex flex-col justify-between gap-3 pt-1 md:flex-row md:items-center">
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
-                                <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Settlements</h1>
-                                <span className="rounded-full bg-[#E6F6EC] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#059669] uppercase">Automatic</span>
+                                <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Settlements</h1>
+                                <span className="rounded-full bg-cp-success-soft px-2 py-0.5 text-[10px] font-semibold tracking-wider text-cp-success-ink uppercase">Automatic</span>
                             </div>
-                            <p className="text-sm text-[#8A8A96]">
+                            <p className="text-sm text-cp-muted">
                                 Your sales are automatically batched and sent to your bank — no need to request a payout.
                             </p>
                         </div>
                         <a
                             href="/dashboard/settlements/export"
-                            className="inline-flex h-9 w-fit items-center gap-1.5 rounded-lg border border-[#E4E2DA] bg-white px-3.5 text-sm font-medium text-[#4B4B57] transition hover:bg-[#F6F5F2]"
+                            className="inline-flex h-9 w-fit items-center gap-1.5 rounded-lg border border-cp-line bg-cp-surface px-3.5 text-sm font-medium text-cp-body transition hover:bg-cp-canvas"
                         >
                             Export CSV
                         </a>
                     </div>
 
                     {balance.adjustments !== 0 && (
-                        <div className="rounded-xl bg-white p-4 text-sm text-[#4B4B57] shadow-sm">
-                            <span className="font-semibold text-[#14141B]">
+                        <div className="rounded-xl bg-cp-surface p-4 text-sm text-cp-body shadow-sm">
+                            <span className="font-semibold text-cp-ink">
                                 {money(Math.abs(balance.adjustments))} will be {balance.adjustments < 0 ? 'deducted from' : 'added to'} your next settlement.
                             </span>{' '}
                             The reason is shown on that settlement once it is created.
@@ -225,84 +225,84 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                     )}
 
                     {/* Auto-settlement explainer */}
-                    <div className="flex flex-col justify-between gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+                    <div className="flex flex-col justify-between gap-3 rounded-xl bg-cp-surface p-4 shadow-sm sm:flex-row sm:items-center">
                         <div className="flex items-start gap-3.5">
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#4F46E5]">
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-cp-brand-soft text-cp-brand-ink">
                                 <RefreshCw className="size-5" />
                             </span>
                             <div>
-                                <p className="text-sm font-semibold text-[#14141B]">Payments are settled automatically</p>
-                                <p className="mt-0.5 text-xs text-[#8A8A96]">
+                                <p className="text-sm font-semibold text-cp-ink">Payments are settled automatically</p>
+                                <p className="mt-0.5 text-xs text-cp-muted">
                                     All ready bookings are grouped into a single settlement and sent to your payout method.
                                 </p>
                             </div>
                         </div>
-                        <div className="shrink-0 rounded-lg bg-[#F6F5F2] px-3 py-2 text-center">
-                            <p className="text-[10px] font-semibold tracking-wider text-[#8A8A96] uppercase">Next run</p>
-                            <p className="mt-0.5 text-[13px] font-semibold text-[#14141B]">{fullDateTime(nextRunAt)}</p>
+                        <div className="shrink-0 rounded-lg bg-cp-canvas px-3 py-2 text-center">
+                            <p className="text-[10px] font-semibold tracking-wider text-cp-muted uppercase">Next run</p>
+                            <p className="mt-0.5 text-[13px] font-semibold text-cp-ink">{fullDateTime(nextRunAt)}</p>
                         </div>
                     </div>
 
                     {/* Blockers — paisa rukka hua hai, kho nahi raha */}
                     {kycBanner && (
-                        <div className="flex flex-col justify-between gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+                        <div className="flex flex-col justify-between gap-3 rounded-xl bg-cp-surface p-4 shadow-sm sm:flex-row sm:items-center">
                             <div className="flex items-start gap-3.5">
                                 <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-lg', kycBanner.tone)}>{kycBanner.icon}</span>
                                 <div>
-                                    <p className="text-sm font-semibold text-[#14141B]">{kycBanner.title}</p>
-                                    <p className="mt-0.5 text-xs text-[#8A8A96]">
+                                    <p className="text-sm font-semibold text-cp-ink">{kycBanner.title}</p>
+                                    <p className="mt-0.5 text-xs text-cp-muted">
                                         {kycBanner.body}
-                                        {blockedAmount > 0 && <> <span className="font-semibold text-[#B46E00]">{money(blockedAmount)} is on hold.</span></>}
+                                        {blockedAmount > 0 && <> <span className="font-semibold text-cp-warning-ink">{money(blockedAmount)} is on hold.</span></>}
                                     </p>
                                 </div>
                             </div>
                             <Link
                                 href="/dashboard/payments/account/kyc"
-                                className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-[#4F46E5] px-4 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+                                className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-cp-brand px-4 text-sm font-medium text-white transition hover:bg-cp-brand-hover"
                             >
                                 {kycBanner.cta}
                             </Link>
                         </div>
                     )}
                     {kycVerified && !hasMethods && (
-                        <div className="flex flex-col justify-between gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+                        <div className="flex flex-col justify-between gap-3 rounded-xl bg-cp-surface p-4 shadow-sm sm:flex-row sm:items-center">
                             <div className="flex items-start gap-3.5">
-                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#E1F6F3] text-[#0D9488]">
+                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-cp-teal-soft text-cp-teal-ink">
                                     <Wallet className="size-5" />
                                 </span>
                                 <div>
-                                    <p className="text-sm font-semibold text-[#14141B]">Add a payout method</p>
-                                    <p className="mt-0.5 text-xs text-[#8A8A96]">
+                                    <p className="text-sm font-semibold text-cp-ink">Add a payout method</p>
+                                    <p className="mt-0.5 text-xs text-cp-muted">
                                         Tell us where to send your money — a UPI ID or bank account.
-                                        {blockedAmount > 0 && <> <span className="font-semibold text-[#B46E00]">{money(blockedAmount)} is on hold.</span></>}
+                                        {blockedAmount > 0 && <> <span className="font-semibold text-cp-warning-ink">{money(blockedAmount)} is on hold.</span></>}
                                     </p>
                                 </div>
                             </div>
                             <Link
                                 href="/dashboard/payments/account"
-                                className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-[#4F46E5] px-4 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+                                className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-cp-brand px-4 text-sm font-medium text-white transition hover:bg-cp-brand-hover"
                             >
                                 Add payout method
                             </Link>
                         </div>
                     )}
                     {kycVerified && balance.blocked_reason === 'payout_unverified' && (
-                        <div className="flex flex-col justify-between gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+                        <div className="flex flex-col justify-between gap-3 rounded-xl bg-cp-surface p-4 shadow-sm sm:flex-row sm:items-center">
                             <div className="flex items-start gap-3.5">
-                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#FFF4DB] text-[#B46E00]">
+                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-cp-warning-soft text-cp-warning-ink">
                                     <Clock className="size-5" />
                                 </span>
                                 <div>
-                                    <p className="text-sm font-semibold text-[#14141B]">Payout method under verification</p>
-                                    <p className="mt-0.5 text-xs text-[#8A8A96]">
+                                    <p className="text-sm font-semibold text-cp-ink">Payout method under verification</p>
+                                    <p className="mt-0.5 text-xs text-cp-muted">
                                         We're verifying {defaultMethod ? methodTitle(defaultMethod) : 'your payout method'}. Settlements will resume automatically once it's verified.
-                                        {blockedAmount > 0 && <> <span className="font-semibold text-[#B46E00]">{money(blockedAmount)} is on hold.</span></>}
+                                        {blockedAmount > 0 && <> <span className="font-semibold text-cp-warning-ink">{money(blockedAmount)} is on hold.</span></>}
                                     </p>
                                 </div>
                             </div>
                             <Link
                                 href="/dashboard/payments/account"
-                                className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg border border-[#E4E2DA] bg-white px-4 text-sm font-medium text-[#14141B] transition hover:bg-[#F6F5F2]"
+                                className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg border border-cp-line bg-cp-surface px-4 text-sm font-medium text-cp-ink transition hover:bg-cp-canvas"
                             >
                                 View payout methods
                             </Link>
@@ -316,20 +316,20 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                             value={money(balance.clearing + (balance.blocked_reason ? balance.ready : 0))}
                             sub={balance.blocked_reason ? 'Settlement on hold — see above' : 'Included in the next settlement'}
                             icon={<Hourglass className="size-3.5" />}
-                            tone="bg-[#FFF4DB] text-[#B46E00]"
+                            tone="bg-cp-warning-soft text-cp-warning-ink"
                         />
-                        <KpiCard label="In transit" value={money(balance.in_transit)} sub="Settlement created, transfer pending" icon={<Banknote className="size-3.5" />} tone="bg-[#E6F2FF] text-[#0284C7]" />
-                        <KpiCard label="Settled" value={money(balance.settled)} sub="Credited to your account" icon={<BadgeCheck className="size-3.5" />} tone="bg-[#E6F6EC] text-[#059669]" />
-                        <KpiCard label="Lifetime earned" value={money(balance.lifetime_earned)} sub="After platform fees" icon={<TrendingUp className="size-3.5" />} tone="bg-[#E1F6F3] text-[#0D9488]" />
+                        <KpiCard label="In transit" value={money(balance.in_transit)} sub="Settlement created, transfer pending" icon={<Banknote className="size-3.5" />} tone="bg-cp-sky-soft text-cp-sky-ink" />
+                        <KpiCard label="Settled" value={money(balance.settled)} sub="Credited to your account" icon={<BadgeCheck className="size-3.5" />} tone="bg-cp-success-soft text-cp-success-ink" />
+                        <KpiCard label="Lifetime earned" value={money(balance.lifetime_earned)} sub="After platform fees" icon={<TrendingUp className="size-3.5" />} tone="bg-cp-teal-soft text-cp-teal-ink" />
                     </div>
 
                     <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
                         {/* Settlement history */}
-                        <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-                            <div className="flex items-center justify-between border-b border-[#E4E2DA]/70 px-6 py-4">
+                        <div className="overflow-hidden rounded-xl bg-cp-surface shadow-sm">
+                            <div className="flex items-center justify-between border-b border-cp-line/70 px-6 py-4">
                                 <div>
-                                    <h2 className="text-base font-semibold text-[#14141B]">Settlement history</h2>
-                                    <p className="mt-0.5 text-xs text-[#8A8A96]">
+                                    <h2 className="text-base font-semibold text-cp-ink">Settlement history</h2>
+                                    <p className="mt-0.5 text-xs text-cp-muted">
                                         {settlements.total > 0
                                             ? `Showing ${settlements.from ?? 0}–${settlements.to ?? 0} of ${settlements.total} settlements`
                                             : 'Your first settlement will appear here once it is created'}
@@ -339,7 +339,7 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                             <div className="overflow-x-auto">
                                 <table className="w-full border-collapse text-left text-sm">
                                     <thead>
-                                        <tr className="bg-[#F6F5F2]/60 text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">
+                                        <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
                                             <th className="px-6 py-3">Settlement</th>
                                             <th className="px-4 py-3">Bookings</th>
                                             <th className="px-4 py-3 text-right">Gross</th>
@@ -350,37 +350,37 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                                             <th className="px-6 py-3" />
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-[#E4E2DA]/50">
+                                    <tbody className="divide-y divide-cp-line/50">
                                         {settlements.data.length === 0 && <TableEmptyState />}
                                         {settlements.data.map((row) => (
                                             <tr
                                                 key={row.id}
                                                 onClick={() => router.visit(`/dashboard/settlements/${row.uuid}`)}
-                                                className="group cursor-pointer transition hover:bg-[#F6F5F2]/60"
+                                                className="group cursor-pointer transition hover:bg-cp-canvas/60"
                                             >
                                                 <td className="px-6 py-3.5 whitespace-nowrap">
-                                                    <span className="block text-[13px] font-semibold text-[#14141B] group-hover:text-[#4F46E5]">{formatDate(row.created_at)}</span>
-                                                    <span className="font-mono text-xs text-[#8A8A96]">{row.number}</span>
+                                                    <span className="block text-[13px] font-semibold text-cp-ink group-hover:text-cp-brand-ink">{formatDate(row.created_at)}</span>
+                                                    <span className="font-mono text-xs text-cp-muted">{row.number}</span>
                                                 </td>
                                                 <td className="px-4 py-3.5 whitespace-nowrap">
-                                                    <span className="text-[13px] font-semibold text-[#14141B]">
+                                                    <span className="text-[13px] font-semibold text-cp-ink">
                                                         {row.orders_count} {row.orders_count === 1 ? 'booking' : 'bookings'}
                                                     </span>
-                                                    <span className="block text-xs text-[#8A8A96]">
+                                                    <span className="block text-xs text-cp-muted">
                                                         {formatDate(row.period_start)} – {formatDate(row.period_end)}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3.5 text-right text-[13px] whitespace-nowrap text-[#14141B]">{money(row.gross_amount)}</td>
-                                                <td className="px-4 py-3.5 text-right text-[13px] whitespace-nowrap text-[#C2410C]">− {money(row.commission_amount)}</td>
-                                                <td className="px-4 py-3.5 text-right text-[15px] font-bold whitespace-nowrap text-[#14141B]">{money(row.net_amount)}</td>
+                                                <td className="px-4 py-3.5 text-right text-[13px] whitespace-nowrap text-cp-ink">{money(row.gross_amount)}</td>
+                                                <td className="px-4 py-3.5 text-right text-[13px] whitespace-nowrap text-cp-coral-dark-ink">− {money(row.commission_amount)}</td>
+                                                <td className="px-4 py-3.5 text-right text-[15px] font-bold whitespace-nowrap text-cp-ink">{money(row.net_amount)}</td>
                                                 <td className="px-4 py-3.5 text-center whitespace-nowrap">
                                                     <StatusPill status={row.status} />
                                                 </td>
-                                                <td className="max-w-32.5 truncate px-4 py-3.5 font-mono text-xs text-[#6B6B78]" title={row.reference_number ?? undefined}>
+                                                <td className="max-w-32.5 truncate px-4 py-3.5 font-mono text-xs text-cp-subtle" title={row.reference_number ?? undefined}>
                                                     {row.reference_number ?? '—'}
                                                 </td>
                                                 <td className="px-6 py-3.5 text-right">
-                                                    <ChevronRight className="ml-auto size-4 text-[#8A8A96] transition group-hover:translate-x-0.5 group-hover:text-[#14141B]" />
+                                                    <ChevronRight className="ml-auto size-4 text-cp-muted transition group-hover:translate-x-0.5 group-hover:text-cp-ink" />
                                                 </td>
                                             </tr>
                                         ))}
@@ -388,13 +388,13 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                                 </table>
                             </div>
                             {settlements.total > 0 && (
-                                <div className="flex flex-col items-center justify-between gap-3 border-t border-[#E4E2DA]/60 p-4 sm:flex-row">
-                                    <p className="text-xs text-[#8A8A96]">
-                                        Page <span className="font-semibold text-[#14141B]">{settlements.current_page}</span> of{' '}
-                                        <span className="font-semibold text-[#14141B]">{settlements.last_page}</span>
+                                <div className="flex flex-col items-center justify-between gap-3 border-t border-cp-line/60 p-4 sm:flex-row">
+                                    <p className="text-xs text-cp-muted">
+                                        Page <span className="font-semibold text-cp-ink">{settlements.current_page}</span> of{' '}
+                                        <span className="font-semibold text-cp-ink">{settlements.last_page}</span>
                                     </p>
                                     <div className="flex items-center gap-2">
-                                        <Button variant="outline" size="sm" disabled={settlements.current_page <= 1} onClick={() => goToPage(settlements.current_page - 1)} className="border-[#E4E2DA]">
+                                        <Button variant="outline" size="sm" disabled={settlements.current_page <= 1} onClick={() => goToPage(settlements.current_page - 1)} className="border-cp-line">
                                             Previous
                                         </Button>
                                         <Button
@@ -402,7 +402,7 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                                             size="sm"
                                             disabled={settlements.current_page >= settlements.last_page}
                                             onClick={() => goToPage(settlements.current_page + 1)}
-                                            className="border-[#E4E2DA]"
+                                            className="border-cp-line"
                                         >
                                             Next <ArrowUpRight className="size-3.5" />
                                         </Button>
@@ -413,48 +413,48 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
 
                         {/* Side cards */}
                         <div className="flex flex-col gap-5">
-                            <div className="rounded-xl bg-white p-5 shadow-sm">
+                            <div className="rounded-xl bg-cp-surface p-5 shadow-sm">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-semibold text-[#14141B]">Payout destination</h3>
-                                    <Link href="/dashboard/payments/account" className="text-xs font-semibold text-[#4F46E5] hover:underline">
+                                    <h3 className="text-sm font-semibold text-cp-ink">Payout destination</h3>
+                                    <Link href="/dashboard/payments/account" className="text-xs font-semibold text-cp-brand-ink hover:underline">
                                         {hasMethods ? 'Manage' : 'Add'}
                                     </Link>
                                 </div>
                                 {hasMethods ? (
                                     <div className="mt-4 flex flex-col gap-2">
                                         {methods.map((m) => (
-                                            <div key={m.id} className="flex items-center gap-3 rounded-lg bg-[#F6F5F2] p-3">
-                                                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#4F46E5]">
+                                            <div key={m.id} className="flex items-center gap-3 rounded-lg bg-cp-canvas p-3">
+                                                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-cp-surface text-cp-brand-ink">
                                                     <MethodIcon type={m.type} className="size-4" />
                                                 </span>
                                                 <div className="min-w-0 flex-1">
-                                                    <span className="block truncate text-[13px] font-semibold text-[#14141B]">{methodTitle(m)}</span>
-                                                    <span className="block truncate text-xs text-[#8A8A96]">{methodSub(m)}</span>
+                                                    <span className="block truncate text-[13px] font-semibold text-cp-ink">{methodTitle(m)}</span>
+                                                    <span className="block truncate text-xs text-cp-muted">{methodSub(m)}</span>
                                                 </div>
                                                 <div className="flex shrink-0 flex-col items-end gap-1">
-                                                    {m.id === defaultMethod?.id && <span className="rounded-full bg-[#E6F6EC] px-2 py-0.5 text-[10px] font-semibold text-[#059669]">Default</span>}
-                                                    {!m.verified_at && <span className="rounded-full bg-[#FFF4DB] px-2 py-0.5 text-[10px] font-semibold text-[#B46E00]">Unverified</span>}
+                                                    {m.id === defaultMethod?.id && <span className="rounded-full bg-cp-success-soft px-2 py-0.5 text-[10px] font-semibold text-cp-success-ink">Default</span>}
+                                                    {!m.verified_at && <span className="rounded-full bg-cp-warning-soft px-2 py-0.5 text-[10px] font-semibold text-cp-warning-ink">Unverified</span>}
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="mt-3 text-xs text-[#8A8A96]">No payout method yet. Add a UPI ID or bank account.</p>
+                                    <p className="mt-3 text-xs text-cp-muted">No payout method yet. Add a UPI ID or bank account.</p>
                                 )}
                             </div>
 
-                            <div className="rounded-xl bg-white p-5 shadow-sm">
-                                <h3 className="text-sm font-semibold text-[#14141B]">How settlements work</h3>
+                            <div className="rounded-xl bg-cp-surface p-5 shadow-sm">
+                                <h3 className="text-sm font-semibold text-cp-ink">How settlements work</h3>
                                 <ul className="mt-4 flex flex-col gap-3.5">
                                     {[
-                                        { icon: <Hourglass className="size-4" />, tone: 'bg-[#FFF4DB] text-[#B46E00]', text: 'Each payment is held for a short period as a buffer for refunds.' },
-                                        { icon: <RefreshCw className="size-4" />, tone: 'bg-[#EEF2FF] text-[#4F46E5]', text: 'A daily cycle groups all bookings ready at that time into one settlement.' },
-                                        { icon: <ShieldCheck className="size-4" />, tone: 'bg-[#F1EAFE] text-[#7C3AED]', text: 'A verified KYC and a verified payout method are required — until then, your money stays safely on hold, never lost.' },
-                                        { icon: <Banknote className="size-4" />, tone: 'bg-[#E1F6F3] text-[#0D9488]', text: 'Click any settlement to see all its bookings and commission.' },
+                                        { icon: <Hourglass className="size-4" />, tone: 'bg-cp-warning-soft text-cp-warning-ink', text: 'Each payment is held for a short period as a buffer for refunds.' },
+                                        { icon: <RefreshCw className="size-4" />, tone: 'bg-cp-brand-soft text-cp-brand-ink', text: 'A daily cycle groups all bookings ready at that time into one settlement.' },
+                                        { icon: <ShieldCheck className="size-4" />, tone: 'bg-cp-accent-soft text-cp-accent-ink', text: 'A verified KYC and a verified payout method are required — until then, your money stays safely on hold, never lost.' },
+                                        { icon: <Banknote className="size-4" />, tone: 'bg-cp-teal-soft text-cp-teal-ink', text: 'Click any settlement to see all its bookings and commission.' },
                                     ].map((item) => (
                                         <li key={item.text} className="flex items-start gap-3">
                                             <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-md', item.tone)}>{item.icon}</span>
-                                            <span className="text-xs leading-relaxed text-[#6B6B78]">{item.text}</span>
+                                            <span className="text-xs leading-relaxed text-cp-subtle">{item.text}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -471,12 +471,12 @@ function TableEmptyState() {
     return (
         <tr>
             <td colSpan={8} className="px-6 py-8">
-                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#E4E2DA] bg-[#FAF9F5] py-8 text-center">
-                    <span className="flex size-10 items-center justify-center rounded-full bg-[#ECEBE6] text-[#8A8A96]">
+                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+                    <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
                         <Inbox className="size-5" />
                     </span>
-                    <p className="mt-1 text-sm font-semibold text-[#14141B]">No settlements yet</p>
-                    <p className="max-w-sm px-4 text-xs text-[#8A8A96]">
+                    <p className="mt-1 text-sm font-semibold text-cp-ink">No settlements yet</p>
+                    <p className="max-w-sm px-4 text-xs text-cp-muted">
                         Your first settlement will be created automatically.
                     </p>
                 </div>

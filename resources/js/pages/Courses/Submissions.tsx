@@ -52,18 +52,18 @@ interface SubmissionsProps {
 }
 
 const STATUS_TABS: { key: 'all' | 'submitted' | 'graded'; label: string; dot: string }[] = [
-    { key: 'all', label: 'All', dot: 'bg-[#4F46E5]' },
+    { key: 'all', label: 'All', dot: 'bg-cp-brand' },
     { key: 'submitted', label: 'Needs review', dot: 'bg-amber-500' },
-    { key: 'graded', label: 'Graded', dot: 'bg-[#059669]' },
+    { key: 'graded', label: 'Graded', dot: 'bg-cp-success' },
 ];
 
 const AVATAR_TONES = [
-    'bg-[#EEF2FF] text-[#4F46E5]',
-    'bg-[#E6F2FF] text-[#0284C7]',
-    'bg-[#FFF4DB] text-[#B46E00]',
-    'bg-[#FFEDE8] text-[#C2410C]',
-    'bg-[#F1EAFE] text-[#7C3AED]',
-    'bg-[#E1F6F3] text-[#0D9488]',
+    'bg-cp-brand-soft text-cp-brand-ink',
+    'bg-cp-sky-soft text-cp-sky-ink',
+    'bg-cp-warning-soft text-cp-warning-ink',
+    'bg-cp-coral-soft text-cp-coral-dark-ink',
+    'bg-cp-accent-soft text-cp-accent-ink',
+    'bg-cp-teal-soft text-cp-teal-ink',
 ];
 
 /* ------------------------------------------------------------------ */
@@ -127,16 +127,16 @@ function ReviewDrawer({ submission, open, onClose }: { submission: SubmissionRow
             <div
                 aria-hidden={!open}
                 className={cn(
-                    'fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-[520px] flex-col justify-between overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-out',
+                    'fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-[520px] flex-col justify-between overflow-y-auto bg-cp-surface shadow-2xl transition-transform duration-300 ease-out',
                     open ? 'translate-x-0' : 'translate-x-full',
                 )}
             >
                 {submission && (
                     <>
                         <div className="flex flex-col gap-5 p-6">
-                            <div className="flex items-center justify-between border-b border-[#E4E2DA]/70 pb-4">
-                                <span className="text-base font-semibold text-[#14141B]">Review Submission</span>
-                                <button onClick={onClose} aria-label="Close" className="rounded-lg p-1 text-[#8A8A96] transition hover:bg-[#F0EFEA] hover:text-[#14141B]">
+                            <div className="flex items-center justify-between border-b border-cp-line/70 pb-4">
+                                <span className="text-base font-semibold text-cp-ink">Review Submission</span>
+                                <button onClick={onClose} aria-label="Close" className="rounded-lg p-1 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink">
                                     <X className="size-5" />
                                 </button>
                             </div>
@@ -145,56 +145,56 @@ function ReviewDrawer({ submission, open, onClose }: { submission: SubmissionRow
                                 <div className="flex min-w-0 items-center gap-3">
                                     <div className={cn('flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-bold', avatarTone(name))}>{initials(name)}</div>
                                     <div className="min-w-0">
-                                        <span className="block truncate text-sm font-semibold text-[#14141B]">{name ?? 'Anonymous'}</span>
-                                        <span className="block truncate text-xs text-[#8A8A96]">{submission.enrollment?.customer?.email ?? '—'}</span>
+                                        <span className="block truncate text-sm font-semibold text-cp-ink">{name ?? 'Anonymous'}</span>
+                                        <span className="block truncate text-xs text-cp-muted">{submission.enrollment?.customer?.email ?? '—'}</span>
                                     </div>
                                 </div>
                                 <SubmissionStatusPill status={submission.status} />
                             </div>
 
-                            <div className="flex flex-col gap-1.5 rounded-xl bg-[#F6F5F2] p-4">
-                                <span className="flex items-center gap-1.5 text-xs text-[#8A8A96]">
+                            <div className="flex flex-col gap-1.5 rounded-xl bg-cp-canvas p-4">
+                                <span className="flex items-center gap-1.5 text-xs text-cp-muted">
                                     <GraduationCap className="size-3.5" /> {courseTitle(submission)}
                                 </span>
-                                <span className="text-[13px] font-semibold text-[#14141B]">{lessonTitle(submission)}</span>
-                                <span className="text-xs text-[#8A8A96]">Submitted {formatDateTime(submission.submitted_at)}</span>
+                                <span className="text-[13px] font-semibold text-cp-ink">{lessonTitle(submission)}</span>
+                                <span className="text-xs text-cp-muted">Submitted {formatDateTime(submission.submitted_at)}</span>
                             </div>
 
                             {submission.assignment?.assignment_prompt && (
                                 <div className="flex flex-col gap-2">
-                                    <span className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">Assignment prompt</span>
-                                    <p className="rounded-xl bg-[#F6F5F2] p-3 text-[13px] break-words whitespace-pre-wrap text-[#4B4B57]">{submission.assignment.assignment_prompt}</p>
+                                    <span className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">Assignment prompt</span>
+                                    <p className="rounded-xl bg-cp-canvas p-3 text-[13px] break-words whitespace-pre-wrap text-cp-body">{submission.assignment.assignment_prompt}</p>
                                 </div>
                             )}
 
                             <div className="flex flex-col gap-2">
-                                <span className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">Student's answer</span>
+                                <span className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">Student's answer</span>
                                 {submission.submission_text ? (
-                                    <p className="max-h-72 overflow-y-auto rounded-xl border border-[#E4E2DA] p-3 text-[13px] break-words whitespace-pre-wrap text-[#14141B]">{submission.submission_text}</p>
+                                    <p className="max-h-72 overflow-y-auto rounded-xl border border-cp-line p-3 text-[13px] break-words whitespace-pre-wrap text-cp-ink">{submission.submission_text}</p>
                                 ) : (
-                                    <p className="rounded-xl border border-dashed border-[#E4E2DA] bg-[#FAF9F5] p-3 text-xs text-[#8A8A96]">No written answer — see the attached file.</p>
+                                    <p className="rounded-xl border border-dashed border-cp-line bg-cp-surface-2 p-3 text-xs text-cp-muted">No written answer — see the attached file.</p>
                                 )}
                                 {submission.submission_file_path && (
                                     <a
                                         href={submissionFileUrl(submission.uuid)}
-                                        className="flex items-center gap-3 rounded-xl border border-[#E4E2DA] p-3 transition hover:bg-[#F6F5F2]"
+                                        className="flex items-center gap-3 rounded-xl border border-cp-line p-3 transition hover:bg-cp-canvas"
                                     >
-                                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#4F46E5]">
+                                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-cp-brand-soft text-cp-brand-ink">
                                             <FileText className="size-4" />
                                         </span>
                                         <span className="min-w-0 flex-1">
-                                            <span className="block truncate text-[13px] font-semibold text-[#14141B]">{submission.submission_file_path.split('/').pop()}</span>
-                                            <span className="text-xs text-[#8A8A96]">Attached file</span>
+                                            <span className="block truncate text-[13px] font-semibold text-cp-ink">{submission.submission_file_path.split('/').pop()}</span>
+                                            <span className="text-xs text-cp-muted">Attached file</span>
                                         </span>
-                                        <Download className="size-4 text-[#8A8A96]" />
+                                        <Download className="size-4 text-cp-muted" />
                                     </a>
                                 )}
                             </div>
 
                             <GradeForm submission={submission} />
                         </div>
-                        <div className="flex flex-col gap-2 border-t border-[#E4E2DA] bg-white p-5">
-                            <Button variant="outline" asChild className="w-full border-[#E4E2DA]">
+                        <div className="flex flex-col gap-2 border-t border-cp-line bg-cp-surface p-5">
+                            <Button variant="outline" asChild className="w-full border-cp-line">
                                 <Link href={`/dashboard/enrollments/${submission.enrollment?.uuid}`}>
                                     <UserRound className="size-4" /> View student progress
                                 </Link>
@@ -243,20 +243,20 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Assignments" />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     {/* Title */}
                     <div className="flex flex-col gap-1 pt-1">
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Assignments</h1>
-                            <span className="rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#4F46E5] uppercase">Live Sync</span>
+                            <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Assignments</h1>
+                            <span className="rounded-full bg-cp-brand-soft px-2 py-0.5 text-[10px] font-semibold tracking-wider text-cp-brand-ink uppercase">Live Sync</span>
                         </div>
-                        <p className="text-sm text-[#8A8A96]">Review student submissions and send feedback.</p>
+                        <p className="text-sm text-cp-muted">Review student submissions and send feedback.</p>
                     </div>
 
                     {/* Filters */}
-                    <div className="flex flex-col gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-[#F6F5F2] p-1">
+                    <div className="flex flex-col gap-3 rounded-xl bg-cp-surface p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
                             {STATUS_TABS.map((tab) => {
                                 const active = activeStatus === tab.key;
                                 return (
@@ -266,7 +266,7 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
                                         onClick={() => applyFilters({ status: tab.key === 'all' ? null : tab.key })}
                                         className={cn(
                                             'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
-                                            active ? 'bg-white text-[#4F46E5] shadow-sm' : 'text-[#8A8A96] hover:text-[#14141B]',
+                                            active ? 'bg-cp-surface text-cp-brand-ink shadow-sm' : 'text-cp-muted hover:text-cp-ink',
                                         )}
                                     >
                                         <span className={cn('size-2 rounded-full', tab.dot)} />
@@ -276,10 +276,10 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
                             })}
                         </div>
                         {courseFilter && (
-                            <span className="flex w-fit items-center gap-1.5 rounded-full bg-[#EEF2FF] py-1 pr-1.5 pl-3 text-xs font-medium text-[#4F46E5]">
+                            <span className="flex w-fit items-center gap-1.5 rounded-full bg-cp-brand-soft py-1 pr-1.5 pl-3 text-xs font-medium text-cp-brand-ink">
                                 <GraduationCap className="size-3.5" />
                                 <span className="max-w-[240px] truncate">{filteredCourseTitle ?? 'Selected course'}</span>
-                                <button onClick={() => applyFilters({ course: null })} aria-label="Remove course filter" className="rounded-full p-0.5 hover:bg-white/70">
+                                <button onClick={() => applyFilters({ course: null })} aria-label="Remove course filter" className="rounded-full p-0.5 hover:bg-cp-surface/70">
                                     <X className="size-3.5" />
                                 </button>
                             </span>
@@ -287,11 +287,11 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
                     </div>
 
                     {/* Table */}
-                    <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-                        <div className="flex items-center justify-between border-b border-[#E4E2DA]/70 px-6 py-4">
+                    <div className="overflow-hidden rounded-xl bg-cp-surface shadow-sm">
+                        <div className="flex items-center justify-between border-b border-cp-line/70 px-6 py-4">
                             <div>
-                                <h2 className="text-base font-semibold text-[#14141B]">Submissions</h2>
-                                <p className="mt-0.5 text-xs text-[#8A8A96]">
+                                <h2 className="text-base font-semibold text-cp-ink">Submissions</h2>
+                                <p className="mt-0.5 text-xs text-cp-muted">
                                     {submissions.total > 0 ? `Showing ${submissions.from ?? 0}–${submissions.to ?? 0} of ${submissions.total} submissions` : 'No submissions to show'}
                                 </p>
                             </div>
@@ -299,7 +299,7 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
                         <div className="overflow-x-auto">
                             <table className="w-full border-collapse text-left text-sm">
                                 <thead>
-                                    <tr className="bg-[#F6F5F2]/60 text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">
+                                    <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
                                         <th className="px-6 py-3">Student</th>
                                         <th className="px-4 py-3">Assignment</th>
                                         <th className="px-4 py-3">Submitted</th>
@@ -307,20 +307,20 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
                                         <th className="px-6 py-3" />
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#E4E2DA]/50">
+                                <tbody className="divide-y divide-cp-line/50">
                                     {submissions.data.length === 0 && (
                                         <tr>
                                             <td colSpan={5} className="px-6 py-8">
-                                                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#E4E2DA] bg-[#FAF9F5] py-8 text-center">
-                                                    <span className="flex size-10 items-center justify-center rounded-full bg-[#ECEBE6] text-[#8A8A96]">
+                                                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+                                                    <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
                                                         <Inbox className="size-5" />
                                                     </span>
-                                                    <p className="mt-1 text-sm font-semibold text-[#14141B]">{hasFilters ? 'No submissions match' : 'No submissions yet'}</p>
-                                                    <p className="max-w-xs px-4 text-xs text-[#8A8A96]">
+                                                    <p className="mt-1 text-sm font-semibold text-cp-ink">{hasFilters ? 'No submissions match' : 'No submissions yet'}</p>
+                                                    <p className="max-w-xs px-4 text-xs text-cp-muted">
                                                         {hasFilters ? 'Try a different status or remove the course filter.' : 'When students submit an assignment from a lesson, it will show up here for review.'}
                                                     </p>
                                                     {hasFilters && (
-                                                        <Button variant="outline" size="sm" onClick={() => router.get(BASE, {}, { preserveState: true, replace: true })} className="mt-3 border-[#E4E2DA]">
+                                                        <Button variant="outline" size="sm" onClick={() => router.get(BASE, {}, { preserveState: true, replace: true })} className="mt-3 border-cp-line">
                                                             Clear filters
                                                         </Button>
                                                     )}
@@ -331,34 +331,34 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
                                     {submissions.data.map((row) => {
                                         const name = studentName(row);
                                         return (
-                                            <tr key={row.id} onClick={() => openReview(row)} className="group cursor-pointer transition hover:bg-[#F6F5F2]/60">
+                                            <tr key={row.id} onClick={() => openReview(row)} className="group cursor-pointer transition hover:bg-cp-canvas/60">
                                                 <td className="px-6 py-3.5">
                                                     <div className="flex min-w-[200px] items-center gap-2.5">
                                                         <div className={cn('flex size-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold', avatarTone(name))}>{initials(name)}</div>
                                                         <div className="min-w-0">
-                                                            <span className="block max-w-[200px] truncate text-[13px] font-semibold text-[#14141B] group-hover:text-[#4F46E5]">{name ?? 'Anonymous'}</span>
-                                                            <span className="block max-w-[200px] truncate text-xs text-[#8A8A96]">{row.enrollment?.customer?.email ?? '—'}</span>
+                                                            <span className="block max-w-[200px] truncate text-[13px] font-semibold text-cp-ink group-hover:text-cp-brand-ink">{name ?? 'Anonymous'}</span>
+                                                            <span className="block max-w-[200px] truncate text-xs text-cp-muted">{row.enrollment?.customer?.email ?? '—'}</span>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3.5">
-                                                    <span className="block max-w-[260px] truncate text-[13px] font-medium text-[#14141B]">{lessonTitle(row)}</span>
-                                                    <span className="mt-0.5 flex items-center gap-2 text-xs text-[#8A8A96]">
+                                                    <span className="block max-w-[260px] truncate text-[13px] font-medium text-cp-ink">{lessonTitle(row)}</span>
+                                                    <span className="mt-0.5 flex items-center gap-2 text-xs text-cp-muted">
                                                         <span className="max-w-[200px] truncate">{courseTitle(row)}</span>
                                                         {row.submission_file_path && (
-                                                            <span title="Has attachment" className="inline-flex items-center text-[#4F46E5]">
+                                                            <span title="Has attachment" className="inline-flex items-center text-cp-brand-ink">
                                                                 <Paperclip className="size-3" />
                                                                 <span className="sr-only">Has attachment</span>
                                                             </span>
                                                         )}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3.5 text-xs whitespace-nowrap text-[#4B4B57]">{formatDateTime(row.submitted_at)}</td>
+                                                <td className="px-4 py-3.5 text-xs whitespace-nowrap text-cp-body">{formatDateTime(row.submitted_at)}</td>
                                                 <td className="px-4 py-3.5 text-center whitespace-nowrap">
                                                     <SubmissionStatusPill status={row.status} />
                                                 </td>
                                                 <td className="px-6 py-3.5 text-right">
-                                                    <ChevronRight className="ml-auto size-4 text-[#8A8A96] transition group-hover:translate-x-0.5 group-hover:text-[#14141B]" />
+                                                    <ChevronRight className="ml-auto size-4 text-cp-muted transition group-hover:translate-x-0.5 group-hover:text-cp-ink" />
                                                 </td>
                                             </tr>
                                         );
@@ -367,15 +367,15 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
                             </table>
                         </div>
                         {submissions.total > 0 && (
-                            <div className="flex flex-col items-center justify-between gap-3 border-t border-[#E4E2DA]/60 p-4 sm:flex-row">
-                                <p className="text-xs text-[#8A8A96]">
-                                    Page <span className="font-semibold text-[#14141B]">{submissions.current_page}</span> of <span className="font-semibold text-[#14141B]">{submissions.last_page}</span>
+                            <div className="flex flex-col items-center justify-between gap-3 border-t border-cp-line/60 p-4 sm:flex-row">
+                                <p className="text-xs text-cp-muted">
+                                    Page <span className="font-semibold text-cp-ink">{submissions.current_page}</span> of <span className="font-semibold text-cp-ink">{submissions.last_page}</span>
                                 </p>
                                 <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm" disabled={submissions.current_page <= 1} onClick={() => goToPage(submissions.current_page - 1)} className="border-[#E4E2DA]">
+                                    <Button variant="outline" size="sm" disabled={submissions.current_page <= 1} onClick={() => goToPage(submissions.current_page - 1)} className="border-cp-line">
                                         Previous
                                     </Button>
-                                    <Button variant="outline" size="sm" disabled={submissions.current_page >= submissions.last_page} onClick={() => goToPage(submissions.current_page + 1)} className="border-[#E4E2DA]">
+                                    <Button variant="outline" size="sm" disabled={submissions.current_page >= submissions.last_page} onClick={() => goToPage(submissions.current_page + 1)} className="border-cp-line">
                                         Next <ArrowUpRight className="size-3.5" />
                                     </Button>
                                 </div>

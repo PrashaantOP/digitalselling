@@ -1,15 +1,10 @@
-import { SVGAttributes } from 'react';
+import { BrandIcon } from '@/components/brand';
 
 /**
- * CreatorPro ka brand mark — landing ke `Logo` (home/primitives.tsx) wala hi layers icon.
- * Stroke icon hai: callers `fill-current` dete hain, isliye paths pe inline `fill: none` (class se upar).
+ * Starter kit ke purane layouts (auth-card / simple / split, app-header) isi naam se icon maangte hain —
+ * ab CreatorPro ka asli icon (components/brand.tsx). Wo `fill-current text-…` jaise class dete hain, jo image pe
+ * kuch nahi karte; sirf size wali class kaam ki hai.
  */
-export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
-    return (
-        <svg {...props} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-            <path style={{ fill: 'none' }} d="M4 7l8-4 8 4-8 4-8-4z" />
-            <path style={{ fill: 'none' }} d="M4 12l8 4 8-4" />
-            <path style={{ fill: 'none' }} d="M4 17l8 4 8-4" />
-        </svg>
-    );
+export default function AppLogoIcon({ className }: { className?: string }) {
+    return <BrandIcon className={className} />;
 }

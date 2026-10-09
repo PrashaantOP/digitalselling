@@ -13,7 +13,7 @@ const TABS: { key: BookingsTab; label: string; href: string }[] = [
 /** Bookings ke chaaron pages ka sticky top tab bar — Payments page jaisa. */
 export function BookingsTabNav({ active }: { active: BookingsTab }) {
     return (
-        <div className="sticky top-0 z-30 border-b border-[#E4E2DA] bg-[#F6F5F2]/95 backdrop-blur-md">
+        <div className="sticky top-14 z-30 border-b border-cp-line bg-cp-canvas/95 backdrop-blur-md lg:top-0">
             <div className="mx-auto w-full max-w-[1600px] px-4 md:px-6">
                 <nav className="flex items-center gap-6 overflow-x-auto">
                     {TABS.map((tab) => (
@@ -23,7 +23,7 @@ export function BookingsTabNav({ active }: { active: BookingsTab }) {
                             preserveScroll
                             className={cn(
                                 '-mb-px flex shrink-0 items-center gap-2 border-b-2 py-3 text-sm font-medium transition-colors',
-                                active === tab.key ? 'border-[#4F46E5] text-[#4F46E5]' : 'border-transparent text-[#8A8A96] hover:border-[#E4E2DA] hover:text-[#14141B]',
+                                active === tab.key ? 'border-cp-brand text-cp-brand-ink' : 'border-transparent text-cp-muted hover:border-cp-line hover:text-cp-ink',
                             )}
                         >
                             {tab.label}

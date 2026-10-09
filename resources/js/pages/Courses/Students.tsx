@@ -42,19 +42,19 @@ interface StudentsProps {
 type StudentStatus = 'completed' | 'expired' | 'in_progress' | 'not_started';
 
 const STATUS_META: Record<StudentStatus, { label: string; chip: string; dot: string }> = {
-    completed: { label: 'Completed', chip: 'bg-[#E6F6EC] text-[#059669]', dot: 'bg-[#059669]' },
-    in_progress: { label: 'In progress', chip: 'bg-[#EEF2FF] text-[#4F46E5]', dot: 'bg-[#4F46E5]' },
-    not_started: { label: 'Not started', chip: 'bg-[#F0EFEA] text-[#6B6B78]', dot: 'bg-current' },
-    expired: { label: 'Access expired', chip: 'bg-[#FFEDE8] text-[#C2410C]', dot: 'bg-[#FF6B4A]' },
+    completed: { label: 'Completed', chip: 'bg-cp-success-soft text-cp-success-ink', dot: 'bg-cp-success' },
+    in_progress: { label: 'In progress', chip: 'bg-cp-brand-soft text-cp-brand-ink', dot: 'bg-cp-brand' },
+    not_started: { label: 'Not started', chip: 'bg-cp-surface-3 text-cp-subtle', dot: 'bg-current' },
+    expired: { label: 'Access expired', chip: 'bg-cp-coral-soft text-cp-coral-dark-ink', dot: 'bg-cp-coral' },
 };
 
 const AVATAR_TONES = [
-    'bg-[#EEF2FF] text-[#4F46E5]',
-    'bg-[#E6F2FF] text-[#0284C7]',
-    'bg-[#FFF4DB] text-[#B46E00]',
-    'bg-[#FFEDE8] text-[#C2410C]',
-    'bg-[#F1EAFE] text-[#7C3AED]',
-    'bg-[#E1F6F3] text-[#0D9488]',
+    'bg-cp-brand-soft text-cp-brand-ink',
+    'bg-cp-sky-soft text-cp-sky-ink',
+    'bg-cp-warning-soft text-cp-warning-ink',
+    'bg-cp-coral-soft text-cp-coral-dark-ink',
+    'bg-cp-accent-soft text-cp-accent-ink',
+    'bg-cp-teal-soft text-cp-teal-ink',
 ];
 
 /* ------------------------------------------------------------------ */
@@ -103,11 +103,11 @@ function statusOf(row: EnrollmentRow): StudentStatus {
 
 /** null expiry = the enrollment never expires (course access_type "lifetime"). */
 function accessLabel(row: EnrollmentRow): { text: string; tone: string } {
-    if (!row.access_expires_at) return { text: 'Lifetime', tone: 'text-[#4B4B57]' };
+    if (!row.access_expires_at) return { text: 'Lifetime', tone: 'text-cp-body' };
     const days = Math.ceil((new Date(row.access_expires_at).getTime() - Date.now()) / 86_400_000);
-    if (days < 0) return { text: `Expired ${formatDate(row.access_expires_at)}`, tone: 'text-[#C2410C]' };
-    if (days <= 7) return { text: `${days <= 0 ? 'Expires today' : `${days} ${days === 1 ? 'day' : 'days'} left`}`, tone: 'text-[#B46E00]' };
-    return { text: `Until ${formatDate(row.access_expires_at)}`, tone: 'text-[#4B4B57]' };
+    if (days < 0) return { text: `Expired ${formatDate(row.access_expires_at)}`, tone: 'text-cp-coral-dark-ink' };
+    if (days <= 7) return { text: `${days <= 0 ? 'Expires today' : `${days} ${days === 1 ? 'day' : 'days'} left`}`, tone: 'text-cp-warning-ink' };
+    return { text: `Until ${formatDate(row.access_expires_at)}`, tone: 'text-cp-body' };
 }
 
 /* ------------------------------------------------------------------ */
@@ -143,9 +143,9 @@ export default function CourseStudents({ course, enrollments, filters }: Student
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Students · ${course.title || 'Course'}`} />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
-                    <Link href="/dashboard/courses" className="flex w-fit items-center gap-1.5 text-xs font-medium text-[#8A8A96] transition hover:text-[#14141B]">
+                    <Link href="/dashboard/courses" className="flex w-fit items-center gap-1.5 text-xs font-medium text-cp-muted transition hover:text-cp-ink">
                         <ArrowLeft className="size-3.5" /> All courses
                     </Link>
 
@@ -153,20 +153,20 @@ export default function CourseStudents({ course, enrollments, filters }: Student
                     <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                         <div className="flex min-w-0 flex-col gap-1">
                             <div className="flex items-center gap-2">
-                                <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Students</h1>
-                                <span className="rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#4F46E5] uppercase">Live Sync</span>
+                                <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Students</h1>
+                                <span className="rounded-full bg-cp-brand-soft px-2 py-0.5 text-[10px] font-semibold tracking-wider text-cp-brand-ink uppercase">Live Sync</span>
                             </div>
-                            <p className="truncate text-sm text-[#8A8A96]">
-                                Enrolled in <span className="font-semibold text-[#14141B]">{course.title || 'Untitled course'}</span>
+                            <p className="truncate text-sm text-cp-muted">
+                                Enrolled in <span className="font-semibold text-cp-ink">{course.title || 'Untitled course'}</span>
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" asChild className="border-[#E4E2DA]">
+                            <Button variant="outline" asChild className="border-cp-line">
                                 <Link href={`/dashboard/assignments/submissions?course=${course.uuid}`}>
                                     <ClipboardCheck className="size-4" /> Assignments
                                 </Link>
                             </Button>
-                            <Button variant="outline" asChild className="border-[#E4E2DA]">
+                            <Button variant="outline" asChild className="border-cp-line">
                                 <Link href={`/dashboard/courses/${course.uuid}/edit`}>
                                     <Pencil className="size-4" /> Edit course
                                 </Link>
@@ -175,18 +175,18 @@ export default function CourseStudents({ course, enrollments, filters }: Student
                     </div>
 
                     {/* Search */}
-                    <div className="rounded-xl bg-white p-4 shadow-sm">
+                    <div className="rounded-xl bg-cp-surface p-4 shadow-sm">
                         <form onSubmit={submitSearch} className="relative max-w-sm">
-                            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#8A8A96]" />
+                            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-cp-muted" />
                             <input
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search name, email or phone…"
                                 aria-label="Search students"
-                                className="w-full rounded-lg bg-[#F6F5F2] py-2 pr-9 pl-9 text-sm text-[#14141B] outline-none placeholder:text-[#8A8A96] focus:bg-white focus:ring-2 focus:ring-[#4F46E5]/20"
+                                className="w-full rounded-lg bg-cp-canvas py-2 pr-9 pl-9 text-sm text-cp-ink outline-none placeholder:text-cp-muted focus:bg-cp-surface focus:ring-2 focus:ring-cp-brand/20"
                             />
                             {search && (
-                                <button type="button" onClick={clearSearch} aria-label="Clear search" className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 text-[#8A8A96] hover:text-[#14141B]">
+                                <button type="button" onClick={clearSearch} aria-label="Clear search" className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 text-cp-muted hover:text-cp-ink">
                                     <X className="size-3.5" />
                                 </button>
                             )}
@@ -194,11 +194,11 @@ export default function CourseStudents({ course, enrollments, filters }: Student
                     </div>
 
                     {/* Table */}
-                    <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-                        <div className="flex items-center justify-between border-b border-[#E4E2DA]/70 px-6 py-4">
+                    <div className="overflow-hidden rounded-xl bg-cp-surface shadow-sm">
+                        <div className="flex items-center justify-between border-b border-cp-line/70 px-6 py-4">
                             <div>
-                                <h2 className="text-base font-semibold text-[#14141B]">Enrolled students</h2>
-                                <p className="mt-0.5 text-xs text-[#8A8A96]">
+                                <h2 className="text-base font-semibold text-cp-ink">Enrolled students</h2>
+                                <p className="mt-0.5 text-xs text-cp-muted">
                                     {enrollments.total > 0
                                         ? `Showing ${enrollments.from ?? 0}–${enrollments.to ?? 0} of ${enrollments.total} ${enrollments.total === 1 ? 'student' : 'students'}${searching ? ' matching your search' : ''}`
                                         : searching
@@ -210,7 +210,7 @@ export default function CourseStudents({ course, enrollments, filters }: Student
                         <div className="overflow-x-auto">
                             <table className="w-full border-collapse text-left text-sm">
                                 <thead>
-                                    <tr className="bg-[#F6F5F2]/60 text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">
+                                    <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
                                         <th className="px-6 py-3">Student</th>
                                         <th className="px-4 py-3">Enrolled</th>
                                         <th className="px-4 py-3">Progress</th>
@@ -220,20 +220,20 @@ export default function CourseStudents({ course, enrollments, filters }: Student
                                         <th className="px-6 py-3" />
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#E4E2DA]/50">
+                                <tbody className="divide-y divide-cp-line/50">
                                     {enrollments.data.length === 0 && (
                                         <tr>
                                             <td colSpan={7} className="px-6 py-8">
-                                                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#E4E2DA] bg-[#FAF9F5] py-8 text-center">
-                                                    <span className="flex size-10 items-center justify-center rounded-full bg-[#ECEBE6] text-[#8A8A96]">
+                                                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+                                                    <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
                                                         <Inbox className="size-5" />
                                                     </span>
-                                                    <p className="mt-1 text-sm font-semibold text-[#14141B]">{searching ? 'No students found' : 'No students yet'}</p>
-                                                    <p className="max-w-xs px-4 text-xs text-[#8A8A96]">
+                                                    <p className="mt-1 text-sm font-semibold text-cp-ink">{searching ? 'No students found' : 'No students yet'}</p>
+                                                    <p className="max-w-xs px-4 text-xs text-cp-muted">
                                                         {searching ? 'Try a different name, email or phone number.' : 'Students appear here automatically as soon as they buy this course.'}
                                                     </p>
                                                     {searching && (
-                                                        <Button variant="outline" size="sm" onClick={clearSearch} className="mt-3 border-[#E4E2DA]">
+                                                        <Button variant="outline" size="sm" onClick={clearSearch} className="mt-3 border-cp-line">
                                                             Clear search
                                                         </Button>
                                                     )}
@@ -248,23 +248,23 @@ export default function CourseStudents({ course, enrollments, filters }: Student
                                         const access = accessLabel(row);
                                         const name = row.customer?.name ?? null;
                                         return (
-                                            <tr key={row.id} onClick={() => router.visit(`/dashboard/enrollments/${row.uuid}`)} className="group cursor-pointer transition hover:bg-[#F6F5F2]/60">
+                                            <tr key={row.id} onClick={() => router.visit(`/dashboard/enrollments/${row.uuid}`)} className="group cursor-pointer transition hover:bg-cp-canvas/60">
                                                 <td className="px-6 py-3.5">
                                                     <div className="flex min-w-[220px] items-center gap-2.5">
                                                         <div className={cn('flex size-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold', avatarTone(name))}>{initials(name)}</div>
                                                         <div className="min-w-0">
-                                                            <span className="block max-w-[220px] truncate text-[13px] font-semibold text-[#14141B] group-hover:text-[#4F46E5]">{name ?? 'Anonymous'}</span>
-                                                            <span className="block max-w-[220px] truncate text-xs text-[#8A8A96]">{row.customer?.email ?? row.customer?.phone ?? '—'}</span>
+                                                            <span className="block max-w-[220px] truncate text-[13px] font-semibold text-cp-ink group-hover:text-cp-brand-ink">{name ?? 'Anonymous'}</span>
+                                                            <span className="block max-w-[220px] truncate text-xs text-cp-muted">{row.customer?.email ?? row.customer?.phone ?? '—'}</span>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3.5 text-xs whitespace-nowrap text-[#4B4B57]">{formatDate(row.created_at)}</td>
+                                                <td className="px-4 py-3.5 text-xs whitespace-nowrap text-cp-body">{formatDate(row.created_at)}</td>
                                                 <td className="px-4 py-3.5">
                                                     <div className="flex min-w-[140px] items-center gap-2.5">
-                                                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#ECEBE6]" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
-                                                            <span className={cn('block h-full rounded-full', percent >= 100 ? 'bg-[#059669]' : 'bg-[#4F46E5]')} style={{ width: `${percent}%` }} />
+                                                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-cp-surface-3" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
+                                                            <span className={cn('block h-full rounded-full', percent >= 100 ? 'bg-cp-success' : 'bg-cp-brand')} style={{ width: `${percent}%` }} />
                                                         </div>
-                                                        <span className="w-9 text-right text-xs font-semibold text-[#14141B]">{percent}%</span>
+                                                        <span className="w-9 text-right text-xs font-semibold text-cp-ink">{percent}%</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3.5 text-center whitespace-nowrap">
@@ -275,16 +275,16 @@ export default function CourseStudents({ course, enrollments, filters }: Student
                                                 <td className={cn('px-4 py-3.5 text-xs whitespace-nowrap', access.tone)}>{access.text}</td>
                                                 <td className="px-4 py-3.5 text-center">
                                                     {row.certificate_issued_at ? (
-                                                        <span title={`Issued ${formatDate(row.certificate_issued_at)}`} className="inline-flex size-7 items-center justify-center rounded-full bg-[#FFF4DB] text-[#B46E00]">
+                                                        <span title={`Issued ${formatDate(row.certificate_issued_at)}`} className="inline-flex size-7 items-center justify-center rounded-full bg-cp-warning-soft text-cp-warning-ink">
                                                             <Award className="size-4" />
                                                             <span className="sr-only">Certificate issued</span>
                                                         </span>
                                                     ) : (
-                                                        <span className="text-xs text-[#8A8A96]">—</span>
+                                                        <span className="text-xs text-cp-muted">—</span>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-3.5 text-right">
-                                                    <ChevronRight className="ml-auto size-4 text-[#8A8A96] transition group-hover:translate-x-0.5 group-hover:text-[#14141B]" />
+                                                    <ChevronRight className="ml-auto size-4 text-cp-muted transition group-hover:translate-x-0.5 group-hover:text-cp-ink" />
                                                 </td>
                                             </tr>
                                         );
@@ -293,15 +293,15 @@ export default function CourseStudents({ course, enrollments, filters }: Student
                             </table>
                         </div>
                         {enrollments.total > 0 && (
-                            <div className="flex flex-col items-center justify-between gap-3 border-t border-[#E4E2DA]/60 p-4 sm:flex-row">
-                                <p className="text-xs text-[#8A8A96]">
-                                    Page <span className="font-semibold text-[#14141B]">{enrollments.current_page}</span> of <span className="font-semibold text-[#14141B]">{enrollments.last_page}</span>
+                            <div className="flex flex-col items-center justify-between gap-3 border-t border-cp-line/60 p-4 sm:flex-row">
+                                <p className="text-xs text-cp-muted">
+                                    Page <span className="font-semibold text-cp-ink">{enrollments.current_page}</span> of <span className="font-semibold text-cp-ink">{enrollments.last_page}</span>
                                 </p>
                                 <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm" disabled={enrollments.current_page <= 1} onClick={() => goToPage(enrollments.current_page - 1)} className="border-[#E4E2DA]">
+                                    <Button variant="outline" size="sm" disabled={enrollments.current_page <= 1} onClick={() => goToPage(enrollments.current_page - 1)} className="border-cp-line">
                                         Previous
                                     </Button>
-                                    <Button variant="outline" size="sm" disabled={enrollments.current_page >= enrollments.last_page} onClick={() => goToPage(enrollments.current_page + 1)} className="border-[#E4E2DA]">
+                                    <Button variant="outline" size="sm" disabled={enrollments.current_page >= enrollments.last_page} onClick={() => goToPage(enrollments.current_page + 1)} className="border-cp-line">
                                         Next <ArrowUpRight className="size-3.5" />
                                     </Button>
                                 </div>

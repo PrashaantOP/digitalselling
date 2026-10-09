@@ -86,10 +86,10 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
         <div className="flex flex-col gap-3">
             {error && <Notice tone="error">{error}</Notice>}
 
-            {modules.length === 0 && <p className="rounded-xl border border-dashed border-[#DAD8D0] bg-[#FAF9F5] p-5 text-center text-xs text-[#8A8A96]">Your syllabus is empty. Add a module, then add lessons to it.</p>}
+            {modules.length === 0 && <p className="rounded-xl border border-dashed border-cp-line-strong bg-cp-surface-2 p-5 text-center text-xs text-cp-muted">Your syllabus is empty. Add a module, then add lessons to it.</p>}
 
             {modules.map((m, mi) => (
-                <div key={m.id} className="rounded-xl border border-[#E4E2DA] bg-[#FAF9F5] p-3">
+                <div key={m.id} className="rounded-xl border border-cp-line bg-cp-surface-2 p-3">
                     <div className="flex items-center gap-1">
                         <input
                             key={`${m.id}:${m.title}`}
@@ -97,7 +97,7 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
                             defaultValue={m.title}
                             maxLength={150}
                             onBlur={(e) => renameModule(m, e.target.value)}
-                            className="h-10 min-w-0 flex-1 rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm font-semibold text-[#14141B] outline-none focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                            className="h-10 min-w-0 flex-1 rounded-lg border border-cp-line bg-cp-surface px-3 text-sm font-semibold text-cp-ink outline-none focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                         />
                         <IconBtn label={`Move module ${mi + 1} up`} disabled={busy || mi === 0} onClick={() => moveModule(mi, -1)}>
                             <ArrowUp className="size-4" />
@@ -115,20 +115,20 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
                             const Icon = LESSON_ICONS[l.type] ?? FileText;
                             const open = expanded === l.id;
                             return (
-                                <div key={l.id} className="rounded-lg border border-[#E4E2DA] bg-white">
+                                <div key={l.id} className="rounded-lg border border-cp-line bg-cp-surface">
                                     <div className="flex items-center gap-1 px-2 py-1.5">
-                                        <button type="button" aria-label={open ? `Collapse ${l.title}` : `Expand ${l.title}`} aria-expanded={open} onClick={() => setExpanded(open ? null : l.id)} className="rounded p-1.5 text-[#8A8A96] hover:bg-[#F0EFEA]">
+                                        <button type="button" aria-label={open ? `Collapse ${l.title}` : `Expand ${l.title}`} aria-expanded={open} onClick={() => setExpanded(open ? null : l.id)} className="rounded p-1.5 text-cp-muted hover:bg-cp-surface-3">
                                             <ChevronRight className={cn('size-4 transition-transform', open && 'rotate-90')} />
                                         </button>
-                                        <Icon className="size-4 shrink-0 text-[#4F46E5]" />
-                                        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#14141B]">{l.title}</span>
-                                        <span className="hidden shrink-0 rounded bg-[#F0EFEA] px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-[#6B6B78] uppercase sm:inline">{l.type.replace('_', ' ').replace('text image', 'text')}</span>
+                                        <Icon className="size-4 shrink-0 text-cp-brand-ink" />
+                                        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-cp-ink">{l.title}</span>
+                                        <span className="hidden shrink-0 rounded bg-cp-surface-3 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-cp-subtle uppercase sm:inline">{l.type.replace('_', ' ').replace('text image', 'text')}</span>
                                         <button
                                             type="button"
                                             aria-label={l.is_published ? `Unpublish ${l.title}` : `Publish ${l.title}`}
                                             disabled={busy}
                                             onClick={() => patchLesson(l, { is_published: !l.is_published })}
-                                            className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase transition', l.is_published ? 'bg-[#E6F6EC] text-[#059669] hover:bg-[#D5F0DE]' : 'bg-[#F0EFEA] text-[#6B6B78] hover:bg-[#E6E4DC]')}
+                                            className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase transition', l.is_published ? 'bg-cp-success-soft text-cp-success-ink hover:bg-cp-success-line-soft' : 'bg-cp-surface-3 text-cp-subtle hover:bg-cp-line')}
                                         >
                                             {l.is_published ? 'Published' : 'Draft'}
                                         </button>
@@ -143,23 +143,23 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
                                         </IconBtn>
                                     </div>
                                     {open && (
-                                        <div className="flex flex-col gap-4 border-t border-[#E4E2DA] p-4">
+                                        <div className="flex flex-col gap-4 border-t border-cp-line p-4">
                                             <Field label="Lesson title" htmlFor={`lesson-title-${l.id}`}>
                                                 <input key={`${l.id}:${l.title}`} id={`lesson-title-${l.id}`} defaultValue={l.title} maxLength={150} onBlur={(e) => renameLesson(l, e.target.value)} className={INPUT} />
                                             </Field>
                                             <div className="grid grid-cols-2 gap-2">
-                                                <div className="flex items-center justify-between rounded-lg bg-[#F6F5F2] px-3 py-2.5">
-                                                    <span className="text-xs font-medium text-[#14141B]">Published</span>
+                                                <div className="flex items-center justify-between rounded-lg bg-cp-canvas px-3 py-2.5">
+                                                    <span className="text-xs font-medium text-cp-ink">Published</span>
                                                     <Toggle checked={l.is_published} disabled={busy} onChange={(v) => patchLesson(l, { is_published: v })} label={`Published: ${l.title}`} />
                                                 </div>
                                                 {/* quiz / assignment ke liye enrollment chahiye — unka free preview hota hi nahi */}
                                                 {l.type === 'quiz' || l.type === 'assignment' ? (
-                                                    <div className="flex items-center rounded-lg bg-[#F6F5F2] px-3 py-2.5">
-                                                        <span className="text-xs text-[#8A8A96]">No free preview for {l.type === 'quiz' ? 'quizzes' : 'assignments'} — enrolled students only.</span>
+                                                    <div className="flex items-center rounded-lg bg-cp-canvas px-3 py-2.5">
+                                                        <span className="text-xs text-cp-muted">No free preview for {l.type === 'quiz' ? 'quizzes' : 'assignments'} — enrolled students only.</span>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center justify-between rounded-lg bg-[#F6F5F2] px-3 py-2.5">
-                                                        <span className="text-xs font-medium text-[#14141B]">Free preview</span>
+                                                    <div className="flex items-center justify-between rounded-lg bg-cp-canvas px-3 py-2.5">
+                                                        <span className="text-xs font-medium text-cp-ink">Free preview</span>
                                                         <Toggle checked={l.is_free_preview} disabled={busy} onChange={(v) => patchLesson(l, { is_free_preview: v })} label={`Free preview: ${l.title}`} />
                                                     </div>
                                                 )}
@@ -172,13 +172,13 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
                         })}
                     </div>
 
-                    <button type="button" onClick={() => setPickerFor(m.id)} disabled={busy} className="mt-2 flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[#4F46E5] hover:bg-[#EEF2FF] disabled:opacity-50">
+                    <button type="button" onClick={() => setPickerFor(m.id)} disabled={busy} className="mt-2 flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-cp-brand-ink hover:bg-cp-brand-soft disabled:opacity-50">
                         <Plus className="size-3.5" /> Add lesson
                     </button>
                 </div>
             ))}
 
-            <button type="button" onClick={addModule} disabled={busy} className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-[#E4E2DA] bg-white text-sm font-semibold text-[#14141B] transition hover:bg-[#F6F5F2] disabled:opacity-50">
+            <button type="button" onClick={addModule} disabled={busy} className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-cp-line bg-cp-surface text-sm font-semibold text-cp-ink transition hover:bg-cp-canvas disabled:opacity-50">
                 {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} New module
             </button>
 
@@ -187,13 +187,13 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
                     {LESSON_TYPES.map((t) => {
                         const Icon = LESSON_ICONS[t.key];
                         return (
-                            <button key={t.key} type="button" onClick={() => pickerFor !== null && addLesson(pickerFor, t.key)} className="flex items-start gap-3 rounded-xl border border-[#E4E2DA] p-4 text-left transition hover:border-[#4F46E5] hover:bg-[#F8F8FF]">
-                                <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#4F46E5]">
+                            <button key={t.key} type="button" onClick={() => pickerFor !== null && addLesson(pickerFor, t.key)} className="flex items-start gap-3 rounded-xl border border-cp-line p-4 text-left transition hover:border-cp-brand hover:bg-cp-surface-2">
+                                <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-cp-brand-soft text-cp-brand-ink">
                                     <Icon className="size-5" />
                                 </span>
                                 <span>
-                                    <span className="block text-base font-bold text-[#14141B]">{t.label}</span>
-                                    <span className="mt-0.5 block text-xs text-[#6B6B78]">{t.hint}</span>
+                                    <span className="block text-base font-bold text-cp-ink">{t.label}</span>
+                                    <span className="mt-0.5 block text-xs text-cp-subtle">{t.hint}</span>
                                 </span>
                             </button>
                         );
@@ -202,15 +202,15 @@ function Syllabus({ courseId, modules: rawModules }: { courseId: string; modules
             </Modal>
 
             <Modal open={doomed !== null} onClose={() => setDoomed(null)} title={`Delete this ${doomed?.kind ?? 'item'}?`}>
-                <p className="text-sm text-[#6B6B78]">
-                    <span className="font-semibold text-[#14141B]">{doomed?.title}</span>
+                <p className="text-sm text-cp-subtle">
+                    <span className="font-semibold text-cp-ink">{doomed?.title}</span>
                     {doomed?.kind === 'module' ? ' and all of its lessons will be permanently removed.' : ' and its content will be permanently removed.'}
                 </p>
                 <div className="mt-5 flex justify-end gap-2">
-                    <button type="button" onClick={() => setDoomed(null)} className="h-9 rounded-lg border border-[#E4E2DA] px-4 text-sm font-semibold text-[#4B4B57] hover:bg-[#F6F5F2]">
+                    <button type="button" onClick={() => setDoomed(null)} className="h-9 rounded-lg border border-cp-line px-4 text-sm font-semibold text-cp-body hover:bg-cp-canvas">
                         Cancel
                     </button>
-                    <button type="button" onClick={confirmDelete} disabled={busy} className="flex h-9 items-center gap-1.5 rounded-lg bg-[#D93838] px-4 text-sm font-semibold text-white hover:bg-[#B92D2D] disabled:opacity-50">
+                    <button type="button" onClick={confirmDelete} disabled={busy} className="flex h-9 items-center gap-1.5 rounded-lg bg-cp-red px-4 text-sm font-semibold text-white hover:bg-cp-danger disabled:opacity-50">
                         {busy ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />} Delete
                     </button>
                 </div>
@@ -273,10 +273,10 @@ function LiveClassForm({ courseId, editing, onClose }: { courseId: string; editi
                 <textarea id="live-desc" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className={TEXTAREA} />
             </Field>
             <div className="flex justify-end gap-2 pt-1">
-                <button type="button" onClick={onClose} className="h-9 rounded-lg border border-[#E4E2DA] px-4 text-sm font-semibold text-[#4B4B57] hover:bg-[#F6F5F2]">
+                <button type="button" onClick={onClose} className="h-9 rounded-lg border border-cp-line px-4 text-sm font-semibold text-cp-body hover:bg-cp-canvas">
                     Cancel
                 </button>
-                <button type="button" onClick={submit} disabled={!ok || busy} className="flex h-9 items-center gap-1.5 rounded-lg bg-[#4F46E5] px-4 text-sm font-semibold text-white hover:bg-[#4338CA] disabled:opacity-50">
+                <button type="button" onClick={submit} disabled={!ok || busy} className="flex h-9 items-center gap-1.5 rounded-lg bg-cp-brand px-4 text-sm font-semibold text-white hover:bg-cp-brand-hover disabled:opacity-50">
                     {busy && <Loader2 className="size-4 animate-spin" />} {editing ? 'Save changes' : 'Schedule class'}
                 </button>
             </div>
@@ -299,10 +299,10 @@ function LiveClasses({ courseId, classes }: { courseId: string; classes: LiveCla
             <div className="flex flex-col gap-2">
                 {error && <Notice tone="error">{error}</Notice>}
                 {classes.map((c) => (
-                    <div key={c.id} className="flex items-center gap-3 rounded-lg bg-[#F6F5F2] px-3 py-2.5">
+                    <div key={c.id} className="flex items-center gap-3 rounded-lg bg-cp-canvas px-3 py-2.5">
                         <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-[#14141B]">{c.title}</p>
-                            <p className="text-xs text-[#8A8A96]">
+                            <p className="truncate text-sm font-semibold text-cp-ink">{c.title}</p>
+                            <p className="text-xs text-cp-muted">
                                 {new Date(c.scheduled_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })} · {c.duration_minutes} min
                             </p>
                         </div>
@@ -314,7 +314,7 @@ function LiveClasses({ courseId, classes }: { courseId: string; classes: LiveCla
                         </IconBtn>
                     </div>
                 ))}
-                <button type="button" onClick={() => setForm('new')} className="flex h-10 w-fit items-center gap-1.5 rounded-lg border border-[#E4E2DA] bg-white px-4 text-sm font-semibold text-[#14141B] hover:bg-[#F6F5F2]">
+                <button type="button" onClick={() => setForm('new')} className="flex h-10 w-fit items-center gap-1.5 rounded-lg border border-cp-line bg-cp-surface px-4 text-sm font-semibold text-cp-ink hover:bg-cp-canvas">
                     <Plus className="size-4" /> Set up a live class
                 </button>
             </div>
@@ -367,12 +367,12 @@ export function CourseTab({
                     {PRICING.map((p) => {
                         const active = form.pricing_type === p.key;
                         return (
-                            <button key={p.key} type="button" role="radio" aria-checked={active} onClick={() => setField('pricing_type', p.key)} className={cn('flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition', active ? 'border-[#4F46E5] bg-[#EEF2FF]' : 'border-[#E4E2DA] bg-white hover:bg-[#F6F5F2]')}>
-                                <span className="flex w-full items-center justify-between gap-1 text-sm font-bold text-[#14141B]">
+                            <button key={p.key} type="button" role="radio" aria-checked={active} onClick={() => setField('pricing_type', p.key)} className={cn('flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition', active ? 'border-cp-brand bg-cp-brand-soft' : 'border-cp-line bg-cp-surface hover:bg-cp-canvas')}>
+                                <span className="flex w-full items-center justify-between gap-1 text-sm font-bold text-cp-ink">
                                     {p.title}
-                                    <span className={cn('flex size-4 shrink-0 items-center justify-center rounded-full border', active ? 'border-[#4F46E5] bg-[#4F46E5] text-white' : 'border-[#DAD8D0]')}>{active && <Check className="size-3" />}</span>
+                                    <span className={cn('flex size-4 shrink-0 items-center justify-center rounded-full border', active ? 'border-cp-brand bg-cp-brand text-white' : 'border-cp-line-strong')}>{active && <Check className="size-3" />}</span>
                                 </span>
-                                <span className="text-[11px] text-[#6B6B78]">{p.hint}</span>
+                                <span className="text-[11px] text-cp-subtle">{p.hint}</span>
                             </button>
                         );
                     })}
@@ -381,23 +381,23 @@ export function CourseTab({
                 {form.pricing_type !== 'free' && (
                     <Field label={form.pricing_type === 'fixed' ? 'Price' : 'Minimum amount'} htmlFor="course_price" required={form.pricing_type === 'fixed'} error={errors.price}>
                         <div className="relative">
-                            <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-[#8A8A96]">₹</span>
+                            <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-cp-muted">₹</span>
                             <input id="course_price" inputMode="decimal" value={form.price} onChange={(e) => setField('price', e.target.value.replace(/[^\d.]/g, ''))} placeholder={form.pricing_type === 'fixed' ? '499' : '99'} className={cn(INPUT, 'pl-7', invalid(errors.price))} />
                         </div>
                         {/* OrderService::minimumAmount — khaali / 0 = ₹1 */}
-                        {form.pricing_type === 'customer_decides' && <p className="mt-1 text-[11px] text-[#8A8A96]">Buyers can pay this or more. Leave empty to accept anything from ₹1.</p>}
+                        {form.pricing_type === 'customer_decides' && <p className="mt-1 text-[11px] text-cp-muted">Buyers can pay this or more. Leave empty to accept anything from ₹1.</p>}
                     </Field>
                 )}
 
                 {form.pricing_type === 'fixed' && (
                     <>
-                        <label className="flex cursor-pointer items-center gap-2 text-sm text-[#14141B]">
-                            <input type="checkbox" checked={form.has_discount} onChange={(e) => setField('has_discount', e.target.checked)} className="size-4 accent-[#4F46E5]" /> Offer discounted price
+                        <label className="flex cursor-pointer items-center gap-2 text-sm text-cp-ink">
+                            <input type="checkbox" checked={form.has_discount} onChange={(e) => setField('has_discount', e.target.checked)} className="size-4 accent-cp-brand" /> Offer discounted price
                         </label>
                         {form.has_discount && (
                             <Field label="Discounted price" htmlFor="discounted_price" error={errors.discounted_price ?? discountProblem}>
                                 <div className="relative">
-                                    <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-[#8A8A96]">₹</span>
+                                    <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-cp-muted">₹</span>
                                     <input id="discounted_price" inputMode="decimal" value={form.discounted_price} onChange={(e) => setField('discounted_price', e.target.value.replace(/[^\d.]/g, ''))} className={cn(INPUT, 'pl-7', invalid(errors.discounted_price ?? discountProblem))} />
                                 </div>
                             </Field>
@@ -412,9 +412,9 @@ export function CourseTab({
                     {([['lifetime', 'Lifetime access', 'Students keep access forever'], ['days', 'Limited access', 'Access expires after some days']] as const).map(([k, title, hint]) => {
                         const active = form.access_type === k;
                         return (
-                            <button key={k} type="button" role="radio" aria-checked={active} onClick={() => setField('access_type', k)} className={cn('flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition', active ? 'border-[#4F46E5] bg-[#EEF2FF]' : 'border-[#E4E2DA] bg-white hover:bg-[#F6F5F2]')}>
-                                <span className="text-sm font-bold text-[#14141B]">{title}</span>
-                                <span className="text-[11px] text-[#6B6B78]">{hint}</span>
+                            <button key={k} type="button" role="radio" aria-checked={active} onClick={() => setField('access_type', k)} className={cn('flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition', active ? 'border-cp-brand bg-cp-brand-soft' : 'border-cp-line bg-cp-surface hover:bg-cp-canvas')}>
+                                <span className="text-sm font-bold text-cp-ink">{title}</span>
+                                <span className="text-[11px] text-cp-subtle">{hint}</span>
                             </button>
                         );
                     })}
@@ -424,12 +424,12 @@ export function CourseTab({
                         <input id="access_days" inputMode="numeric" value={form.access_days} onChange={(e) => setField('access_days', e.target.value.replace(/\D/g, ''))} placeholder="365" className={cn(INPUT, invalid(errors.access_days))} />
                     </Field>
                 )}
-                <div className="flex items-center justify-between rounded-xl border border-[#E4E2DA] bg-white px-4 py-3">
+                <div className="flex items-center justify-between rounded-xl border border-cp-line bg-cp-surface px-4 py-3">
                     <div>
-                        <p className="text-sm font-bold text-[#14141B]">Certificate of completion</p>
-                        <p className="text-xs text-[#6B6B78]">
+                        <p className="text-sm font-bold text-cp-ink">Certificate of completion</p>
+                        <p className="text-xs text-cp-subtle">
                             Issued automatically when a student finishes every lesson.{' '}
-                            <a href="/dashboard/courses/certificate" target="_blank" rel="noreferrer" className="font-semibold text-[#4F46E5] hover:underline">
+                            <a href="/dashboard/courses/certificate" target="_blank" rel="noreferrer" className="font-semibold text-cp-brand-ink hover:underline">
                                 Customise design
                             </a>
                         </p>

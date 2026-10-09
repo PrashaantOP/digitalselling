@@ -34,9 +34,9 @@ export function PreviewLabel({ accent, children }: { accent: string; children: R
 
 export function PreviewPill({ label, value }: { label: string; value: string }) {
     return (
-        <div className="rounded-xl border border-[#E4E2DA] bg-white px-4 py-3">
-            <p className="text-[10px] font-bold tracking-widest text-[#8A8A96] uppercase">{label}</p>
-            <p className="mt-1 truncate text-[14px] font-semibold text-[#14141B]">{value}</p>
+        <div className="rounded-xl border border-cp-line bg-cp-surface px-4 py-3">
+            <p className="text-[10px] font-bold tracking-widest text-cp-muted uppercase">{label}</p>
+            <p className="mt-1 truncate text-[14px] font-semibold text-cp-ink">{value}</p>
         </div>
     );
 }
@@ -72,25 +72,25 @@ export function PreviewCheckoutCard({
     const shownPrice = pricing.pricing_type === 'free' ? 'Free' : formatCurrency(discounted ? Number(pricing.discounted_price) : price);
 
     const fakeInput = (text: string, prefix?: string) => (
-        <div className="flex h-11 items-center gap-2 rounded-lg border border-[#DAD8D0] bg-white px-3 text-sm text-[#8A8A96]">
-            {prefix && <span className="border-r border-[#E4E2DA] pr-2">{prefix}</span>}
+        <div className="flex h-11 items-center gap-2 rounded-lg border border-cp-line-strong bg-cp-surface px-3 text-sm text-cp-muted">
+            {prefix && <span className="border-r border-cp-line pr-2">{prefix}</span>}
             <span className="truncate">{text}</span>
         </div>
     );
 
     return (
-        <aside className="flex flex-col gap-3 rounded-2xl border border-[#E4E2DA] bg-white p-5 text-[#14141B] shadow-sm">
+        <aside className="flex flex-col gap-3 rounded-2xl border border-cp-line bg-cp-surface p-5 text-cp-ink shadow-sm">
             {rows.map((row) => (
-                <div key={row.text} className="flex items-center gap-2.5 text-sm text-[#6B6B78]">
+                <div key={row.text} className="flex items-center gap-2.5 text-sm text-cp-subtle">
                     <row.icon className="size-4 shrink-0" /> <span className="min-w-0 truncate">{row.text}</span>
                 </div>
             ))}
             <div className="mt-1 flex items-baseline gap-2">
                 <span className="text-3xl font-extrabold">{payWhatYouWant ? 'Pay what you want' : shownPrice}</span>
-                {discounted && <span className="text-sm text-[#8A8A96] line-through">{formatCurrency(price)}</span>}
+                {discounted && <span className="text-sm text-cp-muted line-through">{formatCurrency(price)}</span>}
             </div>
-            {payWhatYouWant && price > 0 && <p className="-mt-2 text-xs text-[#6B6B78]">Minimum {formatCurrency(price)}</p>}
-            <p className="text-xs text-[#6B6B78]">Access to this purchase will be sent to this email</p>
+            {payWhatYouWant && price > 0 && <p className="-mt-2 text-xs text-cp-subtle">Minimum {formatCurrency(price)}</p>}
+            <p className="text-xs text-cp-subtle">Access to this purchase will be sent to this email</p>
             {payWhatYouWant && fakeInput(`Your amount (min ${formatCurrency(price)})`, '₹')}
             {collectName && fakeInput('Full name')}
             {fakeInput('Email address')}
@@ -124,18 +124,18 @@ export function PreviewFrame({ device, url, accent, main, side }: { device: Devi
         <div className={cn('mx-auto flex h-full max-h-[760px] w-full transition-all duration-300', mobile ? 'max-w-[390px]' : 'max-w-[1040px]')}>
             <div
                 className={cn(
-                    'flex h-full w-full flex-col overflow-hidden bg-[#FAF9F5] shadow-2xl shadow-black/40',
-                    mobile ? 'rounded-[2.5rem] border-[10px] border-[#14141B]' : 'rounded-xl border border-white/10',
+                    'light-island flex h-full w-full flex-col overflow-hidden bg-cp-surface-2 shadow-2xl shadow-black/40',
+                    mobile ? 'rounded-[2.5rem] border-[10px] border-cp-solid' : 'rounded-xl border border-white/10',
                 )}
             >
                 {mobile ? (
-                    <div className="mx-auto my-1 h-1.5 w-20 shrink-0 rounded-full bg-[#14141B]/80" />
+                    <div className="mx-auto my-1 h-1.5 w-20 shrink-0 rounded-full bg-cp-solid/80" />
                 ) : (
-                    <div className="flex shrink-0 items-center gap-2 bg-[#2A2A35] px-4 py-3">
+                    <div className="flex shrink-0 items-center gap-2 bg-cp-solid-hover px-4 py-3">
                         <span className="size-3 rounded-full bg-[#FF5F57]" />
                         <span className="size-3 rounded-full bg-[#FEBC2E]" />
                         <span className="size-3 rounded-full bg-[#28C840]" />
-                        <span className="mx-auto flex max-w-[60%] min-w-0 items-center gap-1.5 rounded-md bg-[#14141B] px-4 py-1 text-[11px] text-[#C9C9D4]">
+                        <span className="mx-auto flex max-w-[60%] min-w-0 items-center gap-1.5 rounded-md bg-cp-solid px-4 py-1 text-[11px] text-cp-line-stronger">
                             <Lock className="size-3 shrink-0" />
                             <span className="truncate">{url}</span>
                         </span>
@@ -159,8 +159,8 @@ export function PreviewFrame({ device, url, accent, main, side }: { device: Devi
                             <div className="sticky top-0">{side}</div>
                         </>
                     )}
-                    <p className={cn('text-center text-[11px] text-[#8A8A96]', !mobile && 'col-span-2')}>
-                        Built with <span className="font-semibold text-[#4F46E5]">CreatorPro</span>
+                    <p className={cn('text-center text-[11px] text-cp-muted', !mobile && 'col-span-2')}>
+                        Built with <span className="font-semibold text-cp-brand-ink">CreatorPro</span>
                     </p>
                 </div>
             </div>

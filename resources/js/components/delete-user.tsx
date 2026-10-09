@@ -1,81 +1,77 @@
-import HeadingSmall from '@/components/heading-small';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Field, SaveButton, SettingsCard, TextInput } from '@/layouts/settings/layout';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form } from '@inertiajs/react';
+import { AlertTriangle, Trash2 } from 'lucide-react';
 import { useRef } from 'react';
 
+/** Account band karna — settings ke Profile page ka "danger zone". Server pending payout ho to mana karta hai (password field pe error). */
 export default function DeleteUser() {
     const passwordInput = useRef<HTMLInputElement>(null);
 
     return (
-        <div className="space-y-6">
-            <HeadingSmall title="Delete account" description="Delete your account and all of its resources" />
-            <div className="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
-                <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
-                    <p className="font-medium">Warning</p>
-                    <p className="text-sm">Please proceed with caution, this cannot be undone.</p>
-                </div>
+        <SettingsCard icon={Trash2} title="Delete account" tone="bg-cp-danger-soft text-cp-danger-ink" description="Close your account and take your store offline." className="ring-cp-danger-line-soft">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="flex items-start gap-2 text-sm text-cp-subtle">
+                    <AlertTriangle className="mt-0.5 size-4 shrink-0 text-cp-danger-ink" />
+                    Your store, products and buyer access stop working. Make sure all your earnings have been paid out first.
+                </p>
 
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant="destructive">Delete account</Button>
+                        <button
+                            type="button"
+                            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-cp-danger-line bg-cp-surface px-4 text-sm font-semibold text-cp-danger-ink transition hover:bg-cp-danger-soft"
+                        >
+                            <Trash2 className="size-4" /> Delete account
+                        </button>
                     </DialogTrigger>
-                    <DialogContent>
-                        <DialogTitle>Are you sure you want to delete your account?</DialogTitle>
-                        <DialogDescription>
-                            Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password
-                            to confirm you would like to permanently delete your account.
+                    <DialogContent className="rounded-2xl sm:max-w-md">
+                        <span className="flex size-11 items-center justify-center rounded-xl bg-cp-danger-soft text-cp-danger-ink">
+                            <AlertTriangle className="size-5" />
+                        </span>
+                        <DialogTitle className="text-lg font-bold text-cp-ink">Delete your account?</DialogTitle>
+                        <DialogDescription className="text-sm text-cp-subtle">
+                            Your store goes offline and your products can no longer be bought. Enter your password to confirm.
                         </DialogDescription>
 
                         <Form
                             method="delete"
                             action={route('profile.destroy')}
-                            options={{
-                                preserveScroll: true,
-                            }}
+                            options={{ preserveScroll: true }}
                             onError={() => passwordInput.current?.focus()}
                             resetOnSuccess
-                            className="space-y-6"
+                            className="grid gap-5"
                         >
                             {({ resetAndClearErrors, processing, errors }) => (
                                 <>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="password" className="sr-only">
-                                            Password
-                                        </Label>
-
-                                        <Input
-                                            id="password"
+                                    <Field id="delete_password" label="Password" error={errors.password}>
+                                        <TextInput
+                                            id="delete_password"
                                             type="password"
                                             name="password"
                                             ref={passwordInput}
-                                            placeholder="Password"
+                                            placeholder="Your password"
                                             autoComplete="current-password"
+                                            invalid={Boolean(errors.password)}
                                         />
+                                    </Field>
 
-                                        <InputError message={errors.password} />
-                                    </div>
-
-                                    <DialogFooter className="gap-2">
+                                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                                         <DialogClose asChild>
-                                            <Button variant="secondary" onClick={() => resetAndClearErrors()}>
+                                            <SaveButton type="button" tone="outline" onClick={() => resetAndClearErrors()}>
                                                 Cancel
-                                            </Button>
+                                            </SaveButton>
                                         </DialogClose>
-
-                                        <Button variant="destructive" disabled={processing} asChild>
-                                            <button type="submit">Delete account</button>
-                                        </Button>
-                                    </DialogFooter>
+                                        <SaveButton tone="danger" processing={processing}>
+                                            Delete account
+                                        </SaveButton>
+                                    </div>
                                 </>
                             )}
                         </Form>
                     </DialogContent>
                 </Dialog>
             </div>
-        </div>
+        </SettingsCard>
     );
 }

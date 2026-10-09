@@ -123,10 +123,10 @@ function PreviewPane({ data, host, device }: { data: PreviewData; host: string; 
                 >
                     {categoryLabel(data.category)}
                 </span>
-                <h1 className="mt-3 text-3xl font-extrabold tracking-tight break-words text-[#14141B]">
+                <h1 className="mt-3 text-3xl font-extrabold tracking-tight break-words text-cp-ink">
                     {data.title.trim() || 'Your locked content title'}
                 </h1>
-                <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-line text-[#4B4B57]">
+                <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-line text-cp-body">
                     {data.teaser.trim() || 'Unlock this content to view it.'}
                 </p>
             </div>
@@ -342,9 +342,9 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
             <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
                     <label htmlFor="locked_title" className={LABEL_CLASS}>
-                        Title <span className="text-[#D93838]">*</span>
+                        Title <span className="text-cp-red-ink">*</span>
                     </label>
-                    <span className={cn('text-[11px]', titleOk ? 'text-[#8A8A96]' : 'text-[#D93838]')}>{titleCount}/75</span>
+                    <span className={cn('text-[11px]', titleOk ? 'text-cp-muted' : 'text-cp-red-ink')}>{titleCount}/75</span>
                 </div>
                 <input
                     id="locked_title"
@@ -458,11 +458,11 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
             <div className="flex flex-col gap-2">
                 <label className={LABEL_CLASS}>Hidden files</label>
                 {files.map((file) => (
-                    <div key={file.id} className="flex items-center gap-3 rounded-lg border border-[#E4E2DA] bg-[#F8F7F4] px-3 py-2.5">
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#4F46E5]">
+                    <div key={file.id} className="flex items-center gap-3 rounded-lg border border-cp-line bg-cp-surface-2 px-3 py-2.5">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-cp-brand-soft text-cp-brand-ink">
                             <FileText className="size-4" />
                         </span>
-                        <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#14141B]">
+                        <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-cp-ink">
                             {file.original_name || file.file_path.split('/').pop()}
                         </p>
                         <RemoveButton
@@ -490,7 +490,7 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
             {/* Unlock price */}
             <div className="flex flex-col gap-1.5">
                 <label htmlFor="locked_price" className={LABEL_CLASS}>
-                    Unlock price (₹) <span className="text-[#D93838]">*</span>
+                    Unlock price (₹) <span className="text-cp-red-ink">*</span>
                 </label>
                 <input
                     id="locked_price"
@@ -504,12 +504,12 @@ export default function LockedContentEdit({ item, publicUrl }: Props) {
                 <FieldError message={errorFor('price')} />
             </div>
 
-            <label className="flex cursor-pointer items-center gap-2.5 text-[13px] font-semibold text-[#14141B]">
+            <label className="flex cursor-pointer items-center gap-2.5 text-[13px] font-semibold text-cp-ink">
                 <input
                     type="checkbox"
                     checked={form.has_discount}
                     onChange={(e) => patch({ has_discount: e.target.checked })}
-                    className="size-4 rounded border-[#D9D7CE] text-[#4F46E5] focus:ring-[#4F46E5]"
+                    className="size-4 rounded border-cp-line-strong text-cp-brand-ink focus:ring-cp-brand"
                 />
                 Offer discounted price
             </label>

@@ -17,8 +17,8 @@ export function TeamShell({ active, title, description, action, children }: { ac
     return (
         <AppLayout breadcrumbs={[{ title: 'Team', href: '/dashboard/sub-admins' }]}>
             <Head title={`Team · ${title}`} />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
-                <div className="sticky top-0 z-30 border-b border-[#E4E2DA] bg-[#F6F5F2]/95 backdrop-blur-md">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
+                <div className="sticky top-14 z-30 border-b border-cp-line bg-cp-canvas/95 backdrop-blur-md lg:top-0">
                     <nav className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 md:px-6">
                         {TABS.map((t) => (
                             <Link
@@ -26,7 +26,7 @@ export function TeamShell({ active, title, description, action, children }: { ac
                                 href={t.href}
                                 className={cn(
                                     '-mb-px border-b-2 py-3 text-sm font-medium transition-colors',
-                                    active === t.key ? 'border-[#4F46E5] text-[#4F46E5]' : 'border-transparent text-[#8A8A96] hover:text-[#14141B]',
+                                    active === t.key ? 'border-cp-brand text-cp-brand-ink' : 'border-transparent text-cp-muted hover:text-cp-ink',
                                 )}
                             >
                                 {t.label}
@@ -37,8 +37,8 @@ export function TeamShell({ active, title, description, action, children }: { ac
                 <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">{title}</h1>
-                            <p className="mt-1 text-sm text-[#8A8A96]">{description}</p>
+                            <h1 className="text-2xl font-bold tracking-tight text-cp-ink">{title}</h1>
+                            <p className="mt-1 text-sm text-cp-muted">{description}</p>
                         </div>
                         {action}
                     </div>
@@ -50,11 +50,11 @@ export function TeamShell({ active, title, description, action, children }: { ac
 }
 
 export const INPUT =
-    'h-10 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15';
-export const LABEL = 'text-xs font-semibold tracking-wider text-[#14141B] uppercase';
-export const BTN_PRIMARY = 'inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-[#4F46E5] px-4 text-sm font-semibold text-white transition hover:bg-[#4338CA] disabled:opacity-50';
-export const BTN_DANGER = 'inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-[#C2410C] px-4 text-sm font-semibold text-white transition hover:bg-[#9A3412] disabled:opacity-50';
-export const BTN_GHOST = 'inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-[#E4E2DA] bg-white px-4 text-sm font-semibold text-[#14141B] transition hover:bg-[#F6F5F2] disabled:opacity-50';
+    'h-10 w-full rounded-lg border border-cp-line bg-cp-surface px-3 text-sm text-cp-ink shadow-sm outline-none placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15';
+export const LABEL = 'text-xs font-semibold tracking-wider text-cp-ink uppercase';
+export const BTN_PRIMARY = 'inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-cp-brand px-4 text-sm font-semibold text-white transition hover:bg-cp-brand-hover disabled:opacity-50';
+export const BTN_DANGER = 'inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-cp-coral-dark px-4 text-sm font-semibold text-white transition hover:bg-cp-coral-strong disabled:opacity-50';
+export const BTN_GHOST = 'inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-cp-line bg-cp-surface px-4 text-sm font-semibold text-cp-ink transition hover:bg-cp-canvas disabled:opacity-50';
 
 /**
  * Team access badalne wale har kaam (invite, role change, remove) se pehle password dobara —
@@ -126,23 +126,23 @@ export function PasswordAction({
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <div onClick={onClose} className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-            <form onSubmit={submit} role="dialog" aria-modal="true" aria-label={title} className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <form onSubmit={submit} role="dialog" aria-modal="true" aria-label={title} className="relative w-full max-w-md rounded-2xl bg-cp-surface p-6 shadow-2xl">
                 <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-lg font-bold text-[#14141B]">{title}</h3>
-                    <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-1 text-[#8A8A96] hover:bg-[#F0EFEA] hover:text-[#14141B]">
+                    <h3 className="text-lg font-bold text-cp-ink">{title}</h3>
+                    <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-1 text-cp-muted hover:bg-cp-surface-3 hover:text-cp-ink">
                         <X className="size-5" />
                     </button>
                 </div>
-                {body && <div className="mt-2 text-sm text-[#6B6B78]">{body}</div>}
+                {body && <div className="mt-2 text-sm text-cp-subtle">{body}</div>}
                 <div className="mt-5 flex flex-col gap-4">
                     {fields?.(errors)}
                     <label className="flex flex-col gap-1.5">
                         <span className={LABEL}>Your password</span>
                         <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Confirm it's you" className={INPUT} />
-                        {errors.current_password && <span className="text-xs text-[#D93838]">{errors.current_password}</span>}
+                        {errors.current_password && <span className="text-xs text-cp-red-ink">{errors.current_password}</span>}
                     </label>
                     {otherErrors.map(([k, v]) => (
-                        <p key={k} className="rounded-lg bg-[#FFEDE8] px-3 py-2 text-xs font-medium text-[#C2410C]">
+                        <p key={k} className="rounded-lg bg-cp-coral-soft px-3 py-2 text-xs font-medium text-cp-coral-dark-ink">
                             {v}
                         </p>
                     ))}

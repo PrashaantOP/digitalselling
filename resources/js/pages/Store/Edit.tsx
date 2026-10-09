@@ -191,7 +191,7 @@ function SectionCard({
     title,
     description,
     children,
-    tone = 'bg-[#EEF2FF] text-[#4F46E5]',
+    tone = 'bg-cp-brand-soft text-cp-brand-ink',
     action,
 }: {
     icon: React.ReactNode;
@@ -202,13 +202,13 @@ function SectionCard({
     action?: React.ReactNode;
 }) {
     return (
-        <div className="rounded-2xl border border-[#E4E2DA] bg-white p-6 shadow-sm">
-            <div className="flex items-start justify-between gap-4 border-b border-[#E4E2DA]/70 pb-5">
+        <div className="rounded-2xl border border-cp-line bg-cp-surface p-6 shadow-sm">
+            <div className="flex items-start justify-between gap-4 border-b border-cp-line/70 pb-5">
                 <div className="flex items-start gap-3.5">
                     <div className={cn('flex size-10 shrink-0 items-center justify-center rounded-lg', tone)}>{icon}</div>
                     <div>
-                        <h2 className="text-base font-semibold text-[#14141B]">{title}</h2>
-                        {description && <p className="mt-0.5 text-xs text-[#8A8A96]">{description}</p>}
+                        <h2 className="text-base font-semibold text-cp-ink">{title}</h2>
+                        {description && <p className="mt-0.5 text-xs text-cp-muted">{description}</p>}
                     </div>
                 </div>
                 {action}
@@ -221,21 +221,21 @@ function SectionCard({
 function AutoSaveIndicator({ status, compact = false }: { status: SaveStatus; compact?: boolean }) {
     if (status === 'saving') {
         return (
-            <span className="flex items-center gap-1.5 text-xs font-medium text-[#8A8A96]">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-cp-muted">
                 <Loader2 className="size-3.5 animate-spin" /> {compact ? 'Saving…' : 'Saving changes…'}
             </span>
         );
     }
     if (status === 'saved') {
         return (
-            <span className="flex items-center gap-1.5 text-xs font-medium text-[#059669]">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-cp-success-ink">
                 <CheckCircle2 className="size-3.5" /> {compact ? 'Saved' : 'All changes saved'}
             </span>
         );
     }
     return (
-        <span className="flex items-center gap-1.5 text-xs font-medium text-[#8A8A96]">
-            <CheckCircle2 className="size-3.5 text-[#059669]" /> {compact ? 'Synced' : 'Changes sync live'}
+        <span className="flex items-center gap-1.5 text-xs font-medium text-cp-muted">
+            <CheckCircle2 className="size-3.5 text-cp-success-ink" /> {compact ? 'Synced' : 'Changes sync live'}
         </span>
     );
 }
@@ -244,11 +244,11 @@ function AutoSaveIndicator({ status, compact = false }: { status: SaveStatus; co
  *  Left: "Save changes" button. Right: auto-save status + any extra action. */
 function FixedSaveBar({ status, onSave, saving, right }: { status: SaveStatus; onSave?: () => void; saving?: boolean; right?: React.ReactNode }) {
     return (
-        <div className="fixed right-0 bottom-0 left-0 z-40 border-t border-[#E4E2DA] bg-white/95 backdrop-blur-md lg:left-[288px]">
+        <div className="fixed right-0 bottom-(--mobile-nav-offset,0px) left-0 z-40 border-t border-cp-line bg-cp-surface/95 backdrop-blur-md transition-[bottom] duration-200 lg:bottom-0 lg:left-[288px]">
             <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-4 py-3 md:px-6">
                 <div className="flex items-center gap-3">
                     {onSave && (
-                        <Button type="button" onClick={onSave} disabled={saving} className="bg-[#4F46E5] hover:bg-[#4338CA]">
+                        <Button type="button" onClick={onSave} disabled={saving} className="text-white bg-cp-brand hover:bg-cp-brand-hover">
                             {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                             {saving ? 'Saving…' : 'Save changes'}
                         </Button>
@@ -300,8 +300,8 @@ function MobilePreview({
 
     return (
         <div className="sticky top-20 flex flex-col items-center xl:top-24">
-            <div className="relative w-[330px] rounded-[44px] border-4 border-[#2A2A35] bg-[#14141B] p-3 shadow-2xl">
-                <div className="relative flex h-[640px] flex-col overflow-hidden rounded-[34px] bg-black">
+            <div className="relative w-[330px] rounded-[44px] border-4 border-cp-solid-hover bg-cp-solid p-3 shadow-2xl">
+                <div className="light-island relative flex h-[640px] flex-col overflow-hidden rounded-[34px] bg-black">
                     <div className="flex items-center justify-between bg-black px-5 pt-3 pb-1.5 text-[11px] font-semibold text-white/90">
                         <span>9:41</span>
                         <span className="h-4 w-20 rounded-full bg-[#1c1c22]" />
@@ -335,16 +335,16 @@ function MobilePreview({
                     </div>
                 </div>
             </div>
-            <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-[#8A8A96]">
-                <span className="size-1.5 rounded-full bg-[#059669]" />
+            <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-cp-muted">
+                <span className="size-1.5 rounded-full bg-cp-success" />
                 Live preview · Updates in real time
             </p>
             {username && (
                 <div className="mt-2 flex items-center gap-2 text-xs font-semibold">
-                    <a href={`/${username}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-[#E4E2DA] bg-white px-3 py-1.5 text-[#14141B] transition hover:border-[#4F46E5] hover:text-[#4F46E5]">
+                    <a href={`/${username}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-cp-line bg-cp-surface px-3 py-1.5 text-cp-ink transition hover:border-cp-brand hover:text-cp-brand-ink">
                         <StoreIcon className="size-3.5" /> View store
                     </a>
-                    <a href={`/w/${username}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-[#E4E2DA] bg-white px-3 py-1.5 text-[#14141B] transition hover:border-[#4F46E5] hover:text-[#4F46E5]">
+                    <a href={`/w/${username}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-cp-line bg-cp-surface px-3 py-1.5 text-cp-ink transition hover:border-cp-brand hover:text-cp-brand-ink">
                         <Globe className="size-3.5" /> View website
                     </a>
                 </div>
@@ -417,24 +417,24 @@ function StoreTab({ store }: { store: Store }) {
         <div className="grid grid-cols-1 items-start gap-8 pb-24 xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="flex w-full flex-col gap-5">
                 {/* Live banner */}
-                <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-[#C2E7D0] bg-[#E6F6EC] p-3.5 shadow-sm sm:flex-row sm:items-center">
+                <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-cp-success-line-soft bg-cp-success-soft p-3.5 shadow-sm sm:flex-row sm:items-center">
                     <div className="flex min-w-0 items-center gap-2.5">
                         <span className="relative flex size-2.5 shrink-0">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#059669] opacity-75" />
-                            <span className="relative inline-flex size-2.5 rounded-full bg-[#059669]" />
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cp-success opacity-75" />
+                            <span className="relative inline-flex size-2.5 rounded-full bg-cp-success" />
                         </span>
-                        <p className="truncate text-sm text-[#14141B]">
-                            <span className="font-medium text-[#1B4D3E]">{form.is_live ? 'Your store is live:' : 'Your store is offline:'}</span>
-                            <a className="ml-1 font-semibold text-[#4F46E5] hover:underline" href={`/${form.username}`} target="_blank" rel="noreferrer">
+                        <p className="truncate text-sm text-cp-ink">
+                            <span className="font-medium text-[#1B4D3E] dark:text-cp-success-ink">{form.is_live ? 'Your store is live:' : 'Your store is offline:'}</span>
+                            <a className="ml-1 font-semibold text-cp-brand-ink hover:underline" href={`/${form.username}`} target="_blank" rel="noreferrer">
                                 creatorpro.in/{form.username}
                             </a>
                         </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
-                        <button type="button" onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/${form.username}`)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#C2E7D0] bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#1B4D3E] transition hover:bg-white">
+                        <button type="button" onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/${form.username}`)} className="inline-flex items-center gap-1.5 rounded-lg border border-cp-success-line-soft bg-cp-surface/90 px-3 py-1.5 text-xs font-semibold text-[#1B4D3E] dark:text-cp-success-ink transition hover:bg-cp-surface">
                             <Copy className="size-3.5" /> Copy
                         </button>
-                        <a className="inline-flex items-center gap-1.5 rounded-lg border border-[#C2E7D0] bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#1B4D3E] transition hover:bg-white" href={`/${form.username}`} target="_blank" rel="noreferrer">
+                        <a className="inline-flex items-center gap-1.5 rounded-lg border border-cp-success-line-soft bg-cp-surface/90 px-3 py-1.5 text-xs font-semibold text-[#1B4D3E] dark:text-cp-success-ink transition hover:bg-cp-surface" href={`/${form.username}`} target="_blank" rel="noreferrer">
                             Open <Globe className="size-3.5" />
                         </a>
                     </div>
@@ -445,51 +445,51 @@ function StoreTab({ store }: { store: Store }) {
                         {/* Username first */}
                         <div className="flex flex-col gap-1.5">
                             <div className="flex items-center justify-between">
-                                <Label htmlFor="username" className="text-xs font-semibold tracking-wider text-[#14141B] uppercase">
-                                    Username / official link <span className="text-[#D93838]">*</span>
+                                <Label htmlFor="username" className="text-xs font-semibold tracking-wider text-cp-ink uppercase">
+                                    Username / official link <span className="text-cp-red-ink">*</span>
                                 </Label>
-                                <span className="inline-flex items-center gap-1 rounded bg-[#E6F6EC] px-2 py-0.5 text-[11px] font-medium text-[#059669]">
+                                <span className="inline-flex items-center gap-1 rounded bg-cp-success-soft px-2 py-0.5 text-[11px] font-medium text-cp-success-ink">
                                     <CheckCircle2 className="size-3" /> Valid URL
                                 </span>
                             </div>
-                            <div className="flex items-stretch overflow-hidden rounded-lg border border-[#E4E2DA] bg-white transition focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/15">
-                                <span className="flex items-center border-r border-[#E4E2DA] bg-[#F0EFEA] px-3.5 py-2.5 font-mono text-sm text-[#4B4B57] select-none">creatorpro.in/</span>
+                            <div className="flex items-stretch overflow-hidden rounded-lg border border-cp-line bg-cp-surface transition focus-within:border-cp-brand focus-within:ring-2 focus-within:ring-cp-brand/15">
+                                <span className="flex items-center border-r border-cp-line bg-cp-surface-3 px-3.5 py-2.5 font-mono text-sm text-cp-body select-none">creatorpro.in/</span>
                                 <input
                                     id="username"
                                     value={form.username}
                                     onChange={(e) => update('username', slugify(e.target.value))}
                                     placeholder="yourname"
-                                    className="flex-1 bg-transparent px-3 py-2.5 text-sm font-medium text-[#14141B] outline-none"
+                                    className="flex-1 bg-transparent px-3 py-2.5 text-sm font-medium text-cp-ink outline-none"
                                 />
-                                <span className="flex items-center px-3 text-[#059669]">
+                                <span className="flex items-center px-3 text-cp-success-ink">
                                     <CheckCircle2 className="size-4" />
                                 </span>
                             </div>
                             {errors?.username && (
-                                <p role="alert" className="text-xs font-medium text-[#D93838]">
+                                <p role="alert" className="text-xs font-medium text-cp-red-ink">
                                     {errors.username}
                                 </p>
                             )}
-                            <p className="text-xs text-[#8A8A96]">
-                                Your store is at <code className="font-mono text-[11px] text-[#4B4B57]">creatorpro.in/{form.username}</code>, your website at <code className="font-mono text-[11px] text-[#4B4B57]">/w/{form.username}</code> and bookings at <code className="font-mono text-[11px] text-[#4B4B57]">/book/{form.username}</code>
+                            <p className="text-xs text-cp-muted">
+                                Your store is at <code className="font-mono text-[11px] text-cp-body">creatorpro.in/{form.username}</code>, your website at <code className="font-mono text-[11px] text-cp-body">/w/{form.username}</code> and bookings at <code className="font-mono text-[11px] text-cp-body">/book/{form.username}</code>
                             </p>
                         </div>
 
                         {/* Display name */}
                         <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="display_name" className="text-xs font-semibold tracking-wider text-[#14141B] uppercase">
+                            <Label htmlFor="display_name" className="text-xs font-semibold tracking-wider text-cp-ink uppercase">
                                 Display name
                             </Label>
-                            <Input id="display_name" value={form.display_name} onChange={(e) => update('display_name', e.target.value)} maxLength={150} className="h-10 border-[#E4E2DA] shadow-sm focus-visible:ring-[#4F46E5]/15" />
+                            <Input id="display_name" value={form.display_name} onChange={(e) => update('display_name', e.target.value)} maxLength={150} className="h-10 border-cp-line shadow-sm focus-visible:ring-cp-brand/15" />
                         </div>
 
                         {/* Bio */}
                         <div className="flex flex-col gap-1.5">
                             <div className="flex items-center justify-between">
-                                <Label htmlFor="bio" className="text-xs font-semibold tracking-wider text-[#14141B] uppercase">
+                                <Label htmlFor="bio" className="text-xs font-semibold tracking-wider text-cp-ink uppercase">
                                     Bio / Tagline
                                 </Label>
-                                <span className="font-mono text-[11px] text-[#8A8A96]">{form.bio.length} / 500</span>
+                                <span className="font-mono text-[11px] text-cp-muted">{form.bio.length} / 500</span>
                             </div>
                             <textarea
                                 id="bio"
@@ -498,16 +498,16 @@ function StoreTab({ store }: { store: Store }) {
                                 rows={4}
                                 maxLength={500}
                                 placeholder="Tell visitors what you create and why they should follow you."
-                                className="w-full resize-none rounded-lg border border-[#E4E2DA] bg-white p-3.5 text-sm leading-relaxed text-[#14141B] shadow-sm transition outline-none focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                className="w-full resize-none rounded-lg border border-cp-line bg-cp-surface p-3.5 text-sm leading-relaxed text-cp-ink shadow-sm transition outline-none focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                             />
-                            <span className="text-[11px] text-[#8A8A96]">Appears below your profile title across all device layouts.</span>
+                            <span className="text-[11px] text-cp-muted">Appears below your profile title across all device layouts.</span>
                         </div>
 
                         {/* Avatar — now after bio */}
-                        <div className="flex flex-col gap-2 rounded-lg border border-[#E4E2DA]/80 bg-[#F6F5F2] p-4">
-                            <span className="text-xs font-semibold tracking-wider text-[#14141B] uppercase">Avatar Photo</span>
+                        <div className="flex flex-col gap-2 rounded-lg border border-cp-line/80 bg-cp-canvas p-4">
+                            <span className="text-xs font-semibold tracking-wider text-cp-ink uppercase">Avatar Photo</span>
                             <div className="mt-1 flex items-center gap-4">
-                                <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#4F46E5] bg-[#EEF2FF] text-xl font-bold text-[#4F46E5]">
+                                <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-cp-brand bg-cp-brand-soft text-xl font-bold text-cp-brand-ink">
                                     {avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : (form.display_name || 'U').charAt(0).toUpperCase()}
                                 </div>
                                 <div className="flex flex-col gap-1.5">
@@ -519,18 +519,18 @@ function StoreTab({ store }: { store: Store }) {
                                             if (e.target.files?.[0]) uploadAvatar(e.target.files[0]);
                                             e.target.value = ''; // wahi file dobara chunne par bhi onChange chale
                                         }}
-                                        className="w-full text-xs file:mr-2 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-[#14141B] file:shadow-sm"
+                                        className="w-full text-xs file:mr-2 file:rounded-lg file:border-0 file:bg-cp-surface file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-cp-ink file:shadow-sm"
                                     />
                                     {avatarBusy ? (
-                                        <span className="flex items-center gap-1 text-[10px] leading-tight text-[#8A8A96]">
+                                        <span className="flex items-center gap-1 text-[10px] leading-tight text-cp-muted">
                                             <Loader2 className="size-3 animate-spin" /> Uploading…
                                         </span>
                                     ) : avatarError ? (
-                                        <span role="alert" className="text-[11px] leading-tight font-medium text-[#D93838]">
+                                        <span role="alert" className="text-[11px] leading-tight font-medium text-cp-red-ink">
                                             {avatarError}
                                         </span>
                                     ) : (
-                                        <span className="text-[10px] leading-tight text-[#8A8A96]">JPG or PNG, 400×400+ (max 3 MB). Uploads instantly.</span>
+                                        <span className="text-[10px] leading-tight text-cp-muted">JPG or PNG, 400×400+ (max 3 MB). Uploads instantly.</span>
                                     )}
                                 </div>
                             </div>
@@ -538,23 +538,23 @@ function StoreTab({ store }: { store: Store }) {
 
                         {/* Header heading */}
                         <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="header_heading" className="text-xs font-semibold tracking-wider text-[#14141B] uppercase">
+                            <Label htmlFor="header_heading" className="text-xs font-semibold tracking-wider text-cp-ink uppercase">
                                 Header heading
                             </Label>
-                            <Input id="header_heading" value={form.header_heading} onChange={(e) => update('header_heading', e.target.value)} maxLength={150} placeholder="e.g. Join 10,000+ creators learning design" className="h-10 border-[#E4E2DA] shadow-sm focus-visible:ring-[#4F46E5]/15" />
+                            <Input id="header_heading" value={form.header_heading} onChange={(e) => update('header_heading', e.target.value)} maxLength={150} placeholder="e.g. Join 10,000+ creators learning design" className="h-10 border-cp-line shadow-sm focus-visible:ring-cp-brand/15" />
                         </div>
 
                         {/* Welcome message */}
                         <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="welcome_message" className="text-xs font-semibold tracking-wider text-[#14141B] uppercase">
+                            <Label htmlFor="welcome_message" className="text-xs font-semibold tracking-wider text-cp-ink uppercase">
                                 Welcome message
                             </Label>
-                            <Input id="welcome_message" value={form.welcome_message} onChange={(e) => update('welcome_message', e.target.value)} maxLength={500} placeholder="A short greeting shown on your storefront" className="h-10 border-[#E4E2DA] shadow-sm focus-visible:ring-[#4F46E5]/15" />
+                            <Input id="welcome_message" value={form.welcome_message} onChange={(e) => update('welcome_message', e.target.value)} maxLength={500} placeholder="A short greeting shown on your storefront" className="h-10 border-cp-line shadow-sm focus-visible:ring-cp-brand/15" />
                         </div>
 
                         <label className="flex items-center gap-3">
-                            <input type="checkbox" checked={form.is_live} onChange={(e) => update('is_live', e.target.checked, true)} className="size-4 accent-[#4F46E5]" />
-                            <span className="text-sm font-medium text-[#14141B]">Store is live and visible to visitors</span>
+                            <input type="checkbox" checked={form.is_live} onChange={(e) => update('is_live', e.target.checked, true)} className="size-4 accent-cp-brand" />
+                            <span className="text-sm font-medium text-cp-ink">Store is live and visible to visitors</span>
                         </label>
                     </div>
                 </SectionCard>
@@ -592,11 +592,11 @@ function SocialLinksSection({ store }: { store: Store }) {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {SOCIAL_PLATFORMS.map((platform) => (
                     <div key={platform.value} className="flex flex-col gap-1">
-                        <span className="text-[11px] font-medium text-[#4B4B57]">{platform.label}</span>
-                        <div className="flex items-center rounded-lg border border-[#E4E2DA] bg-white px-3 py-2 shadow-sm focus-within:border-[#4F46E5]">
-                            <Globe className="mr-2 size-4 shrink-0 text-[#8A8A96]" />
-                            <input type="url" value={links[platform.value]} onChange={(e) => update(platform.value, e.target.value)} placeholder={platform.placeholder} className="w-full bg-transparent text-xs font-medium text-[#14141B] outline-none" />
-                            {links[platform.value] && <CheckCircle2 className="ml-1.5 size-4 shrink-0 text-[#059669]" />}
+                        <span className="text-[11px] font-medium text-cp-body">{platform.label}</span>
+                        <div className="flex items-center rounded-lg border border-cp-line bg-cp-surface px-3 py-2 shadow-sm focus-within:border-cp-brand">
+                            <Globe className="mr-2 size-4 shrink-0 text-cp-muted" />
+                            <input type="url" value={links[platform.value]} onChange={(e) => update(platform.value, e.target.value)} placeholder={platform.placeholder} className="w-full bg-transparent text-xs font-medium text-cp-ink outline-none" />
+                            {links[platform.value] && <CheckCircle2 className="ml-1.5 size-4 shrink-0 text-cp-success-ink" />}
                         </div>
                     </div>
                 ))}
@@ -624,46 +624,46 @@ function HeaderButtonsSection({ store }: { store: Store }) {
     return (
         <SectionCard
             icon={<MousePointerClick className="size-5" />}
-            tone="bg-[#FEF3C7] text-[#D97706]"
+            tone="bg-cp-amber-soft text-cp-warning-bright-ink"
             title="Header Action Buttons"
             description="Add prominent quick-action buttons to the top of your store — a newsletter, WhatsApp community, or featured reel."
         >
             <div className="flex flex-col gap-2.5">
                 {buttons.length === 0 && (
-                    <div className="flex items-center gap-3 rounded-lg border border-dashed border-[#CCC9BD] bg-[#FAF9F5] p-4">
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#EAE8DE] text-[#8A8A96]">
+                    <div className="flex items-center gap-3 rounded-lg border border-dashed border-cp-line-stronger bg-cp-surface-2 p-4">
+                        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-cp-line text-cp-muted">
                             <Link2 className="size-4" />
                         </div>
-                        <p className="text-xs text-[#8A8A96]">No header buttons yet — add links to guide your visitors directly to WhatsApp, newsletter signups, or your latest work.</p>
+                        <p className="text-xs text-cp-muted">No header buttons yet — add links to guide your visitors directly to WhatsApp, newsletter signups, or your latest work.</p>
                     </div>
                 )}
                 {buttons.map((button) => (
-                    <div key={button.id} className="group flex items-center justify-between rounded-lg border border-[#E4E2DA] bg-[#F6F5F2] p-3 transition-all hover:bg-[#ECEBE6]">
+                    <div key={button.id} className="group flex items-center justify-between rounded-lg border border-cp-line bg-cp-canvas p-3 transition-all hover:bg-cp-surface-3">
                         <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#F5F3FF] text-[#7C3AED]">
+                            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-cp-accent-soft text-cp-accent-ink">
                                 <Link2 className="size-4" />
                             </div>
                             <div className="flex min-w-0 flex-col">
-                                <span className="truncate text-xs font-semibold text-[#14141B]">{button.label}</span>
-                                <span className="truncate font-mono text-[11px] text-[#8A8A96]">{button.url}</span>
+                                <span className="truncate text-xs font-semibold text-cp-ink">{button.label}</span>
+                                <span className="truncate font-mono text-[11px] text-cp-muted">{button.url}</span>
                             </div>
                         </div>
-                        <button type="button" onClick={() => removeButton(button)} className="p-1 text-[#8A8A96] transition hover:text-[#D93838]">
+                        <button type="button" onClick={() => removeButton(button)} className="p-1 text-cp-muted transition hover:text-cp-red-ink">
                             <Trash2 className="size-4" />
                         </button>
                     </div>
                 ))}
 
-                <div className="grid gap-3 border-t border-[#E4E2DA]/60 pt-4 sm:grid-cols-[1fr_1.5fr_auto] sm:items-end">
+                <div className="grid gap-3 border-t border-cp-line/60 pt-4 sm:grid-cols-[1fr_1.5fr_auto] sm:items-end">
                     <div className="flex flex-col gap-2">
-                        <Label htmlFor="button-label" className="text-xs font-semibold tracking-wider text-[#14141B] uppercase">Label</Label>
-                        <Input id="button-label" value={label} onChange={(e) => setLabel(e.target.value)} maxLength={50} placeholder="Join my WhatsApp" className="h-10 border-[#E4E2DA] shadow-sm" />
+                        <Label htmlFor="button-label" className="text-xs font-semibold tracking-wider text-cp-ink uppercase">Label</Label>
+                        <Input id="button-label" value={label} onChange={(e) => setLabel(e.target.value)} maxLength={50} placeholder="Join my WhatsApp" className="h-10 border-cp-line shadow-sm" />
                     </div>
                     <div className="flex flex-col gap-2">
-                        <Label htmlFor="button-url" className="text-xs font-semibold tracking-wider text-[#14141B] uppercase">URL</Label>
-                        <Input id="button-url" value={url} onChange={(e) => setUrl(e.target.value)} type="url" placeholder="https://…" className="h-10 border-[#E4E2DA] shadow-sm" />
+                        <Label htmlFor="button-url" className="text-xs font-semibold tracking-wider text-cp-ink uppercase">URL</Label>
+                        <Input id="button-url" value={url} onChange={(e) => setUrl(e.target.value)} type="url" placeholder="https://…" className="h-10 border-cp-line shadow-sm" />
                     </div>
-                    <Button type="button" onClick={addButton} disabled={!label || !url || saving} className="bg-[#4F46E5] hover:bg-[#4338CA]">
+                    <Button type="button" onClick={addButton} disabled={!label || !url || saving} className="text-white bg-cp-brand hover:bg-cp-brand-hover">
                         {saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} Add
                     </Button>
                 </div>
@@ -731,38 +731,38 @@ function AppearanceTab({ store }: { store: Store }) {
                                     key={item.value}
                                     type="button"
                                     onClick={() => selectTheme(item.value)}
-                                    className={cn('group flex flex-col overflow-hidden rounded-xl border-2 bg-white text-left transition-transform hover:-translate-y-0.5', selected ? 'border-[#4F46E5] ring-2 ring-[#4F46E5]/25' : 'border-[#E4E2DA]')}
+                                    className={cn('group flex flex-col overflow-hidden rounded-xl border-2 bg-cp-surface text-left transition-transform hover:-translate-y-0.5', selected ? 'border-cp-brand ring-2 ring-cp-brand/25' : 'border-cp-line')}
                                 >
-                                    <div className={cn('relative flex aspect-[16/10] w-full flex-col justify-between bg-gradient-to-br p-3', item.preview)}>
+                                    <div className={cn('light-island relative flex aspect-[16/10] w-full flex-col justify-between bg-gradient-to-br p-3', item.preview)}>
                                         <div className="flex items-center justify-between">
-                                            <span className={cn('rounded px-1.5 py-0.5 text-[10px] tracking-wider', item.value === 'paper' ? 'bg-black/5 text-[#4B4B57]' : 'bg-black/40 text-white/80')}>{item.subtitle.toUpperCase()}</span>
+                                            <span className={cn('rounded px-1.5 py-0.5 text-[10px] tracking-wider', item.value === 'paper' ? 'bg-black/5 text-cp-body' : 'bg-black/40 text-white/80')}>{item.subtitle.toUpperCase()}</span>
                                             {selected && (
-                                                <span className="flex size-5 items-center justify-center rounded-full bg-[#4F46E5] text-white">
+                                                <span className="flex size-5 items-center justify-center rounded-full bg-cp-brand text-white">
                                                     <Check className="size-3.5" />
                                                 </span>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className={cn('flex size-7 items-center justify-center rounded-full border text-[11px] font-bold', item.value === 'paper' ? 'border-black/10 bg-black/10 text-[#14141B]' : 'border-white/20 bg-white/20 text-white')}>
+                                            <span className={cn('flex size-7 items-center justify-center rounded-full border text-[11px] font-bold', item.value === 'paper' ? 'border-black/10 bg-black/10 text-cp-ink' : 'border-white/20 bg-white/20 text-white')}>
                                                 {(store.display_name || 'U').charAt(0).toUpperCase()}
                                             </span>
                                             <div className="flex flex-col gap-1">
-                                                <span className={cn('h-2 w-16 rounded-full', item.value === 'paper' ? 'bg-black/40' : 'bg-white/80')} />
+                                                <span className={cn('h-2 w-16 rounded-full', item.value === 'paper' ? 'bg-black/40' : 'bg-cp-surface/80')} />
                                                 <span className={cn('h-1.5 w-10 rounded-full', item.value === 'paper' ? 'bg-black/20' : 'bg-white/40')} />
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center justify-between border-t border-[#E4E2DA]/30 px-3 py-2">
-                                        <span className="text-sm font-semibold text-[#14141B]">{item.label}</span>
-                                        {selected && <span className="rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#4F46E5]">Active</span>}
+                                    <div className="flex items-center justify-between border-t border-cp-line/30 px-3 py-2">
+                                        <span className="text-sm font-semibold text-cp-ink">{item.label}</span>
+                                        {selected && <span className="rounded-full bg-cp-brand-soft px-2 py-0.5 text-[10px] font-semibold text-cp-brand-ink">Active</span>}
                                     </div>
                                 </button>
                             );
                         })}
                     </div>
-                    <div className="mt-4 flex items-center gap-2 border-t border-[#E4E2DA]/40 pt-3 text-xs text-[#8A8A96]">
-                        <Info className="size-4 text-[#4F46E5]" />
-                        <span><strong className="text-[#4B4B57]">Tip:</strong> Custom background images override theme gradient layers while preserving your button and typography styles.</span>
+                    <div className="mt-4 flex items-center gap-2 border-t border-cp-line/40 pt-3 text-xs text-cp-muted">
+                        <Info className="size-4 text-cp-brand-ink" />
+                        <span><strong className="text-cp-body">Tip:</strong> Custom background images override theme gradient layers while preserving your button and typography styles.</span>
                     </div>
                 </SectionCard>
 
@@ -770,29 +770,29 @@ function AppearanceTab({ store }: { store: Store }) {
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                         <div className="flex flex-col gap-4">
                             <div>
-                                <label className="block text-sm font-semibold text-[#14141B]">Primary accent color</label>
-                                <p className="mt-0.5 text-xs text-[#8A8A96]">Used for primary CTA buttons, links, and highlighted badges.</p>
+                                <label className="block text-sm font-semibold text-cp-ink">Primary accent color</label>
+                                <p className="mt-0.5 text-xs text-cp-muted">Used for primary CTA buttons, links, and highlighted badges.</p>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-[#E4E2DA] shadow-inner" style={{ backgroundColor: brandColor }}>
+                                <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-cp-line shadow-inner" style={{ backgroundColor: brandColor }}>
                                     <span className="size-3 rounded-full bg-white/40" />
                                 </div>
                                 <div className="relative flex flex-1 items-center">
-                                    <span className="absolute left-3 text-sm text-[#8A8A96]">#</span>
+                                    <span className="absolute left-3 text-sm text-cp-muted">#</span>
                                     <input
                                         value={brandColor.replace('#', '')}
                                         onChange={(e) => setBrandColor(`#${e.target.value.replace('#', '')}`)}
                                         onBlur={() => changeColor(brandColor)}
                                         maxLength={6}
-                                        className="h-10 w-full rounded-lg border border-[#E4E2DA] bg-white pr-3 pl-7 font-semibold tracking-wider text-[#14141B] uppercase outline-none focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20"
+                                        className="h-10 w-full rounded-lg border border-cp-line bg-cp-surface pr-3 pl-7 font-semibold tracking-wider text-cp-ink uppercase outline-none focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/20"
                                     />
                                 </div>
                             </div>
                             <div className="flex flex-col gap-1.5">
-                                <span className="text-[11px] tracking-wider text-[#8A8A96] uppercase">Suggested palettes</span>
+                                <span className="text-[11px] tracking-wider text-cp-muted uppercase">Suggested palettes</span>
                                 <div className="flex flex-wrap items-center gap-2.5">
                                     {PRESET_COLORS.map((color) => (
-                                        <button key={color} type="button" onClick={() => changeColor(color)} style={{ backgroundColor: color }} className={cn('size-7 rounded-lg transition-transform hover:scale-110', brandColor.toUpperCase() === color ? 'ring-2 ring-[#4F46E5] ring-offset-2' : 'border border-black/10')} title={color} />
+                                        <button key={color} type="button" onClick={() => changeColor(color)} style={{ backgroundColor: color }} className={cn('size-7 rounded-lg transition-transform hover:scale-110 dark:ring-1 dark:ring-white/15', brandColor.toUpperCase() === color ? 'ring-2 ring-cp-brand ring-offset-2 ring-offset-cp-surface' : 'border border-black/10')} title={color} />
                                     ))}
                                 </div>
                             </div>
@@ -800,20 +800,20 @@ function AppearanceTab({ store }: { store: Store }) {
 
                         <div className="flex flex-col gap-4">
                             <div>
-                                <label className="block text-sm font-semibold text-[#14141B]">Storefront font family</label>
-                                <p className="mt-0.5 text-xs text-[#8A8A96]">Applied to headers, price tags, and narrative copy.</p>
+                                <label className="block text-sm font-semibold text-cp-ink">Storefront font family</label>
+                                <p className="mt-0.5 text-xs text-cp-muted">Applied to headers, price tags, and narrative copy.</p>
                             </div>
-                            <select defaultValue={fontRef.current} onChange={(e) => changeFont(e.target.value)} className="h-10 w-full cursor-pointer rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] outline-none focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20">
+                            <select defaultValue={fontRef.current} onChange={(e) => changeFont(e.target.value)} className="h-10 w-full cursor-pointer rounded-lg border border-cp-line bg-cp-surface px-3 text-sm text-cp-ink outline-none focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/20">
                                 {FONT_OPTIONS.map((font) => (
                                     <option key={font} value={font}>{font}</option>
                                 ))}
                             </select>
-                            <div className="flex flex-col gap-1.5 rounded-lg border border-[#E4E2DA]/40 bg-[#F6F5F2] p-3">
+                            <div className="flex flex-col gap-1.5 rounded-lg border border-cp-line/40 bg-cp-canvas p-3">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[11px] tracking-wider text-[#8A8A96] uppercase">Specimen preview</span>
-                                    <span className="text-[11px] text-[#8A8A96]">400 · 600 · 700</span>
+                                    <span className="text-[11px] tracking-wider text-cp-muted uppercase">Specimen preview</span>
+                                    <span className="text-[11px] text-cp-muted">400 · 600 · 700</span>
                                 </div>
-                                <p className="text-sm leading-snug text-[#14141B]">
+                                <p className="text-sm leading-snug text-cp-ink">
                                     The quick brown fox jumps over the lazy dog · <span className="font-semibold" style={{ color: brandColor }}>₹14,999</span> · Design Masterclass
                                 </p>
                             </div>
@@ -824,26 +824,26 @@ function AppearanceTab({ store }: { store: Store }) {
                 <SectionCard icon={<ImageIcon className="size-5" />} title="Custom Store Background" description="Upload your personal wallpaper image or banner pattern to override presets.">
                     <div className="flex flex-col gap-4">
                         {backgroundUrl && (
-                            <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-[#E4E2DA]/50 bg-white p-3 sm:flex-row sm:items-center">
+                            <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-cp-line/50 bg-cp-surface p-3 sm:flex-row sm:items-center">
                                 <div className="flex min-w-0 items-center gap-3">
                                     <img src={backgroundUrl} alt="" className="h-16 w-24 shrink-0 rounded-lg border object-cover" />
                                     <div className="flex flex-col">
-                                        <span className="text-xs font-semibold text-[#14141B]">Custom background active</span>
-                                        <span className="text-[11px] text-[#8A8A96]">Visible behind your storefront header</span>
+                                        <span className="text-xs font-semibold text-cp-ink">Custom background active</span>
+                                        <span className="text-[11px] text-cp-muted">Visible behind your storefront header</span>
                                     </div>
                                 </div>
-                                <Button type="button" variant="outline" size="sm" onClick={removeBackground} className="text-[#D93838]">
+                                <Button type="button" variant="outline" size="sm" onClick={removeBackground} className="text-cp-red-ink">
                                     <Trash2 className="size-3.5" /> Remove
                                 </Button>
                             </div>
                         )}
                         <input ref={bgInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadBackground(e.target.files[0])} />
-                        <button type="button" onClick={() => bgInputRef.current?.click()} className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#E4E2DA] bg-[#F6F5F2]/50 p-8 text-center transition hover:border-[#4F46E5]/70">
-                            <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-[#EEF2FF] text-[#4F46E5]">
+                        <button type="button" onClick={() => bgInputRef.current?.click()} className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-cp-line bg-cp-canvas/50 p-8 text-center transition hover:border-cp-brand/70">
+                            <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-cp-brand-soft text-cp-brand-ink">
                                 <UploadCloud className="size-6" />
                             </div>
-                            <span className="text-sm font-semibold text-[#14141B]">Click to upload <span className="font-normal text-[#8A8A96]">or drag and drop</span></span>
-                            <span className="mt-1 text-xs text-[#8A8A96]">JPG, PNG, WEBP (max 5 MB)</span>
+                            <span className="text-sm font-semibold text-cp-ink">Click to upload <span className="font-normal text-cp-muted">or drag and drop</span></span>
+                            <span className="mt-1 text-xs text-cp-muted">JPG, PNG, WEBP (max 5 MB)</span>
                         </button>
                     </div>
                 </SectionCard>
@@ -887,44 +887,44 @@ function SettingsTab({ store }: { store: Store }) {
             <div className="flex flex-col gap-5">
                 <SectionCard icon={<StoreIcon className="size-5" />} title="Store details" description="Configure your public store link and search engine indexing." action={<AutoSaveIndicator status={status} compact />}>
                     <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="settings-username" className="flex items-center gap-1.5 text-sm font-semibold text-[#14141B]">
-                            Your store's official link <Info className="size-3.5 text-[#8A8A96]" />
+                        <Label htmlFor="settings-username" className="flex items-center gap-1.5 text-sm font-semibold text-cp-ink">
+                            Your store's official link <Info className="size-3.5 text-cp-muted" />
                         </Label>
-                        <div className="flex items-center rounded-lg bg-[#F6F5F2] transition focus-within:ring-2 focus-within:ring-[#4F46E5]/20">
-                            <span className="rounded-l-lg border-r border-[#E4E2DA]/40 bg-[#ECEBE6] px-3.5 py-2.5 font-mono text-sm text-[#4B4B57] select-none">creatorpro.in/</span>
-                            <input id="settings-username" value={form.username} onChange={(e) => update('username', slugify(e.target.value))} className="flex-1 bg-transparent px-3 py-2.5 text-sm font-medium text-[#14141B] outline-none" />
-                            <CheckCircle2 className="mr-2 size-4 text-[#0D9488]" />
-                            <button type="button" onClick={() => navigator.clipboard?.writeText(`creatorpro.in/${form.username}`)} className="mr-1.5 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-[#14141B] shadow-sm transition hover:bg-[#F0EFEA]">
+                        <div className="flex items-center rounded-lg bg-cp-canvas transition focus-within:ring-2 focus-within:ring-cp-brand/20">
+                            <span className="rounded-l-lg border-r border-cp-line/40 bg-cp-surface-3 px-3.5 py-2.5 font-mono text-sm text-cp-body select-none">creatorpro.in/</span>
+                            <input id="settings-username" value={form.username} onChange={(e) => update('username', slugify(e.target.value))} className="flex-1 bg-transparent px-3 py-2.5 text-sm font-medium text-cp-ink outline-none" />
+                            <CheckCircle2 className="mr-2 size-4 text-cp-teal-ink" />
+                            <button type="button" onClick={() => navigator.clipboard?.writeText(`creatorpro.in/${form.username}`)} className="mr-1.5 inline-flex items-center gap-1.5 rounded-lg bg-cp-surface px-3 py-1.5 text-xs font-medium text-cp-ink shadow-sm transition hover:bg-cp-surface-3">
                                 <Copy className="size-3.5" /> Copy link
                             </button>
                         </div>
-                        <p className="text-xs text-[#8A8A96]">Your public storefront is accessible at this address across all devices.</p>
+                        <p className="text-xs text-cp-muted">Your public storefront is accessible at this address across all devices.</p>
                     </div>
                 </SectionCard>
 
-                <SectionCard icon={<Globe className="size-5" />} tone="bg-[#E1F6F3] text-[#0D9488]" title="SEO & Custom Meta Tags" description="Customize how your storefront appears in Google search results and social previews.">
+                <SectionCard icon={<Globe className="size-5" />} tone="bg-cp-teal-soft text-cp-teal-ink" title="SEO & Custom Meta Tags" description="Customize how your storefront appears in Google search results and social previews.">
                     <div className="flex flex-col gap-6">
                         <div className="flex flex-col gap-1.5">
                             <div className="flex items-center justify-between">
-                                <Label htmlFor="meta_title" className="text-sm font-semibold text-[#14141B]">Meta title</Label>
-                                <span className="font-mono text-xs text-[#8A8A96]">{form.meta_title.length} / 70</span>
+                                <Label htmlFor="meta_title" className="text-sm font-semibold text-cp-ink">Meta title</Label>
+                                <span className="font-mono text-xs text-cp-muted">{form.meta_title.length} / 70</span>
                             </div>
-                            <input id="meta_title" value={form.meta_title} onChange={(e) => update('meta_title', e.target.value)} maxLength={70} placeholder={store.display_name} className="w-full rounded-lg bg-[#F6F5F2] px-3.5 py-2.5 text-sm text-[#14141B] outline-none transition focus:bg-white focus:ring-2 focus:ring-[#4F46E5]/20" />
+                            <input id="meta_title" value={form.meta_title} onChange={(e) => update('meta_title', e.target.value)} maxLength={70} placeholder={store.display_name} className="w-full rounded-lg bg-cp-canvas px-3.5 py-2.5 text-sm text-cp-ink outline-none transition focus:bg-cp-surface focus:ring-2 focus:ring-cp-brand/20" />
                         </div>
 
                         <div className="flex flex-col gap-1.5">
                             <div className="flex items-center justify-between">
-                                <Label htmlFor="meta_description" className="text-sm font-semibold text-[#14141B]">Meta description</Label>
-                                <span className="font-mono text-xs text-[#8A8A96]">{form.meta_description.length} / 200</span>
+                                <Label htmlFor="meta_description" className="text-sm font-semibold text-cp-ink">Meta description</Label>
+                                <span className="font-mono text-xs text-cp-muted">{form.meta_description.length} / 200</span>
                             </div>
-                            <textarea id="meta_description" value={form.meta_description} onChange={(e) => update('meta_description', e.target.value)} rows={3} maxLength={200} placeholder="Welcome to my store!" className="w-full resize-none rounded-lg bg-[#F6F5F2] px-3.5 py-2.5 text-sm leading-relaxed text-[#14141B] outline-none transition focus:bg-white focus:ring-2 focus:ring-[#4F46E5]/20" />
+                            <textarea id="meta_description" value={form.meta_description} onChange={(e) => update('meta_description', e.target.value)} rows={3} maxLength={200} placeholder="Welcome to my store!" className="w-full resize-none rounded-lg bg-cp-canvas px-3.5 py-2.5 text-sm leading-relaxed text-cp-ink outline-none transition focus:bg-cp-surface focus:ring-2 focus:ring-cp-brand/20" />
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <span className="text-[11px] font-bold tracking-wider text-[#8A8A96] uppercase">Search engine preview (Google)</span>
-                            <div className="flex flex-col gap-1.5 rounded-xl bg-[#F6F5F2] p-4">
+                            <span className="text-[11px] font-bold tracking-wider text-cp-muted uppercase">Search engine preview (Google)</span>
+                            <div className="light-island flex flex-col gap-1.5 rounded-xl bg-cp-canvas p-4">
                                 <div className="flex items-center gap-1.5 text-xs text-[#202124]">
-                                    <span className="flex size-4 items-center justify-center rounded-full bg-[#EEF2FF] text-[10px] font-bold text-[#4F46E5]">K</span>
+                                    <span className="flex size-4 items-center justify-center rounded-full bg-cp-brand-soft text-[10px] font-bold text-cp-brand-ink">K</span>
                                     <span className="truncate font-medium">https://creatorpro.in › {form.username}</span>
                                 </div>
                                 <span className="cursor-pointer text-lg leading-snug text-[#1a0dab] hover:underline">{form.meta_title || `${store.display_name} — Creator Store`}</span>
@@ -942,46 +942,46 @@ function SettingsTab({ store }: { store: Store }) {
                         ].map((option) => {
                             const selected = form.column_layout === option.value;
                             return (
-                                <button key={option.value} type="button" onClick={() => update('column_layout', option.value as 'single' | 'double', true)} className={cn('flex flex-col gap-3 rounded-xl p-4 text-left transition', selected ? 'bg-[#F6F5F2] ring-2 ring-[#4F46E5]' : 'bg-white ring-1 ring-[#E4E2DA] hover:bg-[#F6F5F2]')}>
+                                <button key={option.value} type="button" onClick={() => update('column_layout', option.value as 'single' | 'double', true)} className={cn('flex flex-col gap-3 rounded-xl p-4 text-left transition', selected ? 'bg-cp-canvas ring-2 ring-cp-brand' : 'bg-cp-surface ring-1 ring-cp-line hover:bg-cp-canvas')}>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-semibold text-[#14141B]">{option.title}</span>
-                                        <span className={cn('flex size-4 items-center justify-center rounded-full border', selected ? 'border-[#4F46E5] bg-[#4F46E5]' : 'border-[#CCC9BD]')}>{selected && <Check className="size-3 text-white" />}</span>
+                                        <span className="text-sm font-semibold text-cp-ink">{option.title}</span>
+                                        <span className={cn('flex size-4 items-center justify-center rounded-full border', selected ? 'border-cp-brand bg-cp-brand' : 'border-cp-line-stronger')}>{selected && <Check className="size-3 text-white" />}</span>
                                     </div>
-                                    <p className="text-xs text-[#8A8A96]">{option.desc}</p>
+                                    <p className="text-xs text-cp-muted">{option.desc}</p>
                                 </button>
                             );
                         })}
                     </div>
                 </SectionCard>
 
-                <SectionCard icon={<AlertTriangle className="size-5" />} tone="bg-[#FFEDE8] text-[#FF6B4A]" title="Sensitive content warning" description="Show an explicit gatekeeper warning before visitors browse your store.">
+                <SectionCard icon={<AlertTriangle className="size-5" />} tone="bg-cp-coral-soft text-cp-coral-ink" title="Sensitive content warning" description="Show an explicit gatekeeper warning before visitors browse your store.">
                     <label className="flex items-center gap-3">
-                        <input type="checkbox" checked={form.sensitive_content_warning} onChange={(e) => update('sensitive_content_warning', e.target.checked, true)} className="size-4 accent-[#4F46E5]" />
-                        <span className="text-sm font-medium text-[#14141B]">Require visitors to acknowledge restricted content before proceeding</span>
+                        <input type="checkbox" checked={form.sensitive_content_warning} onChange={(e) => update('sensitive_content_warning', e.target.checked, true)} className="size-4 accent-cp-brand" />
+                        <span className="text-sm font-medium text-cp-ink">Require visitors to acknowledge restricted content before proceeding</span>
                     </label>
                 </SectionCard>
 
-                <SectionCard icon={<BarChart3 className="size-5" />} tone="bg-[#E1F6F3] text-[#0D9488]" title="Analytics & Conversion Tracking" description="Track visitor engagement and advertising return via server-side pixel pings.">
+                <SectionCard icon={<BarChart3 className="size-5" />} tone="bg-cp-teal-soft text-cp-teal-ink" title="Analytics & Conversion Tracking" description="Track visitor engagement and advertising return via server-side pixel pings.">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="fb_pixel_id" className="flex items-center gap-1.5 text-sm font-semibold text-[#14141B]">
-                                Facebook Pixel ID <Info className="size-3.5 text-[#8A8A96]" />
+                            <Label htmlFor="fb_pixel_id" className="flex items-center gap-1.5 text-sm font-semibold text-cp-ink">
+                                Facebook Pixel ID <Info className="size-3.5 text-cp-muted" />
                             </Label>
                             <div className="relative flex items-center">
-                                <Facebook className="absolute left-3 size-4 text-[#8A8A96]" />
-                                <input id="fb_pixel_id" value={form.fb_pixel_id} onChange={(e) => update('fb_pixel_id', e.target.value)} maxLength={50} placeholder="123456789012345" className="w-full rounded-lg bg-[#F6F5F2] py-2.5 pr-3.5 pl-9 font-mono text-sm text-[#14141B] outline-none transition focus:bg-white focus:ring-2 focus:ring-[#4F46E5]/20" />
+                                <Facebook className="absolute left-3 size-4 text-cp-muted" />
+                                <input id="fb_pixel_id" value={form.fb_pixel_id} onChange={(e) => update('fb_pixel_id', e.target.value)} maxLength={50} placeholder="123456789012345" className="w-full rounded-lg bg-cp-canvas py-2.5 pr-3.5 pl-9 font-mono text-sm text-cp-ink outline-none transition focus:bg-cp-surface focus:ring-2 focus:ring-cp-brand/20" />
                             </div>
-                            <p className="text-xs text-[#8A8A96]">Triggers ViewContent, InitiateCheckout, and Purchase events.</p>
+                            <p className="text-xs text-cp-muted">Triggers ViewContent, InitiateCheckout, and Purchase events.</p>
                         </div>
                         <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="ga_tracking_id" className="flex items-center gap-1.5 text-sm font-semibold text-[#14141B]">
-                                Google Analytics ID (GA4) <Info className="size-3.5 text-[#8A8A96]" />
+                            <Label htmlFor="ga_tracking_id" className="flex items-center gap-1.5 text-sm font-semibold text-cp-ink">
+                                Google Analytics ID (GA4) <Info className="size-3.5 text-cp-muted" />
                             </Label>
                             <div className="relative flex items-center">
-                                <TrendingUp className="absolute left-3 size-4 text-[#8A8A96]" />
-                                <input id="ga_tracking_id" value={form.ga_tracking_id} onChange={(e) => update('ga_tracking_id', e.target.value)} maxLength={50} placeholder="G-XXXXXXXXXX" className="w-full rounded-lg bg-[#F6F5F2] py-2.5 pr-3.5 pl-9 font-mono text-sm text-[#14141B] uppercase outline-none transition focus:bg-white focus:ring-2 focus:ring-[#4F46E5]/20" />
+                                <TrendingUp className="absolute left-3 size-4 text-cp-muted" />
+                                <input id="ga_tracking_id" value={form.ga_tracking_id} onChange={(e) => update('ga_tracking_id', e.target.value)} maxLength={50} placeholder="G-XXXXXXXXXX" className="w-full rounded-lg bg-cp-canvas py-2.5 pr-3.5 pl-9 font-mono text-sm text-cp-ink uppercase outline-none transition focus:bg-cp-surface focus:ring-2 focus:ring-cp-brand/20" />
                             </div>
-                            <p className="text-xs text-[#8A8A96]">Real-time engagement telemetry sent to your Google Data Streams.</p>
+                            <p className="text-xs text-cp-muted">Real-time engagement telemetry sent to your Google Data Streams.</p>
                         </div>
                     </div>
                 </SectionCard>
@@ -1000,12 +1000,12 @@ function SettingsTab({ store }: { store: Store }) {
 
 function KpiCard({ label, value, icon, tone }: { label: string; value: string; icon: React.ReactNode; tone: string }) {
     return (
-        <div className="flex flex-col justify-between rounded-xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+        <div className="flex flex-col justify-between rounded-xl bg-cp-surface p-4 shadow-sm transition-shadow hover:shadow-md">
             <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">{label}</span>
+                <span className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">{label}</span>
                 <span className={cn('flex size-6 items-center justify-center rounded-md', tone)}>{icon}</span>
             </div>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-[#14141B]">{value}</span>
+            <span className="mt-3 text-2xl font-semibold tracking-tight text-cp-ink">{value}</span>
         </div>
     );
 }
@@ -1014,30 +1014,30 @@ function SimpleListCard({ title, icon, items, valueLabel, emptyText }: { title: 
     const hasItems = (items?.length ?? 0) > 0;
     const max = Math.max(1, ...(items?.map((i) => i.value) ?? [1]));
     return (
-        <div className="flex flex-col gap-4 rounded-xl bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 rounded-xl bg-cp-surface p-6 shadow-sm">
             <div className="flex items-center gap-2">
-                <span className="text-[#8A8A96]">{icon}</span>
-                <h3 className="text-base font-semibold text-[#14141B]">{title}</h3>
+                <span className="text-cp-muted">{icon}</span>
+                <h3 className="text-base font-semibold text-cp-ink">{title}</h3>
             </div>
             {!hasItems ? (
-                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#E4E2DA] bg-[#FAF9F5] py-8 text-center">
-                    <span className="flex size-10 items-center justify-center rounded-full bg-[#ECEBE6] text-[#8A8A96]">{icon}</span>
-                    <p className="max-w-xs px-4 text-sm text-[#8A8A96]">{emptyText}</p>
+                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+                    <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">{icon}</span>
+                    <p className="max-w-xs px-4 text-sm text-cp-muted">{emptyText}</p>
                 </div>
             ) : (
                 <div className="flex flex-col gap-3">
                     {items?.map((item, index) => (
                         <div key={`${item.label}-${index}`} className="flex flex-col gap-1.5">
                             <div className="flex items-center justify-between gap-3">
-                                <span className="truncate text-sm text-[#14141B]">{item.label}</span>
-                                <span className="shrink-0 text-sm font-semibold text-[#14141B]">{item.value.toLocaleString('en-IN')}</span>
+                                <span className="truncate text-sm text-cp-ink">{item.label}</span>
+                                <span className="shrink-0 text-sm font-semibold text-cp-ink">{item.value.toLocaleString('en-IN')}</span>
                             </div>
-                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#F0EFEA]">
-                                <div className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${(item.value / max) * 100}%` }} />
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-cp-surface-3">
+                                <div className="h-full rounded-full bg-cp-brand" style={{ width: `${(item.value / max) * 100}%` }} />
                             </div>
                         </div>
                     ))}
-                    <span className="text-[11px] text-[#8A8A96]">Measured in {valueLabel}</span>
+                    <span className="text-[11px] text-cp-muted">Measured in {valueLabel}</span>
                 </div>
             )}
         </div>
@@ -1069,14 +1069,14 @@ function AnalyticsTab({ analytics, store }: { analytics?: AnalyticsData; store: 
             <div className="flex flex-col justify-between gap-3 pt-1 md:flex-row md:items-center">
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Store analytics</h1>
-                        <span className="rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#4F46E5] uppercase">Live Sync</span>
+                        <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Store analytics</h1>
+                        <span className="rounded-full bg-cp-brand-soft px-2 py-0.5 text-[10px] font-semibold tracking-wider text-cp-brand-ink uppercase">Live Sync</span>
                     </div>
-                    <p className="text-sm text-[#8A8A96]">Where your visitors come from, and what they do across {store.display_name}.</p>
+                    <p className="text-sm text-cp-muted">Where your visitors come from, and what they do across {store.display_name}.</p>
                 </div>
-                <div className="flex items-center gap-1 rounded-lg bg-white p-1 shadow-sm">
+                <div className="flex items-center gap-1 rounded-lg bg-cp-surface p-1 shadow-sm">
                     {[7, 30, 90].map((option) => (
-                        <button key={option} type="button" onClick={() => changeDays(option)} className={cn('rounded-md px-3 py-1.5 text-xs font-medium transition-colors', days === option ? 'bg-[#EEF2FF] text-[#4F46E5]' : 'text-[#8A8A96] hover:text-[#14141B]')}>
+                        <button key={option} type="button" onClick={() => changeDays(option)} className={cn('rounded-md px-3 py-1.5 text-xs font-medium transition-colors', days === option ? 'bg-cp-brand-soft text-cp-brand-ink' : 'text-cp-muted hover:text-cp-ink')}>
                             Last {option} days
                         </button>
                     ))}
@@ -1084,38 +1084,38 @@ function AnalyticsTab({ analytics, store }: { analytics?: AnalyticsData; store: 
             </div>
 
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-                <KpiCard label="Visits" value={(totals?.page_views ?? 0).toLocaleString('en-IN')} icon={<Eye className="size-3.5" />} tone="bg-[#EEF2FF] text-[#4F46E5]" />
-                <KpiCard label="Unique" value={(totals?.unique_visitors ?? 0).toLocaleString('en-IN')} icon={<Users className="size-3.5" />} tone="bg-[#E1F6F3] text-[#0D9488]" />
-                <KpiCard label="Clicks" value={totalClicks.toLocaleString('en-IN')} icon={<MousePointerClick className="size-3.5" />} tone="bg-[#FFEDE8] text-[#FF6B4A]" />
-                <KpiCard label="CTR" value={`${ctr}%`} icon={<TrendingUp className="size-3.5" />} tone="bg-[#F1EAFE] text-[#7C3AED]" />
-                <KpiCard label="Sales" value={(totals?.sales ?? 0).toLocaleString('en-IN')} icon={<ShoppingBag className="size-3.5" />} tone="bg-[#FFF4DB] text-[#B46E00]" />
-                <KpiCard label="Revenue" value={formatCurrency(totals?.revenue ?? 0)} icon={<BarChart3 className="size-3.5" />} tone="bg-[#E6F6EC] text-[#059669]" />
+                <KpiCard label="Visits" value={(totals?.page_views ?? 0).toLocaleString('en-IN')} icon={<Eye className="size-3.5" />} tone="bg-cp-brand-soft text-cp-brand-ink" />
+                <KpiCard label="Unique" value={(totals?.unique_visitors ?? 0).toLocaleString('en-IN')} icon={<Users className="size-3.5" />} tone="bg-cp-teal-soft text-cp-teal-ink" />
+                <KpiCard label="Clicks" value={totalClicks.toLocaleString('en-IN')} icon={<MousePointerClick className="size-3.5" />} tone="bg-cp-coral-soft text-cp-coral-ink" />
+                <KpiCard label="CTR" value={`${ctr}%`} icon={<TrendingUp className="size-3.5" />} tone="bg-cp-accent-soft text-cp-accent-ink" />
+                <KpiCard label="Sales" value={(totals?.sales ?? 0).toLocaleString('en-IN')} icon={<ShoppingBag className="size-3.5" />} tone="bg-cp-warning-soft text-cp-warning-ink" />
+                <KpiCard label="Revenue" value={formatCurrency(totals?.revenue ?? 0)} icon={<BarChart3 className="size-3.5" />} tone="bg-cp-success-soft text-cp-success-ink" />
             </div>
 
-            <div className="flex flex-col gap-4 rounded-xl bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-4 rounded-xl bg-cp-surface p-6 shadow-sm">
                 <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
                     <div>
-                        <h2 className="text-base font-semibold text-[#14141B]">Visits & clicks over time</h2>
-                        <p className="text-xs text-[#8A8A96]">Daily breakdown of storefront traffic</p>
+                        <h2 className="text-base font-semibold text-cp-ink">Visits & clicks over time</h2>
+                        <p className="text-xs text-cp-muted">Daily breakdown of storefront traffic</p>
                     </div>
                     <div className="flex items-center gap-4 text-xs">
-                        <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-[#4F46E5]" /> <span className="font-medium text-[#14141B]">Visits</span></span>
-                        <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-[#FF6B4A]" /> <span className="text-[#8A8A96]">Clicks</span></span>
+                        <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-cp-brand" /> <span className="font-medium text-cp-ink">Visits</span></span>
+                        <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-cp-coral" /> <span className="text-cp-muted">Clicks</span></span>
                     </div>
                 </div>
                 <div className={cn('flex h-56 items-end gap-2 overflow-x-auto transition-opacity', refreshing && 'opacity-50')}>
-                    {daily.length === 0 && <p className="w-full py-16 text-center text-sm text-[#8A8A96]">No traffic recorded in this period.</p>}
+                    {daily.length === 0 && <p className="w-full py-16 text-center text-sm text-cp-muted">No traffic recorded in this period.</p>}
                     {daily.map((day) => (
                         <div key={day.day} className="flex min-w-[28px] flex-1 flex-col items-center gap-2">
                             <div className="flex w-full flex-1 items-end justify-center">
-                                <div className="w-full rounded-t-md bg-gradient-to-t from-[#4F46E5]/70 to-[#4F46E5] transition-all" style={{ height: `${(day.views / maxViews) * 100}%`, minHeight: '4px' }} title={`${day.views} views`} />
+                                <div className="w-full rounded-t-md bg-gradient-to-t from-cp-brand/70 to-cp-brand transition-all" style={{ height: `${(day.views / maxViews) * 100}%`, minHeight: '4px' }} title={`${day.views} views`} />
                             </div>
-                            <span className="text-[10px] whitespace-nowrap text-[#8A8A96]">{new Date(day.day).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                            <span className="text-[10px] whitespace-nowrap text-cp-muted">{new Date(day.day).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
                         </div>
                     ))}
                 </div>
-                <div className="flex items-center gap-1.5 border-t border-[#E4E2DA]/40 pt-3 text-xs text-[#8A8A96]">
-                    <Sparkles className="size-3.5 text-[#4F46E5]" />
+                <div className="flex items-center gap-1.5 border-t border-cp-line/40 pt-3 text-xs text-cp-muted">
+                    <Sparkles className="size-3.5 text-cp-brand-ink" />
                     Looking quiet? Share your link on WhatsApp status or Instagram bio.
                 </div>
             </div>
@@ -1126,27 +1126,27 @@ function AnalyticsTab({ analytics, store }: { analytics?: AnalyticsData; store: 
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <div className="flex flex-col gap-4 rounded-xl bg-white p-6 shadow-sm">
+                <div className="flex flex-col gap-4 rounded-xl bg-cp-surface p-6 shadow-sm">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-base font-semibold text-[#14141B]">Devices</h3>
-                        <span className="text-xs text-[#8A8A96]">{(totals?.page_views ?? 0).toLocaleString('en-IN')} total</span>
+                        <h3 className="text-base font-semibold text-cp-ink">Devices</h3>
+                        <span className="text-xs text-cp-muted">{(totals?.page_views ?? 0).toLocaleString('en-IN')} total</span>
                     </div>
                     <div className="flex flex-col gap-3">
-                        {(analytics?.devices.length ?? 0) === 0 && <p className="py-6 text-center text-sm text-[#8A8A96]">No device data yet.</p>}
+                        {(analytics?.devices.length ?? 0) === 0 && <p className="py-6 text-center text-sm text-cp-muted">No device data yet.</p>}
                         {analytics?.devices.map((device) => {
                             const pct = totals?.page_views ? Math.round((device.total / totals.page_views) * 100) : 0;
                             const Icon = device.device === 'mobile' ? Smartphone : device.device === 'tablet' ? Tablet : Monitor;
                             return (
-                                <div key={device.device ?? 'unknown'} className="flex items-center justify-between rounded-xl bg-[#F6F5F2] p-3">
+                                <div key={device.device ?? 'unknown'} className="flex items-center justify-between rounded-xl bg-cp-canvas p-3">
                                     <div className="flex items-center gap-3">
-                                        <span className="flex size-8 items-center justify-center rounded-lg bg-white text-[#4F46E5] shadow-sm">
+                                        <span className="flex size-8 items-center justify-center rounded-lg bg-cp-surface text-cp-brand-ink shadow-sm">
                                             <Icon className="size-4" />
                                         </span>
-                                        <span className="text-sm font-semibold text-[#14141B] capitalize">{device.device ?? 'Unknown'}</span>
+                                        <span className="text-sm font-semibold text-cp-ink capitalize">{device.device ?? 'Unknown'}</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-sm">
-                                        <span className="font-bold text-[#4F46E5]">{device.total}</span>
-                                        <span className="text-xs text-[#8A8A96]">({pct}%)</span>
+                                        <span className="font-bold text-cp-brand-ink">{device.total}</span>
+                                        <span className="text-xs text-cp-muted">({pct}%)</span>
                                     </div>
                                 </div>
                             );
@@ -1161,7 +1161,7 @@ function AnalyticsTab({ analytics, store }: { analytics?: AnalyticsData; store: 
             <FixedSaveBar
                 status={refreshing ? 'saving' : 'saved'}
                 right={
-                    <Button type="button" variant="outline" onClick={refresh} disabled={refreshing} className="border-[#E4E2DA]">
+                    <Button type="button" variant="outline" onClick={refresh} disabled={refreshing} className="border-cp-line">
                         <RefreshCw className={cn('size-4', refreshing && 'animate-spin')} /> Refresh data
                     </Button>
                 }
@@ -1178,7 +1178,7 @@ export default function StoreEdit({ store, tab = 'profile', analytics }: StoreEd
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Store" />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 {/* Sticky top header (tab navigation) — Web App page bhi yahi dikhata hai */}
                 <StoreTabsHeader active={tab} />
 

@@ -6,16 +6,16 @@ import type { SaveStatus } from './use-auto-save';
 
 /* Book / Locked content editors ke shared form pieces — dono ka design ek jaisa rahe isliye yahin se aate hain. */
 
-export const LABEL_CLASS = 'text-xs font-semibold tracking-wider text-[#14141B] uppercase';
-export const HINT_CLASS = 'text-[11px] text-[#8A8A96]';
+export const LABEL_CLASS = 'text-xs font-semibold tracking-wider text-cp-ink uppercase';
+export const HINT_CLASS = 'text-[11px] text-cp-muted';
 export const INPUT_CLASS =
-    'h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15 disabled:cursor-not-allowed disabled:bg-[#F6F5F2] disabled:text-[#8A8A96]';
+    'h-11 w-full rounded-lg border border-cp-line bg-cp-surface px-3 text-sm text-cp-ink shadow-sm outline-none transition placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15 disabled:cursor-not-allowed disabled:bg-cp-canvas disabled:text-cp-muted';
 export const TEXTAREA_CLASS =
-    'w-full resize-y rounded-lg border border-[#E4E2DA] bg-white px-3 py-2.5 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15';
+    'w-full resize-y rounded-lg border border-cp-line bg-cp-surface px-3 py-2.5 text-sm text-cp-ink shadow-sm outline-none transition placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15';
 export const ADD_BUTTON_CLASS =
-    'h-11 w-fit rounded-lg border border-[#E4E2DA] bg-white px-4 text-[13px] font-semibold text-[#14141B] shadow-sm transition hover:bg-[#F6F5F2]';
+    'h-11 w-fit rounded-lg border border-cp-line bg-cp-surface px-4 text-[13px] font-semibold text-cp-ink shadow-sm transition hover:bg-cp-canvas';
 export const UPLOAD_TILE_CLASS =
-    'flex aspect-square items-center justify-center rounded-lg border border-dashed border-[#E4E2DA] bg-white text-[12px] font-medium text-[#4B4B57] transition hover:border-[#4F46E5] hover:text-[#4F46E5]';
+    'flex aspect-square items-center justify-center rounded-lg border border-dashed border-cp-line bg-cp-surface text-[12px] font-medium text-cp-body transition hover:border-cp-brand hover:text-cp-brand-ink';
 
 export type Device = 'desktop' | 'mobile';
 
@@ -79,7 +79,7 @@ export function RemoveButton({ label, onClick, busy }: { label: string; onClick:
             onClick={onClick}
             disabled={busy}
             aria-label={label}
-            className="shrink-0 rounded-lg p-1.5 text-[#D93838] transition hover:bg-[#FFEDE8] disabled:opacity-50"
+            className="shrink-0 rounded-lg p-1.5 text-cp-red-ink transition hover:bg-cp-coral-soft disabled:opacity-50"
         >
             {busy ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
         </button>
@@ -87,20 +87,20 @@ export function RemoveButton({ label, onClick, busy }: { label: string; onClick:
 }
 
 export function FieldError({ message }: { message?: string | null }) {
-    return message ? <p className="text-[11px] font-medium text-[#D93838]">{message}</p> : null;
+    return message ? <p className="text-[11px] font-medium text-cp-red-ink">{message}</p> : null;
 }
 
 /** Image thumbnail + corner remove button (cover images / hidden images). */
 export function ThumbTile({ src, alt, onRemove, busy }: { src: string; alt: string; onRemove: () => void; busy?: boolean }) {
     return (
-        <div className="group relative aspect-square overflow-hidden rounded-lg bg-[#F6F5F2]">
+        <div className="group relative aspect-square overflow-hidden rounded-lg bg-cp-canvas">
             <img src={src} alt={alt} className="size-full object-cover" />
             <button
                 type="button"
                 onClick={onRemove}
                 disabled={busy}
                 aria-label={`Remove ${alt}`}
-                className="absolute top-1 right-1 rounded-full bg-white/90 p-1 text-[#D93838] shadow hover:bg-white disabled:opacity-50"
+                className="absolute top-1 right-1 rounded-full bg-cp-surface/90 p-1 text-cp-red-ink shadow hover:bg-cp-surface disabled:opacity-50"
             >
                 <X className="size-3.5" />
             </button>
@@ -155,10 +155,10 @@ export function CouponsField({ productUuid, initial }: { productUuid: string; in
         <div className="flex flex-col gap-2">
             <label className={LABEL_CLASS}>Discount coupons</label>
             {coupons.map((coupon) => (
-                <div key={coupon.id} className="flex items-center gap-2 rounded-lg border border-[#E4E2DA] bg-[#F8F7F4] px-3 py-2 text-[11px]">
-                    <span className="font-bold text-[#4F46E5]">{coupon.code}</span>
-                    <span className="font-semibold text-[#14141B]">{coupon.discount_percent}% off</span>
-                    <span className={cn('ml-auto', coupon.is_active ? 'text-[#059669]' : 'text-[#8A8A96]')}>
+                <div key={coupon.id} className="flex items-center gap-2 rounded-lg border border-cp-line bg-cp-surface-2 px-3 py-2 text-[11px]">
+                    <span className="font-bold text-cp-brand-ink">{coupon.code}</span>
+                    <span className="font-semibold text-cp-ink">{coupon.discount_percent}% off</span>
+                    <span className={cn('ml-auto', coupon.is_active ? 'text-cp-success-ink' : 'text-cp-muted')}>
                         {coupon.is_active ? 'Active' : 'Inactive'}
                     </span>
                     <button
@@ -166,7 +166,7 @@ export function CouponsField({ productUuid, initial }: { productUuid: string; in
                         onClick={() => remove(coupon)}
                         disabled={removingId === coupon.id}
                         aria-label={`Remove ${coupon.code} coupon`}
-                        className="rounded p-0.5 text-[#D93838] transition hover:bg-[#FFEDE8] disabled:opacity-40"
+                        className="rounded p-0.5 text-cp-red-ink transition hover:bg-cp-coral-soft disabled:opacity-40"
                     >
                         {removingId === coupon.id ? <Loader2 className="size-3 animate-spin" /> : <X className="size-3" />}
                     </button>
@@ -189,7 +189,7 @@ export function CouponsField({ productUuid, initial }: { productUuid: string; in
                         onChange={(e) => setPercent(e.target.value)}
                         className={cn(INPUT_CLASS, 'pr-7')}
                     />
-                    <span className="absolute top-1/2 right-3 -translate-y-1/2 text-sm text-[#8A8A96]">%</span>
+                    <span className="absolute top-1/2 right-3 -translate-y-1/2 text-sm text-cp-muted">%</span>
                 </div>
                 <button
                     type="button"
@@ -313,32 +313,32 @@ export function AddonsField({ productUuid }: { productUuid: string }) {
                 const discounted = product && addon.price !== null && addon.price < product.unit_price;
 
                 return (
-                    <div key={addon.uuid} className="flex flex-col gap-2 rounded-lg border border-[#E4E2DA] bg-[#F8F7F4] p-3">
+                    <div key={addon.uuid} className="flex flex-col gap-2 rounded-lg border border-cp-line bg-cp-surface-2 p-3">
                         <div className="flex items-start gap-2">
                             <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-[#14141B]">{product?.title ?? 'Deleted product'}</p>
-                                <p className="text-[11px] text-[#8A8A96]">
+                                <p className="truncate text-sm font-semibold text-cp-ink">{product?.title ?? 'Deleted product'}</p>
+                                <p className="text-[11px] text-cp-muted">
                                     {ADDON_TYPE_LABEL[product?.type ?? ''] ?? 'Product'} ·{' '}
-                                    <span className="font-semibold text-[#14141B]">{rupees(addon.effective_price)}</span>
+                                    <span className="font-semibold text-cp-ink">{rupees(addon.effective_price)}</span>
                                     {discounted && <span className="ml-1 line-through">{rupees(product.unit_price)}</span>}
                                 </p>
-                                {hidden && <p className="mt-1 text-[11px] font-semibold text-[#B46E00]">Not published — hidden at checkout</p>}
+                                {hidden && <p className="mt-1 text-[11px] font-semibold text-cp-warning-ink">Not published — hidden at checkout</p>}
                             </div>
                             <button
                                 type="button"
                                 onClick={() => void remove(addon)}
                                 disabled={busy === addon.uuid}
                                 aria-label={`Remove ${product?.title ?? 'add-on'}`}
-                                className="rounded p-1 text-[#D93838] transition hover:bg-[#FFEDE8] disabled:opacity-40"
+                                className="rounded p-1 text-cp-red-ink transition hover:bg-cp-coral-soft disabled:opacity-40"
                             >
                                 {busy === addon.uuid ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
                             </button>
                         </div>
                         {product && (
-                            <label className="flex items-center gap-2 text-[11px] text-[#6B6B78]">
+                            <label className="flex items-center gap-2 text-[11px] text-cp-subtle">
                                 Offer price
                                 <span className="relative w-32">
-                                    <span className="absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-[#8A8A96]">₹</span>
+                                    <span className="absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-cp-muted">₹</span>
                                     <input
                                         key={`${addon.uuid}-${addon.price ?? 'none'}`}
                                         type="number"
@@ -349,10 +349,10 @@ export function AddonsField({ productUuid }: { productUuid: string }) {
                                         placeholder={String(product.unit_price)}
                                         onBlur={(e) => void savePrice(addon, e.target.value)}
                                         aria-label={`Offer price for ${product.title}`}
-                                        className="h-9 w-full rounded-lg border border-[#E4E2DA] bg-white pr-2 pl-6 text-sm text-[#14141B] outline-none focus:border-[#4F46E5]"
+                                        className="h-9 w-full rounded-lg border border-cp-line bg-cp-surface pr-2 pl-6 text-sm text-cp-ink outline-none focus:border-cp-brand"
                                     />
                                 </span>
-                                <span className="text-[#8A8A96]">blank = regular price</span>
+                                <span className="text-cp-muted">blank = regular price</span>
                             </label>
                         )}
                     </div>
@@ -378,7 +378,7 @@ export function AddonsField({ productUuid }: { productUuid: string }) {
                         ))}
                     </select>
                     <div className="relative w-32 shrink-0">
-                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-[#8A8A96]">₹</span>
+                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-cp-muted">₹</span>
                         <input
                             type="number"
                             min="0"
@@ -420,17 +420,17 @@ export function SlugField({
     return (
         <div className="flex flex-col gap-1.5">
             <label htmlFor="product_slug" className={LABEL_CLASS}>
-                Page URL <span className="text-[#D93838]">*</span>
+                Page URL <span className="text-cp-red-ink">*</span>
             </label>
-            <div className="flex h-11 items-stretch overflow-hidden rounded-lg border border-[#E4E2DA] bg-white text-sm shadow-sm focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/15">
-                <span className="flex items-center border-r border-[#E4E2DA] bg-[#F6F5F2] px-3 text-[#8A8A96]">{prefix}</span>
+            <div className="flex h-11 items-stretch overflow-hidden rounded-lg border border-cp-line bg-cp-surface text-sm shadow-sm focus-within:border-cp-brand focus-within:ring-2 focus-within:ring-cp-brand/15">
+                <span className="flex items-center border-r border-cp-line bg-cp-canvas px-3 text-cp-muted">{prefix}</span>
                 <input
                     id="product_slug"
                     value={value}
                     maxLength={150}
                     onChange={(e) => onChange(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                     placeholder={placeholder}
-                    className="min-w-0 flex-1 bg-transparent px-3 text-sm text-[#14141B] outline-none placeholder:text-[#8A8A96]"
+                    className="min-w-0 flex-1 bg-transparent px-3 text-sm text-cp-ink outline-none placeholder:text-cp-muted"
                 />
             </div>
             <p className={HINT_CLASS}>Required before publishing</p>
@@ -448,7 +448,7 @@ export function DeviceToggle({ device, onChange }: { device: Device; onChange: (
                 aria-pressed={device === 'desktop'}
                 className={cn(
                     'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition',
-                    device === 'desktop' ? 'bg-white text-[#14141B]' : 'text-white/60 hover:text-white',
+                    device === 'desktop' ? 'light-island bg-cp-surface text-cp-ink' : 'text-white/60 hover:text-white',
                 )}
             >
                 <Monitor className="size-3.5" /> Desktop
@@ -459,7 +459,7 @@ export function DeviceToggle({ device, onChange }: { device: Device; onChange: (
                 aria-pressed={device === 'mobile'}
                 className={cn(
                     'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition',
-                    device === 'mobile' ? 'bg-white text-[#14141B]' : 'text-white/60 hover:text-white',
+                    device === 'mobile' ? 'light-island bg-cp-surface text-cp-ink' : 'text-white/60 hover:text-white',
                 )}
             >
                 <Smartphone className="size-3.5" /> Mobile
@@ -471,24 +471,24 @@ export function DeviceToggle({ device, onChange }: { device: Device; onChange: (
 export function SaveStatusPill({ status }: { status: SaveStatus }) {
     if (status === 'saving')
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#4F46E5]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-cp-brand-soft px-2 py-0.5 text-[10px] font-semibold text-cp-brand-ink">
                 <Loader2 className="size-3 animate-spin" /> Saving
             </span>
         );
     if (status === 'saved')
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#E6F6EC] px-2 py-0.5 text-[10px] font-semibold text-[#059669]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-cp-success-soft px-2 py-0.5 text-[10px] font-semibold text-cp-success-ink">
                 <Check className="size-3" /> Saved
             </span>
         );
     if (status === 'error')
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#FFEDE8] px-2 py-0.5 text-[10px] font-semibold text-[#C2410C]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-cp-coral-soft px-2 py-0.5 text-[10px] font-semibold text-cp-coral-dark-ink">
                 <Info className="size-3" /> Save failed
             </span>
         );
     return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-white/0 px-2 py-0.5 text-[10px] font-semibold text-[#8A8A96]">
+        <span className="inline-flex items-center gap-1 rounded-full bg-white/0 px-2 py-0.5 text-[10px] font-semibold text-cp-muted">
             <Eye className="size-3" /> Live
         </span>
     );

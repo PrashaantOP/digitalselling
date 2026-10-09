@@ -67,20 +67,20 @@ const shortDate = (iso: string | null) =>
     iso ? new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
 const STATUS_META: Record<ReferralStatus, { label: string; chip: string; icon: typeof UserPlus }> = {
-    signed_up: { label: 'Signed up', chip: 'bg-[#F0EFEA] text-[#6B6B78]', icon: UserPlus },
-    active: { label: 'Store live', chip: 'bg-[#E6F2FF] text-[#0284C7]', icon: Sparkles },
-    earning: { label: 'Earned', chip: 'bg-[#E6F6EC] text-[#059669]', icon: BadgeCheck },
+    signed_up: { label: 'Signed up', chip: 'bg-cp-surface-3 text-cp-subtle', icon: UserPlus },
+    active: { label: 'Store live', chip: 'bg-cp-sky-soft text-cp-sky-ink', icon: Sparkles },
+    earning: { label: 'Earned', chip: 'bg-cp-success-soft text-cp-success-ink', icon: BadgeCheck },
 };
 
 function StatTile({ label, value, sub, icon, tone }: { label: string; value: string; sub: string; icon: React.ReactNode; tone: string }) {
     return (
-        <div className="flex flex-col justify-between rounded-xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+        <div className="flex flex-col justify-between rounded-xl bg-cp-surface p-4 shadow-sm transition-shadow hover:shadow-md">
             <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">{label}</span>
+                <span className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">{label}</span>
                 <span className={cn('flex size-7 items-center justify-center rounded-lg', tone)}>{icon}</span>
             </div>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-[#14141B]">{value}</span>
-            <span className="mt-1 text-xs text-[#8A8A96]">{sub}</span>
+            <span className="mt-3 text-2xl font-semibold tracking-tight text-cp-ink">{value}</span>
+            <span className="mt-1 text-xs text-cp-muted">{sub}</span>
         </div>
     );
 }
@@ -125,29 +125,29 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Refer & Earn" />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     {/* Title */}
                     <div className="flex flex-col gap-1 pt-1">
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Refer &amp; Earn</h1>
-                            <span className="rounded-full bg-[#FFF4DB] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#B46E00] uppercase">
+                            <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Refer &amp; Earn</h1>
+                            <span className="rounded-full bg-cp-warning-soft px-2 py-0.5 text-[10px] font-semibold tracking-wider text-cp-warning-ink uppercase">
                                 {money(reward)} per referral
                             </span>
                         </div>
-                        <p className="text-sm text-[#8A8A96]">
+                        <p className="text-sm text-cp-muted">
                             Share your link — when a creator you referred makes their first sale, you earn {money(reward)} in credit.
                         </p>
                     </div>
 
                     {notice && (
-                        <div role="status" className="flex items-center gap-2 rounded-xl bg-[#E6F6EC] p-3.5 text-[13px] font-semibold text-[#059669]">
+                        <div role="status" className="flex items-center gap-2 rounded-xl bg-cp-success-soft p-3.5 text-[13px] font-semibold text-cp-success-ink">
                             <Check className="size-4" /> {notice}
                         </div>
                     )}
 
                     {/* Hero — referral link */}
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#4F46E5] via-[#6D28D9] to-[#DB2777] p-5 text-white shadow-lg sm:p-7">
+                    <div className="light-island relative overflow-hidden rounded-2xl bg-gradient-to-br from-cp-brand via-cp-accent-strong to-cp-pink p-5 text-white shadow-lg sm:p-7">
                         <span className="pointer-events-none absolute -top-16 -right-10 size-56 rounded-full bg-white/15 blur-3xl" />
                         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                             <div className="min-w-0">
@@ -168,7 +168,7 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                                     <button
                                         type="button"
                                         onClick={copyLink}
-                                        className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-white px-3 text-[13px] font-bold text-[#4F46E5] transition hover:bg-white/90"
+                                        className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-white px-3 text-[13px] font-bold text-cp-brand transition hover:bg-white/90"
                                     >
                                         {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                                         {copied ? 'Copied' : 'Copy'}
@@ -210,61 +210,61 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                             value={String(stats.total)}
                             sub={`${stats.rewarded} made their first sale`}
                             icon={<Users className="size-3.5" />}
-                            tone="bg-[#EEF2FF] text-[#4F46E5]"
+                            tone="bg-cp-brand-soft text-cp-brand-ink"
                         />
                         <StatTile
                             label="Total earned"
                             value={money(balance.earned)}
                             sub={`${money(reward)} × ${stats.rewarded} referral${stats.rewarded === 1 ? '' : 's'}`}
                             icon={<Gift className="size-3.5" />}
-                            tone="bg-[#FFF4DB] text-[#B46E00]"
+                            tone="bg-cp-warning-soft text-cp-warning-ink"
                         />
                         <StatTile
                             label="Used for Plus"
                             value={money(balance.redeemed)}
                             sub="Applied to your subscription"
                             icon={<Crown className="size-3.5" />}
-                            tone="bg-[#F1EAFE] text-[#7C3AED]"
+                            tone="bg-cp-accent-soft text-cp-accent-ink"
                         />
                         <StatTile
                             label="Available"
                             value={money(balance.balance)}
                             sub={balance.months_available > 0 ? `Enough for ${balance.months_available} month${balance.months_available > 1 ? 's' : ''} of Plus` : 'Not enough to redeem yet'}
                             icon={<Wallet className="size-3.5" />}
-                            tone="bg-[#E6F6EC] text-[#059669]"
+                            tone="bg-cp-success-soft text-cp-success-ink"
                         />
                     </div>
 
                     <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
                         {/* Referral list */}
-                        <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-                            <div className="border-b border-[#E4E2DA]/70 px-5 py-4 sm:px-6">
-                                <h2 className="text-base font-semibold text-[#14141B]">Your referrals</h2>
-                                <p className="mt-0.5 text-xs text-[#8A8A96]">Signed up → store live → {money(reward)} on their first sale</p>
+                        <div className="overflow-hidden rounded-xl bg-cp-surface shadow-sm">
+                            <div className="border-b border-cp-line/70 px-5 py-4 sm:px-6">
+                                <h2 className="text-base font-semibold text-cp-ink">Your referrals</h2>
+                                <p className="mt-0.5 text-xs text-cp-muted">Signed up → store live → {money(reward)} on their first sale</p>
                             </div>
 
                             {referrals.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center">
-                                    <span className="flex size-14 items-center justify-center rounded-2xl bg-[#EEF2FF] text-[#4F46E5]">
+                                    <span className="flex size-14 items-center justify-center rounded-2xl bg-cp-brand-soft text-cp-brand-ink">
                                         <UserPlus className="size-7" />
                                     </span>
-                                    <h3 className="text-lg font-semibold text-[#14141B]">No referrals yet</h3>
-                                    <p className="max-w-sm text-sm text-[#8A8A96]">
+                                    <h3 className="text-lg font-semibold text-cp-ink">No referrals yet</h3>
+                                    <p className="max-w-sm text-sm text-cp-muted">
                                         Send the link above to a creator. When they join and make their first sale, {money(reward)} lands in your
                                         account.
                                     </p>
-                                    <Button onClick={copyLink} className="mt-1 bg-[#4F46E5] hover:bg-[#4338CA]">
+                                    <Button onClick={copyLink} className="mt-1 text-white bg-cp-brand hover:bg-cp-brand-hover">
                                         <Copy className="size-4" /> Copy your link
                                     </Button>
                                 </div>
                             ) : (
-                                <ul className="divide-y divide-[#E4E2DA]/50">
+                                <ul className="divide-y divide-cp-line/50">
                                     {referrals.map((row) => {
                                         const meta = STATUS_META[row.status] ?? STATUS_META.signed_up;
 
                                         return (
                                             <li key={row.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5 sm:px-6">
-                                                <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EEF2FF] text-sm font-bold text-[#4F46E5]">
+                                                <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cp-brand-soft text-sm font-bold text-cp-brand-ink">
                                                     {row.avatar ? (
                                                         <img src={`/assets/${row.avatar}`} alt="" className="size-full object-cover" />
                                                     ) : (
@@ -272,13 +272,13 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                                                     )}
                                                 </span>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="truncate text-[13px] font-semibold text-[#14141B]">{row.name}</p>
-                                                    <p className="text-xs text-[#8A8A96]">Joined {shortDate(row.joined_at)}</p>
+                                                    <p className="truncate text-[13px] font-semibold text-cp-ink">{row.name}</p>
+                                                    <p className="text-xs text-cp-muted">Joined {shortDate(row.joined_at)}</p>
                                                 </div>
                                                 <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold', meta.chip)}>
                                                     <meta.icon className="size-3" /> {meta.label}
                                                 </span>
-                                                <span className="w-16 text-right text-[13px] font-bold text-[#14141B]">
+                                                <span className="w-16 text-right text-[13px] font-bold text-cp-ink">
                                                     {row.earned > 0 ? money(row.earned) : '—'}
                                                 </span>
                                             </li>
@@ -290,24 +290,24 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
 
                         {/* Redeem + how it works */}
                         <div className="flex flex-col gap-5">
-                            <div className="rounded-xl bg-white p-5 shadow-sm">
+                            <div className="rounded-xl bg-cp-surface p-5 shadow-sm">
                                 <div className="flex items-center gap-2">
-                                    <span className="flex size-8 items-center justify-center rounded-lg bg-[#F1EAFE] text-[#7C3AED]">
+                                    <span className="flex size-8 items-center justify-center rounded-lg bg-cp-accent-soft text-cp-accent-ink">
                                         <Crown className="size-4" />
                                     </span>
-                                    <h3 className="text-sm font-semibold text-[#14141B]">Redeem for Plus</h3>
+                                    <h3 className="text-sm font-semibold text-cp-ink">Redeem for Plus</h3>
                                 </div>
-                                <p className="mt-2 text-xs text-[#8A8A96]">
+                                <p className="mt-2 text-xs text-cp-muted">
                                     {money(balance.monthly_price)} = 1 month of Plus (10% commission). Anything left over stays in your balance.
                                 </p>
 
                                 {blockedReason === 'paid_subscription' ? (
-                                    <div className="mt-4 flex items-start gap-2 rounded-lg bg-[#FFF4DB] p-3 text-[12px] font-medium text-[#B46E00]">
+                                    <div className="mt-4 flex items-start gap-2 rounded-lg bg-cp-warning-soft p-3 text-[12px] font-medium text-cp-warning-ink">
                                         <Info className="mt-px size-4 shrink-0" />
                                         Your account already has Plus with no end date, so there is nothing to add this credit to.
                                     </div>
                                 ) : blockedReason === 'auto_renew' ? (
-                                    <div className="mt-4 flex items-start gap-2 rounded-lg bg-[#FFF4DB] p-3 text-[12px] font-medium text-[#B46E00]">
+                                    <div className="mt-4 flex items-start gap-2 rounded-lg bg-cp-warning-soft p-3 text-[12px] font-medium text-cp-warning-ink">
                                         <Info className="mt-px size-4 shrink-0" />
                                         <span>
                                             Plus auto-renew is on, so credit can't be added right now (you would pay twice).{' '}
@@ -319,68 +319,68 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="mt-4 flex items-center justify-between rounded-lg bg-[#F6F5F2] p-2">
+                                        <div className="mt-4 flex items-center justify-between rounded-lg bg-cp-canvas p-2">
                                             <button
                                                 type="button"
                                                 onClick={() => setMonths((m) => Math.max(1, m - 1))}
                                                 disabled={months <= 1}
                                                 aria-label="Fewer months"
-                                                className="flex size-8 items-center justify-center rounded-md bg-white text-[#4B4B57] shadow-sm transition hover:text-[#14141B] disabled:opacity-40"
+                                                className="flex size-8 items-center justify-center rounded-md bg-cp-surface text-cp-body shadow-sm transition hover:text-cp-ink disabled:opacity-40"
                                             >
                                                 <Minus className="size-4" />
                                             </button>
                                             <span className="text-center">
-                                                <span className="block text-lg font-bold text-[#14141B]">
+                                                <span className="block text-lg font-bold text-cp-ink">
                                                     {months} month{months > 1 ? 's' : ''}
                                                 </span>
-                                                <span className="text-[11px] text-[#8A8A96]">{money(cost)} credit</span>
+                                                <span className="text-[11px] text-cp-muted">{money(cost)} credit</span>
                                             </span>
                                             <button
                                                 type="button"
                                                 onClick={() => setMonths((m) => Math.min(balance.months_available || 1, m + 1))}
                                                 disabled={months >= balance.months_available}
                                                 aria-label="More months"
-                                                className="flex size-8 items-center justify-center rounded-md bg-white text-[#4B4B57] shadow-sm transition hover:text-[#14141B] disabled:opacity-40"
+                                                className="flex size-8 items-center justify-center rounded-md bg-cp-surface text-cp-body shadow-sm transition hover:text-cp-ink disabled:opacity-40"
                                             >
                                                 <Plus className="size-4" />
                                             </button>
                                         </div>
 
-                                        <Button onClick={redeem} disabled={!canRedeem || redeeming} className="mt-3 w-full bg-[#4F46E5] hover:bg-[#4338CA]">
+                                        <Button onClick={redeem} disabled={!canRedeem || redeeming} className="mt-3 w-full text-white bg-cp-brand hover:bg-cp-brand-hover">
                                             {redeeming ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
                                             {redeeming ? 'Applying…' : 'Redeem now'}
                                         </Button>
 
                                         {!canRedeem && (
-                                            <p className="mt-2 text-center text-[11px] text-[#8A8A96]">
+                                            <p className="mt-2 text-center text-[11px] text-cp-muted">
                                                 You can redeem once you reach {money(balance.monthly_price)} — you have {money(balance.balance)} so far.
                                             </p>
                                         )}
                                         {planExpiresAt && (
-                                            <p className="mt-2 text-center text-[11px] text-[#8A8A96]">Your Plus runs until {shortDate(planExpiresAt)}.</p>
+                                            <p className="mt-2 text-center text-[11px] text-cp-muted">Your Plus runs until {shortDate(planExpiresAt)}.</p>
                                         )}
                                     </>
                                 )}
 
-                                <p className="mt-3 flex items-start gap-1.5 border-t border-[#E4E2DA]/70 pt-3 text-[11px] text-[#8A8A96]">
+                                <p className="mt-3 flex items-start gap-1.5 border-t border-cp-line/70 pt-3 text-[11px] text-cp-muted">
                                     <Info className="mt-px size-3.5 shrink-0" />
                                     Referral credit can only be used for Plus — it cannot be withdrawn to a bank account.
                                 </p>
                             </div>
 
-                            <div className="rounded-xl bg-white p-5 shadow-sm">
-                                <h3 className="text-sm font-semibold text-[#14141B]">How it works</h3>
+                            <div className="rounded-xl bg-cp-surface p-5 shadow-sm">
+                                <h3 className="text-sm font-semibold text-cp-ink">How it works</h3>
                                 <ol className="mt-4 flex flex-col gap-3.5">
                                     {[
-                                        { icon: <Share2 className="size-4" />, tone: 'bg-[#EEF2FF] text-[#4F46E5]', text: 'Send your link to a creator.' },
-                                        { icon: <UserPlus className="size-4" />, tone: 'bg-[#E6F2FF] text-[#0284C7]', text: 'They join and set up their store (90 days of Plus free).' },
-                                        { icon: <ShoppingBag className="size-4" />, tone: 'bg-[#FFF4DB] text-[#B46E00]', text: 'They make their first successful sale.' },
-                                        { icon: <IndianRupee className="size-4" />, tone: 'bg-[#E6F6EC] text-[#059669]', text: `${money(reward)} lands in your credit — ready for Plus.` },
+                                        { icon: <Share2 className="size-4" />, tone: 'bg-cp-brand-soft text-cp-brand-ink', text: 'Send your link to a creator.' },
+                                        { icon: <UserPlus className="size-4" />, tone: 'bg-cp-sky-soft text-cp-sky-ink', text: 'They join and set up their store (90 days of Plus free).' },
+                                        { icon: <ShoppingBag className="size-4" />, tone: 'bg-cp-warning-soft text-cp-warning-ink', text: 'They make their first successful sale.' },
+                                        { icon: <IndianRupee className="size-4" />, tone: 'bg-cp-success-soft text-cp-success-ink', text: `${money(reward)} lands in your credit — ready for Plus.` },
                                     ].map((step, index) => (
                                         <li key={step.text} className="flex items-start gap-3">
                                             <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-md', step.tone)}>{step.icon}</span>
-                                            <span className="text-xs leading-relaxed text-[#6B6B78]">
-                                                <span className="font-semibold text-[#14141B]">Step {index + 1}.</span> {step.text}
+                                            <span className="text-xs leading-relaxed text-cp-subtle">
+                                                <span className="font-semibold text-cp-ink">Step {index + 1}.</span> {step.text}
                                             </span>
                                         </li>
                                     ))}
@@ -388,24 +388,24 @@ export default function ReferralIndex({ code, link, reward, balance, blockedReas
                             </div>
 
                             {ledger.length > 0 && (
-                                <div className="rounded-xl bg-white p-5 shadow-sm">
-                                    <h3 className="text-sm font-semibold text-[#14141B]">Credit history</h3>
+                                <div className="rounded-xl bg-cp-surface p-5 shadow-sm">
+                                    <h3 className="text-sm font-semibold text-cp-ink">Credit history</h3>
                                     <ul className="mt-3 flex flex-col gap-2">
                                         {ledger.map((row) => (
-                                            <li key={row.id} className="flex items-center gap-2.5 rounded-lg bg-[#F6F5F2]/60 p-2.5">
+                                            <li key={row.id} className="flex items-center gap-2.5 rounded-lg bg-cp-canvas/60 p-2.5">
                                                 <span
                                                     className={cn(
                                                         'flex size-7 shrink-0 items-center justify-center rounded-md',
-                                                        row.type === 'earned' ? 'bg-[#E6F6EC] text-[#059669]' : 'bg-[#F1EAFE] text-[#7C3AED]',
+                                                        row.type === 'earned' ? 'bg-cp-success-soft text-cp-success-ink' : 'bg-cp-accent-soft text-cp-accent-ink',
                                                     )}
                                                 >
                                                     {row.type === 'earned' ? <Gift className="size-3.5" /> : <Crown className="size-3.5" />}
                                                 </span>
                                                 <span className="min-w-0 flex-1">
-                                                    <span className="block truncate text-[12px] font-semibold text-[#14141B]">{row.description}</span>
-                                                    <span className="text-[11px] text-[#8A8A96]">{shortDate(row.created_at)}</span>
+                                                    <span className="block truncate text-[12px] font-semibold text-cp-ink">{row.description}</span>
+                                                    <span className="text-[11px] text-cp-muted">{shortDate(row.created_at)}</span>
                                                 </span>
-                                                <span className={cn('text-[13px] font-bold', row.type === 'earned' ? 'text-[#059669]' : 'text-[#7C3AED]')}>
+                                                <span className={cn('text-[13px] font-bold', row.type === 'earned' ? 'text-cp-success-ink' : 'text-cp-accent-ink')}>
                                                     {row.type === 'earned' ? '+' : '−'}
                                                     {money(row.amount)}
                                                 </span>

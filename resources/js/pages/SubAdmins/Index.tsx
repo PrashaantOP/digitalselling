@@ -55,27 +55,27 @@ export default function TeamMembers({ members, roles, seats }: Props) {
                 </button>
             }
         >
-            {flash?.success && <p className="rounded-xl bg-[#E6F6EC] px-4 py-3 text-sm font-medium text-[#059669]">{flash.success}</p>}
+            {flash?.success && <p className="rounded-xl bg-cp-success-soft px-4 py-3 text-sm font-medium text-cp-success-ink">{flash.success}</p>}
 
             {/* seats */}
-            <div className="flex flex-col gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-xl bg-cp-surface p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                    <span className="flex size-10 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#4F46E5]">
+                    <span className="flex size-10 items-center justify-center rounded-lg bg-cp-brand-soft text-cp-brand-ink">
                         <Users className="size-5" />
                     </span>
                     <div>
-                        <p className="text-sm font-semibold text-[#14141B]">
+                        <p className="text-sm font-semibold text-cp-ink">
                             {seats.used} of {seats.limit} seat{seats.limit === 1 ? '' : 's'} used
                         </p>
-                        <p className="text-xs text-[#8A8A96]">Pending invites count as a seat. {seats.plan === 'plus' ? 'Plus includes 5 seats.' : 'Free includes 1 seat.'}</p>
+                        <p className="text-xs text-cp-muted">Pending invites count as a seat. {seats.plan === 'plus' ? 'Plus includes 5 seats.' : 'Free includes 1 seat.'}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="h-2 w-40 overflow-hidden rounded-full bg-[#ECEBE6]">
-                        <div className={cn('h-full rounded-full', full ? 'bg-[#B46E00]' : 'bg-[#4F46E5]')} style={{ width: `${Math.min(100, (seats.used / seats.limit) * 100)}%` }} />
+                    <div className="h-2 w-40 overflow-hidden rounded-full bg-cp-surface-3">
+                        <div className={cn('h-full rounded-full', full ? 'bg-cp-warning' : 'bg-cp-brand')} style={{ width: `${Math.min(100, (seats.used / seats.limit) * 100)}%` }} />
                     </div>
                     {full && seats.plan !== 'plus' && (
-                        <Link href="/dashboard/settings/billing" className="text-xs font-semibold text-[#4F46E5] hover:underline">
+                        <Link href="/dashboard/settings/billing" className="text-xs font-semibold text-cp-brand-ink hover:underline">
                             Upgrade for 5 seats
                         </Link>
                     )}
@@ -83,19 +83,19 @@ export default function TeamMembers({ members, roles, seats }: Props) {
             </div>
 
             {/* members */}
-            <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+            <div className="overflow-hidden rounded-xl bg-cp-surface shadow-sm">
                 {members.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
-                        <span className="flex size-11 items-center justify-center rounded-full bg-[#EEF2FF] text-[#4F46E5]">
+                        <span className="flex size-11 items-center justify-center rounded-full bg-cp-brand-soft text-cp-brand-ink">
                             <UserPlus className="size-5" />
                         </span>
-                        <p className="text-sm font-semibold text-[#14141B]">No team members yet</p>
-                        <p className="max-w-sm text-xs text-[#8A8A96]">Invite a manager, editor or support person. You choose exactly what they can see and do with roles.</p>
+                        <p className="text-sm font-semibold text-cp-ink">No team members yet</p>
+                        <p className="max-w-sm text-xs text-cp-muted">Invite a manager, editor or support person. You choose exactly what they can see and do with roles.</p>
                     </div>
                 ) : (
                     <table className="w-full text-left text-sm">
                         <thead>
-                            <tr className="bg-[#F6F5F2]/60 text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">
+                            <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
                                 <th className="px-5 py-3">Member</th>
                                 <th className="px-4 py-3">Role</th>
                                 <th className="px-4 py-3">Status</th>
@@ -103,48 +103,48 @@ export default function TeamMembers({ members, roles, seats }: Props) {
                                 <th className="px-5 py-3" />
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#E4E2DA]/60">
+                        <tbody className="divide-y divide-cp-line/60">
                             {members.map((m) => (
                                 <tr key={m.uuid}>
                                     <td className="px-5 py-3.5">
-                                        <p className="font-semibold text-[#14141B]">{m.name ?? 'Invited'}</p>
-                                        <p className="text-xs text-[#8A8A96]">{m.email}</p>
+                                        <p className="font-semibold text-cp-ink">{m.name ?? 'Invited'}</p>
+                                        <p className="text-xs text-cp-muted">{m.email}</p>
                                     </td>
                                     <td className="px-4 py-3.5">
-                                        <span className="rounded-md bg-[#EEF2FF] px-2 py-0.5 text-xs font-semibold text-[#4F46E5]">{m.role ?? 'No role'}</span>
+                                        <span className="rounded-md bg-cp-brand-soft px-2 py-0.5 text-xs font-semibold text-cp-brand-ink">{m.role ?? 'No role'}</span>
                                     </td>
                                     <td className="px-4 py-3.5">
                                         {m.status === 'active' ? (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-[#E6F6EC] px-2.5 py-0.5 text-[11px] font-semibold text-[#059669]">
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-cp-success-soft px-2.5 py-0.5 text-[11px] font-semibold text-cp-success-ink">
                                                 <ShieldCheck className="size-3" /> Active · 2-step on
                                             </span>
                                         ) : (
-                                            <span className="rounded-full bg-[#FFF4DB] px-2.5 py-0.5 text-[11px] font-semibold text-[#B46E00]">
+                                            <span className="rounded-full bg-cp-warning-soft px-2.5 py-0.5 text-[11px] font-semibold text-cp-warning-ink">
                                                 Invited · expires {expiresIn(m.invite_expires_at)}
                                             </span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3.5 text-xs text-[#6B6B78]">{m.status === 'active' ? relativeTime(m.last_active_at) : '—'}</td>
+                                    <td className="px-4 py-3.5 text-xs text-cp-subtle">{m.status === 'active' ? relativeTime(m.last_active_at) : '—'}</td>
                                     <td className="relative px-5 py-3.5 text-right">
                                         <button
                                             type="button"
                                             aria-label={`Actions for ${m.email}`}
                                             onClick={() => setMenuFor(menuFor === m.uuid ? null : m.uuid)}
-                                            className="rounded-lg p-1.5 text-[#8A8A96] hover:bg-[#F0EFEA] hover:text-[#14141B]"
+                                            className="rounded-lg p-1.5 text-cp-muted hover:bg-cp-surface-3 hover:text-cp-ink"
                                         >
                                             <MoreHorizontal className="size-4" />
                                         </button>
                                         {menuFor === m.uuid && (
-                                            <div className="absolute right-5 z-20 mt-1 w-48 overflow-hidden rounded-xl border border-[#E4E2DA] bg-white p-1 text-left shadow-lg">
-                                                <button type="button" onClick={() => { setMenuFor(null); setRole(m.role ?? ''); setAction({ kind: 'role', member: m }); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-[#F6F5F2]">
-                                                    <ShieldCheck className="size-4 text-[#8A8A96]" /> Change role
+                                            <div className="absolute right-5 z-20 mt-1 w-48 overflow-hidden rounded-xl border border-cp-line bg-cp-surface p-1 text-left shadow-lg">
+                                                <button type="button" onClick={() => { setMenuFor(null); setRole(m.role ?? ''); setAction({ kind: 'role', member: m }); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-cp-canvas">
+                                                    <ShieldCheck className="size-4 text-cp-muted" /> Change role
                                                 </button>
                                                 {m.status === 'invited' && (
-                                                    <button type="button" onClick={() => resend(m)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-[#F6F5F2]">
-                                                        <RefreshCw className="size-4 text-[#8A8A96]" /> Resend invite
+                                                    <button type="button" onClick={() => resend(m)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-cp-canvas">
+                                                        <RefreshCw className="size-4 text-cp-muted" /> Resend invite
                                                     </button>
                                                 )}
-                                                <button type="button" onClick={() => { setMenuFor(null); setAction({ kind: 'remove', member: m }); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#C2410C] hover:bg-[#FFEDE8]">
+                                                <button type="button" onClick={() => { setMenuFor(null); setAction({ kind: 'remove', member: m }); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-cp-coral-dark-ink hover:bg-cp-coral-soft">
                                                     <UserMinus className="size-4" /> {m.status === 'invited' ? 'Cancel invite' : 'Remove access'}
                                                 </button>
                                             </div>
@@ -157,7 +157,7 @@ export default function TeamMembers({ members, roles, seats }: Props) {
                 )}
             </div>
 
-            <p className="flex items-center gap-1.5 text-xs text-[#8A8A96]">
+            <p className="flex items-center gap-1.5 text-xs text-cp-muted">
                 <Mail className="size-3.5" /> Invite links work once and expire after 7 days. Team members always sign in with a code from their email.
             </p>
 
@@ -177,7 +177,7 @@ export default function TeamMembers({ members, roles, seats }: Props) {
                         <label className="flex flex-col gap-1.5">
                             <span className={LABEL}>Email</span>
                             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="teammate@example.com" className={INPUT} />
-                            {errors.email && <span className="text-xs text-[#D93838]">{errors.email}</span>}
+                            {errors.email && <span className="text-xs text-cp-red-ink">{errors.email}</span>}
                         </label>
                         <RoleSelect roles={roles} value={role} onChange={setRole} error={errors.role} />
                     </>
@@ -234,14 +234,14 @@ function RoleSelect({ roles, value, onChange, error }: { roles: Props['roles']; 
                     </option>
                 ))}
             </select>
-            <span className="text-[11px] text-[#8A8A96]">
+            <span className="text-[11px] text-cp-muted">
                 Manage what each role can do in the{' '}
-                <Link href="/dashboard/roles" className="font-semibold text-[#4F46E5] hover:underline">
+                <Link href="/dashboard/roles" className="font-semibold text-cp-brand-ink hover:underline">
                     Roles
                 </Link>{' '}
                 tab.
             </span>
-            {error && <span className="text-xs text-[#D93838]">{error}</span>}
+            {error && <span className="text-xs text-cp-red-ink">{error}</span>}
         </label>
     );
 }

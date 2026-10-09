@@ -81,7 +81,7 @@ interface AttendeesProps {
 type Notice = { kind: 'success' | 'error'; text: string };
 
 const INPUT_CLASS =
-    'h-10 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15';
+    'h-10 w-full rounded-lg border border-cp-line bg-cp-surface px-3 text-sm text-cp-ink shadow-sm outline-none transition placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15';
 
 /* ------------------------------------------------------------------ */
 /*  HELPERS                                                            */
@@ -119,13 +119,13 @@ function errorText(errors: Record<string, string>, fallback: string): string {
 
 function StatCard({ label, value, icon, tone, hint }: { label: string; value: string | number; icon: React.ReactNode; tone: string; hint?: string }) {
     return (
-        <div className="flex flex-col justify-between rounded-xl bg-white p-4 shadow-sm">
+        <div className="flex flex-col justify-between rounded-xl bg-cp-surface p-4 shadow-sm">
             <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">{label}</span>
+                <span className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">{label}</span>
                 <span className={cn('flex size-6 items-center justify-center rounded-md', tone)}>{icon}</span>
             </div>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-[#14141B]">{value}</span>
-            {hint && <span className="mt-1 text-xs text-[#8A8A96]">{hint}</span>}
+            <span className="mt-3 text-2xl font-semibold tracking-tight text-cp-ink">{value}</span>
+            {hint && <span className="mt-1 text-xs text-cp-muted">{hint}</span>}
         </div>
     );
 }
@@ -135,14 +135,14 @@ function ModeChip({ event }: { event: EventInfo }) {
 
     if (mode === 'in_person') {
         return (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFEDE8] px-2.5 py-0.5 text-[11px] font-semibold text-[#C2410C]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-cp-coral-soft px-2.5 py-0.5 text-[11px] font-semibold text-cp-coral-dark-ink">
                 <MapPin className="size-3" /> In person
             </span>
         );
     }
 
     return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F2FF] px-2.5 py-0.5 text-[11px] font-semibold text-[#0284C7]">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-cp-sky-soft px-2.5 py-0.5 text-[11px] font-semibold text-cp-sky-ink">
             <Video className="size-3" /> Online
         </span>
     );
@@ -158,7 +158,7 @@ function AttendanceButton({ attended, busy, onClick }: { attended: boolean; busy
             title={attended ? 'Mark as not attended' : 'Mark as attended'}
             className={cn(
                 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:opacity-60',
-                attended ? 'bg-[#E6F6EC] text-[#059669] hover:bg-[#D5F0E0]' : 'bg-[#F0EFEA] text-[#6B6B78] hover:bg-[#E6E4DD]',
+                attended ? 'bg-cp-success-soft text-cp-success-ink hover:bg-cp-success-line-soft' : 'bg-cp-surface-3 text-cp-subtle hover:bg-cp-line',
             )}
         >
             {busy ? <Loader2 className="size-3 animate-spin" /> : attended ? <UserCheck className="size-3" /> : <UserX className="size-3" />}
@@ -235,22 +235,22 @@ export default function Attendees({ event, registrations, totals, filters }: Att
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Attendees · ${event.title}`} />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     {/* Title */}
                     <div className="flex flex-col justify-between gap-3 pt-1 md:flex-row md:items-center">
                         <div className="flex flex-col gap-1">
                             <div className="flex flex-wrap items-center gap-2">
-                                <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Attendees</h1>
+                                <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Attendees</h1>
                                 <ModeChip event={event} />
                             </div>
-                            <p className="text-sm text-[#8A8A96]">
-                                Everyone who registered for <span className="font-medium text-[#4B4B57]">{event.title}</span> — mark attendance as the
+                            <p className="text-sm text-cp-muted">
+                                Everyone who registered for <span className="font-medium text-cp-body">{event.title}</span> — mark attendance as the
                                 event runs.
                             </p>
                         </div>
                         <Link href={BASE}>
-                            <Button variant="outline" className="w-fit border-[#E4E2DA]">
+                            <Button variant="outline" className="w-fit border-cp-line">
                                 <ArrowLeft className="size-4" /> Back to events
                             </Button>
                         </Link>
@@ -261,7 +261,7 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                         <div
                             className={cn(
                                 'flex items-start justify-between gap-3 rounded-xl p-3.5 text-[13px] font-semibold',
-                                notice.kind === 'success' ? 'bg-[#E6F6EC] text-[#059669]' : 'bg-[#FFEDE8] text-[#C2410C]',
+                                notice.kind === 'success' ? 'bg-cp-success-soft text-cp-success-ink' : 'bg-cp-coral-soft text-cp-coral-dark-ink',
                             )}
                         >
                             <span className="flex items-start gap-2">
@@ -272,7 +272,7 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                                 )}
                                 {notice.text}
                             </span>
-                            <button onClick={() => setNotice(null)} aria-label="Dismiss" className="rounded p-0.5 hover:bg-white/60">
+                            <button onClick={() => setNotice(null)} aria-label="Dismiss" className="rounded p-0.5 hover:bg-cp-surface/60">
                                 <X className="size-4" />
                             </button>
                         </div>
@@ -284,59 +284,59 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                             label="Registered"
                             value={totals.registered}
                             icon={<Users className="size-3.5" />}
-                            tone="bg-[#EEF2FF] text-[#4F46E5]"
+                            tone="bg-cp-brand-soft text-cp-brand-ink"
                             hint="Total seats booked"
                         />
                         <StatCard
                             label="Attended"
                             value={totals.attended}
                             icon={<UserCheck className="size-3.5" />}
-                            tone="bg-[#E6F6EC] text-[#059669]"
+                            tone="bg-cp-success-soft text-cp-success-ink"
                             hint="Checked in so far"
                         />
                         <StatCard
                             label="Not attended"
                             value={notAttended}
                             icon={<UserX className="size-3.5" />}
-                            tone="bg-[#FFEDE8] text-[#C2410C]"
+                            tone="bg-cp-coral-soft text-cp-coral-dark-ink"
                             hint="Still pending"
                         />
                         <StatCard
                             label="Attendance rate"
                             value={`${rate}%`}
                             icon={<Ticket className="size-3.5" />}
-                            tone="bg-[#FFF4DB] text-[#B46E00]"
+                            tone="bg-cp-warning-soft text-cp-warning-ink"
                             hint="Attended ÷ registered"
                         />
                     </div>
 
                     {/* Event schedule strip */}
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl bg-white px-4 py-3 text-xs text-[#4B4B57] shadow-sm">
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl bg-cp-surface px-4 py-3 text-xs text-cp-body shadow-sm">
                         <span className="flex items-center gap-1.5">
-                            <CalendarDays className="size-3.5 text-[#8A8A96]" />
+                            <CalendarDays className="size-3.5 text-cp-muted" />
                             Starts {formatDateTime(event.event_detail?.starts_at ?? null)}
                         </span>
                         {event.event_detail?.ends_at && (
                             <span className="flex items-center gap-1.5">
-                                <CalendarDays className="size-3.5 text-[#8A8A96]" /> Ends {formatDateTime(event.event_detail.ends_at)}
+                                <CalendarDays className="size-3.5 text-cp-muted" /> Ends {formatDateTime(event.event_detail.ends_at)}
                             </span>
                         )}
                         {event.event_detail?.mode === 'in_person' ? (
                             event.event_detail?.venue_address && (
                                 <span className="flex items-center gap-1.5">
-                                    <MapPin className="size-3.5 text-[#8A8A96]" /> {event.event_detail.venue_address}
+                                    <MapPin className="size-3.5 text-cp-muted" /> {event.event_detail.venue_address}
                                 </span>
                             )
                         ) : event.event_detail?.join_link ? (
                             <span className="flex items-center gap-1.5">
-                                <Video className="size-3.5 text-[#8A8A96]" /> Join link is shared with attendees
+                                <Video className="size-3.5 text-cp-muted" /> Join link is shared with attendees
                             </span>
                         ) : null}
                     </div>
 
                     {/* Search */}
                     <form onSubmit={submitSearch} className="relative w-full max-w-sm">
-                        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#8A8A96]" />
+                        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-cp-muted" />
                         <input
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -349,7 +349,7 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                                 type="button"
                                 onClick={clearSearch}
                                 aria-label="Clear search"
-                                className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 text-[#8A8A96] hover:text-[#14141B]"
+                                className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 text-cp-muted hover:text-cp-ink"
                             >
                                 <X className="size-3.5" />
                             </button>
@@ -357,11 +357,11 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                     </form>
 
                     {/* Attendees table */}
-                    <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-                        <div className="flex items-center justify-between border-b border-[#E4E2DA]/70 px-6 py-4">
+                    <div className="overflow-hidden rounded-xl bg-cp-surface shadow-sm">
+                        <div className="flex items-center justify-between border-b border-cp-line/70 px-6 py-4">
                             <div>
-                                <h2 className="text-base font-semibold text-[#14141B]">Registrations</h2>
-                                <p className="mt-0.5 text-xs text-[#8A8A96]">
+                                <h2 className="text-base font-semibold text-cp-ink">Registrations</h2>
+                                <p className="mt-0.5 text-xs text-cp-muted">
                                     {registrations.total > 0
                                         ? `Showing ${registrations.from ?? 0}–${registrations.to ?? 0} of ${registrations.total} attendees`
                                         : 'No attendees match this search'}
@@ -371,18 +371,18 @@ export default function Attendees({ event, registrations, totals, filters }: Att
 
                         {registrations.data.length === 0 ? (
                             <div className="px-6 py-8">
-                                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#E4E2DA] bg-[#FAF9F5] py-10 text-center">
-                                    <span className="flex size-10 items-center justify-center rounded-full bg-[#ECEBE6] text-[#8A8A96]">
+                                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-10 text-center">
+                                    <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
                                         <Inbox className="size-5" />
                                     </span>
-                                    <p className="mt-1 text-sm font-semibold text-[#14141B]">No registrations yet</p>
-                                    <p className="max-w-sm px-4 text-xs text-[#8A8A96]">
+                                    <p className="mt-1 text-sm font-semibold text-cp-ink">No registrations yet</p>
+                                    <p className="max-w-sm px-4 text-xs text-cp-muted">
                                         {hasSearch
                                             ? 'Try a different name, email or phone number.'
                                             : 'Attendees appear here as soon as someone registers and their payment settles.'}
                                     </p>
                                     {hasSearch && (
-                                        <Button variant="outline" size="sm" onClick={clearSearch} className="mt-3 border-[#E4E2DA]">
+                                        <Button variant="outline" size="sm" onClick={clearSearch} className="mt-3 border-cp-line">
                                             Clear search
                                         </Button>
                                     )}
@@ -392,7 +392,7 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                             <div className="overflow-x-auto">
                                 <table className="w-full border-collapse text-left text-sm">
                                     <thead>
-                                        <tr className="bg-[#F6F5F2]/60 text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">
+                                        <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
                                             <th className="px-6 py-3">Attendee</th>
                                             <th className="px-4 py-3">Contact</th>
                                             <th className="px-4 py-3">Order</th>
@@ -400,45 +400,45 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                                             <th className="px-6 py-3 text-right">Attendance</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-[#E4E2DA]/50">
+                                    <tbody className="divide-y divide-cp-line/50">
                                         {registrations.data.map((reg) => (
-                                            <tr key={reg.id} className="transition-colors hover:bg-[#FAF9F5]">
+                                            <tr key={reg.id} className="transition-colors hover:bg-cp-surface-2">
                                                 <td className="px-6 py-3.5">
                                                     <div className="flex items-center gap-3">
-                                                        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#EEF2FF] text-xs font-bold text-[#4F46E5]">
+                                                        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-cp-brand-soft text-xs font-bold text-cp-brand-ink">
                                                             {initials(reg.customer?.name ?? null)}
                                                         </span>
                                                         <div className="flex min-w-0 flex-col">
-                                                            <span className="truncate text-[13px] font-semibold text-[#14141B]">
+                                                            <span className="truncate text-[13px] font-semibold text-cp-ink">
                                                                 {reg.customer?.name ?? 'Unknown attendee'}
                                                             </span>
-                                                            <span className="text-xs text-[#8A8A96]">Customer #{reg.customer_id}</span>
+                                                            <span className="text-xs text-cp-muted">Customer #{reg.customer_id}</span>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3.5">
                                                     <div className="flex flex-col gap-0.5">
                                                         {reg.customer?.email ? (
-                                                            <span className="flex items-center gap-1.5 text-xs text-[#4B4B57]">
-                                                                <Mail className="size-3 shrink-0 text-[#8A8A96]" />
+                                                            <span className="flex items-center gap-1.5 text-xs text-cp-body">
+                                                                <Mail className="size-3 shrink-0 text-cp-muted" />
                                                                 <span className="max-w-[220px] truncate">{reg.customer.email}</span>
                                                             </span>
                                                         ) : null}
                                                         {reg.customer?.phone ? (
-                                                            <span className="flex items-center gap-1.5 text-xs text-[#4B4B57]">
-                                                                <Phone className="size-3 shrink-0 text-[#8A8A96]" /> {reg.customer.phone}
+                                                            <span className="flex items-center gap-1.5 text-xs text-cp-body">
+                                                                <Phone className="size-3 shrink-0 text-cp-muted" /> {reg.customer.phone}
                                                             </span>
                                                         ) : null}
                                                         {!reg.customer?.email && !reg.customer?.phone && (
-                                                            <span className="text-xs text-[#8A8A96]">—</span>
+                                                            <span className="text-xs text-cp-muted">—</span>
                                                         )}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3.5 whitespace-nowrap">
-                                                    <span className="font-mono text-xs text-[#4B4B57]">#{reg.order_id}</span>
+                                                    <span className="font-mono text-xs text-cp-body">#{reg.order_id}</span>
                                                 </td>
                                                 <td className="px-4 py-3.5 whitespace-nowrap">
-                                                    <span className="text-xs text-[#4B4B57]">{formatDateTime(reg.registered_at)}</span>
+                                                    <span className="text-xs text-cp-body">{formatDateTime(reg.registered_at)}</span>
                                                 </td>
                                                 <td className="px-6 py-3.5 text-right whitespace-nowrap">
                                                     <AttendanceButton
@@ -455,10 +455,10 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                         )}
 
                         {registrations.total > 0 && (
-                            <div className="flex flex-col items-center justify-between gap-3 border-t border-[#E4E2DA]/60 p-4 sm:flex-row">
-                                <p className="text-xs text-[#8A8A96]">
-                                    Page <span className="font-semibold text-[#14141B]">{registrations.current_page}</span> of{' '}
-                                    <span className="font-semibold text-[#14141B]">{registrations.last_page}</span>
+                            <div className="flex flex-col items-center justify-between gap-3 border-t border-cp-line/60 p-4 sm:flex-row">
+                                <p className="text-xs text-cp-muted">
+                                    Page <span className="font-semibold text-cp-ink">{registrations.current_page}</span> of{' '}
+                                    <span className="font-semibold text-cp-ink">{registrations.last_page}</span>
                                 </p>
                                 <div className="flex items-center gap-2">
                                     <Button
@@ -466,7 +466,7 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                                         size="sm"
                                         disabled={registrations.current_page <= 1}
                                         onClick={() => goToPage(registrations.current_page - 1)}
-                                        className="border-[#E4E2DA]"
+                                        className="border-cp-line"
                                     >
                                         Previous
                                     </Button>
@@ -475,7 +475,7 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                                         size="sm"
                                         disabled={registrations.current_page >= registrations.last_page}
                                         onClick={() => goToPage(registrations.current_page + 1)}
-                                        className="border-[#E4E2DA]"
+                                        className="border-cp-line"
                                     >
                                         Next
                                     </Button>
@@ -484,8 +484,8 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                         )}
                     </div>
 
-                    <p className="flex items-center gap-1.5 text-xs text-[#8A8A96]">
-                        <Ticket className="size-3.5 text-[#FF6B4A]" />
+                    <p className="flex items-center gap-1.5 text-xs text-cp-muted">
+                        <Ticket className="size-3.5 text-cp-coral-ink" />
                         Attendees get a join link or venue address the moment their payment settles. Mark attendance to track who actually showed up.
                     </p>
                 </div>

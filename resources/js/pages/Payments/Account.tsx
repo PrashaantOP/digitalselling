@@ -43,14 +43,14 @@ interface AccountProps {
 }
 
 const KYC_META: Record<KycStatus, { label: string; chip: string }> = {
-    verified: { label: 'Verified', chip: 'bg-[#E6F6EC] text-[#059669]' },
-    pending: { label: 'Pending', chip: 'bg-[#FFF4DB] text-[#B46E00]' },
-    rejected: { label: 'Rejected', chip: 'bg-[#FFEDE8] text-[#C2410C]' },
-    not_started: { label: 'Not started', chip: 'bg-[#F0EFEA] text-[#6B6B78]' },
+    verified: { label: 'Verified', chip: 'bg-cp-success-soft text-cp-success-ink' },
+    pending: { label: 'Pending', chip: 'bg-cp-warning-soft text-cp-warning-ink' },
+    rejected: { label: 'Rejected', chip: 'bg-cp-coral-soft text-cp-coral-dark-ink' },
+    not_started: { label: 'Not started', chip: 'bg-cp-surface-3 text-cp-subtle' },
 };
 
-const LABEL_CLASS = 'text-xs font-semibold tracking-wider text-[#14141B] uppercase';
-const INPUT_CLASS = 'h-10 border-[#E4E2DA] shadow-sm focus-visible:ring-[#4F46E5]/15';
+const LABEL_CLASS = 'text-xs font-semibold tracking-wider text-cp-ink uppercase';
+const INPUT_CLASS = 'h-10 border-cp-line shadow-sm focus-visible:ring-cp-brand/15';
 
 function maskAccount(no: string | null) {
     if (!no) return '••••';
@@ -63,7 +63,7 @@ function maskAccount(no: string | null) {
 
 function TabNav({ active }: { active: 'transactions' | 'account' }) {
     return (
-        <nav className="flex items-center gap-6 border-b border-[#E4E2DA]">
+        <nav className="flex items-center gap-6 border-b border-cp-line">
             {[
                 { key: 'transactions', label: 'Transactions', href: '/dashboard/payments' },
                 { key: 'account', label: 'Account', href: '/dashboard/payments/account' },
@@ -76,7 +76,7 @@ function TabNav({ active }: { active: 'transactions' | 'account' }) {
                         onClick={() => router.get(tab.href, {}, { preserveScroll: true })}
                         className={cn(
                             '-mb-px flex items-center gap-2 border-b-2 py-3 text-sm font-medium transition-colors',
-                            isActive ? 'border-[#4F46E5] text-[#4F46E5]' : 'border-transparent text-[#8A8A96] hover:border-[#E4E2DA] hover:text-[#14141B]',
+                            isActive ? 'border-cp-brand text-cp-brand-ink' : 'border-transparent text-cp-muted hover:border-cp-line hover:text-cp-ink',
                         )}
                     >
                         {tab.label}
@@ -92,7 +92,7 @@ function SectionCard({
     title,
     description,
     children,
-    tone = 'bg-[#EEF2FF] text-[#4F46E5]',
+    tone = 'bg-cp-brand-soft text-cp-brand-ink',
     action,
 }: {
     icon: React.ReactNode;
@@ -103,13 +103,13 @@ function SectionCard({
     action?: React.ReactNode;
 }) {
     return (
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-            <div className="flex items-start justify-between gap-4 border-b border-[#E4E2DA]/70 pb-5">
+        <div className="rounded-xl bg-cp-surface p-6 shadow-sm">
+            <div className="flex items-start justify-between gap-4 border-b border-cp-line/70 pb-5">
                 <div className="flex items-start gap-3.5">
                     <div className={cn('flex size-10 shrink-0 items-center justify-center rounded-lg', tone)}>{icon}</div>
                     <div>
-                        <h2 className="text-base font-semibold text-[#14141B]">{title}</h2>
-                        {description && <p className="mt-0.5 text-xs text-[#8A8A96]">{description}</p>}
+                        <h2 className="text-base font-semibold text-cp-ink">{title}</h2>
+                        {description && <p className="mt-0.5 text-xs text-cp-muted">{description}</p>}
                     </div>
                 </div>
                 {action}
@@ -121,7 +121,7 @@ function SectionCard({
 
 function FieldError({ message }: { message?: string }) {
     if (!message) return null;
-    return <span className="text-xs text-[#D93838]">{message}</span>;
+    return <span className="text-xs text-cp-red-ink">{message}</span>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -131,12 +131,12 @@ function FieldError({ message }: { message?: string }) {
 function SideNav({ active, onChange, kycStatus, hasMethod }: { active: Section; onChange: (s: Section) => void; kycStatus: KycStatus; hasMethod: boolean }) {
     const items: { key: Section; label: string; icon: React.ComponentType<{ className?: string }>; badge: { label: string; chip: string } | null }[] = [
         { key: 'profile', label: 'Profile', icon: UserRound, badge: null },
-        { key: 'payout', label: 'Payout method', icon: Wallet, badge: hasMethod ? null : { label: 'Required', chip: 'bg-[#FFF4DB] text-[#B46E00]' } },
+        { key: 'payout', label: 'Payout method', icon: Wallet, badge: hasMethod ? null : { label: 'Required', chip: 'bg-cp-warning-soft text-cp-warning-ink' } },
         { key: 'kyc', label: 'KYC verification', icon: ShieldCheck, badge: KYC_META[kycStatus] },
     ];
 
     return (
-        <nav className="flex gap-1.5 overflow-x-auto rounded-xl bg-white p-2 shadow-sm lg:sticky lg:top-20 lg:flex-col lg:overflow-visible">
+        <nav className="flex gap-1.5 overflow-x-auto rounded-xl bg-cp-surface p-2 shadow-sm lg:sticky lg:top-20 lg:flex-col lg:overflow-visible">
             {items.map((item) => {
                 const isActive = active === item.key;
                 return (
@@ -146,7 +146,7 @@ function SideNav({ active, onChange, kycStatus, hasMethod }: { active: Section; 
                         onClick={() => onChange(item.key)}
                         className={cn(
                             'flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium whitespace-nowrap transition-colors',
-                            isActive ? 'bg-[#EEF2FF] text-[#4F46E5]' : 'text-[#8A8A96] hover:bg-[#F6F5F2] hover:text-[#14141B]',
+                            isActive ? 'bg-cp-brand-soft text-cp-brand-ink' : 'text-cp-muted hover:bg-cp-canvas hover:text-cp-ink',
                         )}
                     >
                         <item.icon className="size-4 shrink-0" />
@@ -187,7 +187,7 @@ function ProfileSection({ profile }: { profile: PayoutProfile | null }) {
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
                     <Label htmlFor="full_name" className={LABEL_CLASS}>
-                        Full name <span className="text-[#D93838]">*</span>
+                        Full name <span className="text-cp-red-ink">*</span>
                     </Label>
                     <Input id="full_name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="e.g. Prashant Kumar" className={INPUT_CLASS} />
                     <FieldError message={errors.full_name} />
@@ -214,7 +214,7 @@ function ProfileSection({ profile }: { profile: PayoutProfile | null }) {
                     <FieldError message={errors.profession} />
                 </div>
             </div>
-            <Button onClick={save} disabled={saving || !form.full_name.trim()} className="mt-6 bg-[#4F46E5] hover:bg-[#4338CA]">
+            <Button onClick={save} disabled={saving || !form.full_name.trim()} className="mt-6 text-white bg-cp-brand hover:bg-cp-brand-hover">
                 {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                 {saving ? 'Saving…' : 'Save profile'}
             </Button>
@@ -275,12 +275,12 @@ function PayoutSection({ methods }: { methods: PayoutMethod[] }) {
     return (
         <SectionCard
             icon={<Wallet className="size-5" />}
-            tone="bg-[#E1F6F3] text-[#0D9488]"
+            tone="bg-cp-teal-soft text-cp-teal-ink"
             title="Payout method"
             description="Where your settlements are sent automatically."
             action={
                 defaultMethod && (
-                    <span className="hidden max-w-[220px] truncate rounded-full bg-[#E6F6EC] px-2.5 py-1 text-[11px] font-semibold text-[#059669] sm:block">
+                    <span className="hidden max-w-[220px] truncate rounded-full bg-cp-success-soft px-2.5 py-1 text-[11px] font-semibold text-cp-success-ink sm:block">
                         Default: {defaultMethod.type === 'upi' ? defaultMethod.upi_id : maskAccount(defaultMethod.account_number)}
                     </span>
                 )
@@ -300,12 +300,12 @@ function PayoutSection({ methods }: { methods: PayoutMethod[] }) {
                             onClick={() => setType(t.key)}
                             className={cn(
                                 'flex h-11 items-center justify-center gap-2 rounded-lg border text-sm font-semibold transition-colors',
-                                isActive ? 'border-[#4F46E5] bg-[#EEF2FF] text-[#4F46E5]' : 'border-[#E4E2DA] bg-white text-[#4B4B57] hover:bg-[#F6F5F2]',
+                                isActive ? 'border-cp-brand bg-cp-brand-soft text-cp-brand-ink' : 'border-cp-line bg-cp-surface text-cp-body hover:bg-cp-canvas',
                             )}
                         >
                             <t.icon className="size-4" />
                             {t.label}
-                            {t.isDefault && <span className="rounded-full bg-[#4F46E5] px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-white uppercase">Default</span>}
+                            {t.isDefault && <span className="rounded-full bg-cp-brand px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-white uppercase">Default</span>}
                         </button>
                     );
                 })}
@@ -319,7 +319,7 @@ function PayoutSection({ methods }: { methods: PayoutMethod[] }) {
                     </Label>
                     <Input id="upi_id" value={upiId} onChange={(e) => setUpiId(e.target.value)} placeholder="name@bank" className={cn(INPUT_CLASS, 'font-mono')} />
                     <FieldError message={errors.upi_id} />
-                    <span className="text-[11px] text-[#8A8A96]">Format: name@bank — instant settlement, no IFSC needed.</span>
+                    <span className="text-[11px] text-cp-muted">Format: name@bank — instant settlement, no IFSC needed.</span>
                 </div>
             ) : (
                 <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -352,7 +352,7 @@ function PayoutSection({ methods }: { methods: PayoutMethod[] }) {
                 <div
                     className={cn(
                         'mt-5 flex items-start gap-2 rounded-lg px-3 py-2.5 text-xs font-medium',
-                        existing.verified_at ? 'bg-[#E6F6EC] text-[#059669]' : 'bg-[#FFF4DB] text-[#B46E00]',
+                        existing.verified_at ? 'bg-cp-success-soft text-cp-success-ink' : 'bg-cp-warning-soft text-cp-warning-ink',
                     )}
                 >
                     {existing.verified_at ? <BadgeCheck className="mt-px size-4 shrink-0" /> : <Clock className="mt-px size-4 shrink-0" />}
@@ -367,8 +367,8 @@ function PayoutSection({ methods }: { methods: PayoutMethod[] }) {
             {/* Default toggle — only when this type is not already the default */}
             {!existing?.is_default && methods.length > 0 && (
                 <label className="mt-5 flex items-center gap-3">
-                    <input type="checkbox" checked={makeDefault[type]} onChange={(e) => setMakeDefault({ ...makeDefault, [type]: e.target.checked })} className="size-4 accent-[#4F46E5]" />
-                    <span className="text-sm font-medium text-[#14141B]">Use this as my default payout method</span>
+                    <input type="checkbox" checked={makeDefault[type]} onChange={(e) => setMakeDefault({ ...makeDefault, [type]: e.target.checked })} className="size-4 accent-cp-brand" />
+                    <span className="text-sm font-medium text-cp-ink">Use this as my default payout method</span>
                 </label>
             )}
 
@@ -379,10 +379,10 @@ function PayoutSection({ methods }: { methods: PayoutMethod[] }) {
                 </Label>
                 <Input id="payout_password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Confirm it's you" className={INPUT_CLASS} />
                 <FieldError message={errors.current_password} />
-                <span className="text-[11px] text-[#8A8A96]">We'll email you whenever your payout account changes.</span>
+                <span className="text-[11px] text-cp-muted">We'll email you whenever your payout account changes.</span>
             </div>
 
-            <Button onClick={save} disabled={!canSave || saving} className="mt-6 bg-[#4F46E5] hover:bg-[#4338CA]">
+            <Button onClick={save} disabled={!canSave || saving} className="mt-6 text-white bg-cp-brand hover:bg-cp-brand-hover">
                 {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                 {saving ? 'Saving…' : 'Save payout method'}
             </Button>
@@ -393,12 +393,12 @@ function PayoutSection({ methods }: { methods: PayoutMethod[] }) {
 function KycSection({ kycStatus }: { kycStatus: KycStatus }) {
     const tone =
         kycStatus === 'verified'
-            ? 'bg-[#E6F6EC] text-[#059669]'
+            ? 'bg-cp-success-soft text-cp-success-ink'
             : kycStatus === 'pending'
-              ? 'bg-[#FFF4DB] text-[#B46E00]'
+              ? 'bg-cp-warning-soft text-cp-warning-ink'
               : kycStatus === 'rejected'
-                ? 'bg-[#FFEDE8] text-[#C2410C]'
-                : 'bg-[#F6F5F2] text-[#4B4B57]';
+                ? 'bg-cp-coral-soft text-cp-coral-dark-ink'
+                : 'bg-cp-canvas text-cp-body';
 
     const headline =
         kycStatus === 'verified'
@@ -412,7 +412,7 @@ function KycSection({ kycStatus }: { kycStatus: KycStatus }) {
     return (
         <SectionCard
             icon={<ShieldCheck className="size-5" />}
-            tone="bg-[#F1EAFE] text-[#7C3AED]"
+            tone="bg-cp-accent-soft text-cp-accent-ink"
             title="KYC verification"
             description="Verify your identity so we can release payouts to your account."
             action={<span className={cn('rounded-full px-2.5 py-1 text-[11px] font-semibold', KYC_META[kycStatus].chip)}>{KYC_META[kycStatus].label}</span>}
@@ -424,11 +424,11 @@ function KycSection({ kycStatus }: { kycStatus: KycStatus }) {
 
             <Link
                 href="/dashboard/payments/account/kyc"
-                className="mt-6 inline-flex h-10 items-center justify-center rounded-lg bg-[#4F46E5] px-5 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+                className="mt-6 inline-flex h-10 items-center justify-center rounded-lg bg-cp-brand px-5 text-sm font-medium text-white transition hover:bg-cp-brand-hover"
             >
                 {kycStatus === 'not_started' ? 'Start KYC verification' : 'View KYC details'}
             </Link>
-            <p className="mt-2 text-[11px] text-[#8A8A96]">PAN + bank + ID document · 5 MB max</p>
+            <p className="mt-2 text-[11px] text-cp-muted">PAN + bank + ID document · 5 MB max</p>
         </SectionCard>
     );
 }
@@ -445,9 +445,9 @@ export default function PaymentsAccount({ profile, methods, kycStatus }: Account
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Payout Account" />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 {/* Sticky top header — same as Store / Payments */}
-                <div className="sticky top-0 z-30 border-b border-[#E4E2DA] bg-[#F6F5F2]/95 backdrop-blur-md">
+                <div className="sticky top-14 z-30 border-b border-cp-line bg-cp-canvas/95 backdrop-blur-md lg:top-0">
                     <div className="mx-auto w-full max-w-[1600px] px-4 md:px-6">
                         <TabNav active="account" />
                     </div>
@@ -458,10 +458,10 @@ export default function PaymentsAccount({ profile, methods, kycStatus }: Account
                     <div className="flex flex-col justify-between gap-3 pt-1 md:flex-row md:items-center">
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
-                                <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Payout Account</h1>
-                                <span className="rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#4F46E5] uppercase">Live Sync</span>
+                                <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Payout Account</h1>
+                                <span className="rounded-full bg-cp-brand-soft px-2 py-0.5 text-[10px] font-semibold tracking-wider text-cp-brand-ink uppercase">Live Sync</span>
                             </div>
-                            <p className="text-sm text-[#8A8A96]">Where your earnings land — UPI or bank, plus verification.</p>
+                            <p className="text-sm text-cp-muted">Where your earnings land — UPI or bank, plus verification.</p>
                         </div>
                         {/* <span className="flex w-fit items-center gap-1.5 text-xs text-emerald-600">
                             <span className="size-2 rounded-full bg-emerald-500" />
@@ -475,7 +475,7 @@ export default function PaymentsAccount({ profile, methods, kycStatus }: Account
 
                         <fieldset disabled={!isOwner} className="w-full max-w-3xl min-w-0">
                             {!isOwner && (
-                                <p className="mb-4 rounded-xl bg-[#FFF4DB] px-4 py-3 text-sm font-medium text-[#B46E00]">
+                                <p className="mb-4 rounded-xl bg-cp-warning-soft px-4 py-3 text-sm font-medium text-cp-warning-ink">
                                     Only the store owner can change payout details, KYC or the payout profile. You can view them here.
                                 </p>
                             )}

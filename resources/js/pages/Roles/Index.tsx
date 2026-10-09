@@ -54,31 +54,31 @@ export default function TeamRoles({ roles, matrix }: Props) {
                 </button>
             }
         >
-            {flash?.success && <p className="rounded-xl bg-[#E6F6EC] px-4 py-3 text-sm font-medium text-[#059669]">{flash.success}</p>}
-            {error && <p className="rounded-xl bg-[#FFEDE8] px-4 py-3 text-sm font-medium text-[#C2410C]">{error}</p>}
+            {flash?.success && <p className="rounded-xl bg-cp-success-soft px-4 py-3 text-sm font-medium text-cp-success-ink">{flash.success}</p>}
+            {error && <p className="rounded-xl bg-cp-coral-soft px-4 py-3 text-sm font-medium text-cp-coral-dark-ink">{error}</p>}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {roles.map((r) => (
-                    <article key={r.uuid} className="flex flex-col rounded-xl bg-white p-5 shadow-sm">
+                    <article key={r.uuid} className="flex flex-col rounded-xl bg-cp-surface p-5 shadow-sm">
                         <div className="flex items-start justify-between gap-3">
                             <div>
-                                <h3 className="flex items-center gap-2 text-base font-semibold text-[#14141B]">
-                                    <ShieldCheck className="size-4 text-[#4F46E5]" /> {r.name}
+                                <h3 className="flex items-center gap-2 text-base font-semibold text-cp-ink">
+                                    <ShieldCheck className="size-4 text-cp-brand-ink" /> {r.name}
                                 </h3>
-                                {r.is_template && <span className="mt-1 inline-block rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#4F46E5]">Ready-made</span>}
+                                {r.is_template && <span className="mt-1 inline-block rounded-full bg-cp-brand-soft px-2 py-0.5 text-[10px] font-semibold text-cp-brand-ink">Ready-made</span>}
                             </div>
-                            <span className="text-xs font-medium text-[#8A8A96]">
+                            <span className="text-xs font-medium text-cp-muted">
                                 {r.members} member{r.members === 1 ? '' : 's'}
                             </span>
                         </div>
-                        {r.description && <p className="mt-2 text-xs text-[#6B6B78]">{r.description}</p>}
-                        <p className="mt-3 text-xs text-[#8A8A96]">
-                            <span className="font-semibold text-[#14141B]">Access: </span>
+                        {r.description && <p className="mt-2 text-xs text-cp-subtle">{r.description}</p>}
+                        <p className="mt-3 text-xs text-cp-muted">
+                            <span className="font-semibold text-cp-ink">Access: </span>
                             {summary(r.permissions)}
                         </p>
                         <div className="flex-1" />
-                        <div className="mt-4 flex items-center justify-end gap-1 border-t border-[#E4E2DA]/70 pt-3">
-                            <button type="button" onClick={() => setEditing(r)} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-[#4B4B57] hover:bg-[#F6F5F2]">
+                        <div className="mt-4 flex items-center justify-end gap-1 border-t border-cp-line/70 pt-3">
+                            <button type="button" onClick={() => setEditing(r)} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-cp-body hover:bg-cp-canvas">
                                 <Pencil className="size-3.5" /> Edit
                             </button>
                             <button
@@ -86,7 +86,7 @@ export default function TeamRoles({ roles, matrix }: Props) {
                                 onClick={() => remove(r)}
                                 disabled={r.members > 0}
                                 title={r.members > 0 ? 'Move members to another role first' : 'Delete role'}
-                                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-[#C2410C] hover:bg-[#FFEDE8] disabled:cursor-not-allowed disabled:opacity-40"
+                                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-cp-coral-dark-ink hover:bg-cp-coral-soft disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 <Trash2 className="size-3.5" /> Delete
                             </button>
@@ -136,11 +136,11 @@ function RoleEditor({ role, matrix, onClose }: { role: RoleRow | null; matrix: P
     return (
         <>
             <div onClick={onClose} className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm" />
-            <aside className="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-[520px] flex-col overflow-y-auto bg-white shadow-2xl">
+            <aside className="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-[520px] flex-col overflow-y-auto bg-cp-surface shadow-2xl">
                 <form onSubmit={submit} className="flex flex-1 flex-col">
-                    <div className="flex items-center justify-between border-b border-[#E4E2DA]/70 px-6 py-4">
-                        <span className="text-base font-semibold text-[#14141B]">{role ? `Edit ${role.name}` : 'New role'}</span>
-                        <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-1 text-[#8A8A96] hover:bg-[#F0EFEA]">
+                    <div className="flex items-center justify-between border-b border-cp-line/70 px-6 py-4">
+                        <span className="text-base font-semibold text-cp-ink">{role ? `Edit ${role.name}` : 'New role'}</span>
+                        <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-1 text-cp-muted hover:bg-cp-surface-3">
                             <X className="size-5" />
                         </button>
                     </div>
@@ -149,14 +149,14 @@ function RoleEditor({ role, matrix, onClose }: { role: RoleRow | null; matrix: P
                         <label className="flex flex-col gap-1.5">
                             <span className={LABEL}>Role name</span>
                             <input value={name} maxLength={50} onChange={(e) => setName(e.target.value)} placeholder="e.g. Community manager" className={INPUT} />
-                            {errors.name && <span className="text-xs text-[#D93838]">{errors.name}</span>}
+                            {errors.name && <span className="text-xs text-cp-red-ink">{errors.name}</span>}
                         </label>
 
                         <div>
                             <span className={LABEL}>Permissions</span>
                             <table className="mt-2 w-full text-sm">
                                 <thead>
-                                    <tr className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">
+                                    <tr className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
                                         <th className="py-2 text-left">Area</th>
                                         {ABILITIES.map((a) => (
                                             <th key={a.key} className="w-16 py-2 text-center">
@@ -165,10 +165,10 @@ function RoleEditor({ role, matrix, onClose }: { role: RoleRow | null; matrix: P
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#E4E2DA]/60">
+                                <tbody className="divide-y divide-cp-line/60">
                                     {matrix.map((m) => (
                                         <tr key={m.module}>
-                                            <td className="py-2.5 font-medium text-[#14141B]">{m.label}</td>
+                                            <td className="py-2.5 font-medium text-cp-ink">{m.label}</td>
                                             {ABILITIES.map((a) => (
                                                 <td key={a.key} className="py-2.5 text-center">
                                                     {m.abilities.includes(a.key) ? (
@@ -177,10 +177,10 @@ function RoleEditor({ role, matrix, onClose }: { role: RoleRow | null; matrix: P
                                                             aria-label={`${a.label} ${m.label}`}
                                                             checked={perms.has(`${m.module}.${a.key}`)}
                                                             onChange={(e) => toggle(m.module, a.key, e.target.checked)}
-                                                            className={cn('size-4', a.key === 'delete' ? 'accent-[#C2410C]' : 'accent-[#4F46E5]')}
+                                                            className={cn('size-4', a.key === 'delete' ? 'accent-cp-coral-dark' : 'accent-cp-brand')}
                                                         />
                                                     ) : (
-                                                        <span className="text-[#D5D3CB]">—</span>
+                                                        <span className="text-cp-line-strong">—</span>
                                                     )}
                                                 </td>
                                             ))}
@@ -188,14 +188,14 @@ function RoleEditor({ role, matrix, onClose }: { role: RoleRow | null; matrix: P
                                     ))}
                                 </tbody>
                             </table>
-                            {errors.permissions && <span className="text-xs text-[#D93838]">{errors.permissions}</span>}
+                            {errors.permissions && <span className="text-xs text-cp-red-ink">{errors.permissions}</span>}
                         </div>
 
-                        {hasDelete && <p className="rounded-lg bg-[#FFEDE8] px-3 py-2 text-xs font-medium text-[#C2410C]">This role can permanently delete products. Only give it to people you fully trust.</p>}
-                        <p className="rounded-lg bg-[#F6F5F2] px-3 py-2 text-xs text-[#6B6B78]">Payout account, KYC, billing, referral earnings and your team can never be given to a role.</p>
+                        {hasDelete && <p className="rounded-lg bg-cp-coral-soft px-3 py-2 text-xs font-medium text-cp-coral-dark-ink">This role can permanently delete products. Only give it to people you fully trust.</p>}
+                        <p className="rounded-lg bg-cp-canvas px-3 py-2 text-xs text-cp-subtle">Payout account, KYC, billing, referral earnings and your team can never be given to a role.</p>
                     </div>
 
-                    <div className="mt-auto flex justify-end gap-2 border-t border-[#E4E2DA] p-5">
+                    <div className="mt-auto flex justify-end gap-2 border-t border-cp-line p-5">
                         <button type="button" onClick={onClose} className={BTN_GHOST}>
                             Cancel
                         </button>

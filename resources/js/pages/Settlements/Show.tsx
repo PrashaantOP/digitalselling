@@ -79,23 +79,23 @@ const TYPE_LABEL: Record<string, string> = {
 
 function SummaryTile({ label, value, tone, hint }: { label: string; value: string; tone?: string; hint?: string }) {
     return (
-        <div className="rounded-xl bg-[#F6F5F2] p-4">
-            <p className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">{label}</p>
-            <p className={cn('mt-1 text-xl font-semibold tracking-tight text-[#14141B]', tone)}>{value}</p>
-            {hint && <p className="mt-0.5 text-xs text-[#8A8A96]">{hint}</p>}
+        <div className="rounded-xl bg-cp-canvas p-4">
+            <p className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">{label}</p>
+            <p className={cn('mt-1 text-xl font-semibold tracking-tight text-cp-ink', tone)}>{value}</p>
+            {hint && <p className="mt-0.5 text-xs text-cp-muted">{hint}</p>}
         </div>
     );
 }
 
 function MetaRow({ label, value, mono, copy, copied }: { label: string; value: string; mono?: boolean; copy?: () => void; copied?: boolean }) {
     return (
-        <div className="flex items-center justify-between gap-3 rounded-lg bg-[#F6F5F2]/60 p-2.5">
-            <span className="text-[13px] text-[#8A8A96]">{label}</span>
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-cp-canvas/60 p-2.5">
+            <span className="text-[13px] text-cp-muted">{label}</span>
             <div className="flex items-center gap-1">
-                <span className={cn('max-w-[220px] truncate text-[13px] font-semibold text-[#14141B]', mono && 'font-mono text-xs')}>{value}</span>
+                <span className={cn('max-w-[220px] truncate text-[13px] font-semibold text-cp-ink', mono && 'font-mono text-xs')}>{value}</span>
                 {copy && (
-                    <button onClick={copy} className="p-0.5 text-[#8A8A96] hover:text-[#14141B]" title="Copy">
-                        {copied ? <Check className="size-3.5 text-[#059669]" /> : <Copy className="size-3.5" />}
+                    <button onClick={copy} className="p-0.5 text-cp-muted hover:text-cp-ink" title="Copy">
+                        {copied ? <Check className="size-3.5 text-cp-success-ink" /> : <Copy className="size-3.5" />}
                     </button>
                 )}
             </div>
@@ -122,19 +122,19 @@ export default function SettlementShow({ settlement, orders, adjustments }: Prop
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Settlement ${settlement.number}`} />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     {/* Header */}
                     <div className="flex flex-col justify-between gap-3 pt-1 md:flex-row md:items-center">
                         <div className="flex flex-col gap-1">
-                            <Link href="/dashboard/settlements" className="inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-[#8A8A96] transition hover:text-[#14141B]">
+                            <Link href="/dashboard/settlements" className="inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-cp-muted transition hover:text-cp-ink">
                                 <ArrowLeft className="size-3.5" /> Back to settlements
                             </Link>
                             <div className="flex items-center gap-2.5">
-                                <h1 className="font-mono text-2xl font-bold tracking-tight text-[#14141B]">{settlement.number}</h1>
+                                <h1 className="font-mono text-2xl font-bold tracking-tight text-cp-ink">{settlement.number}</h1>
                                 <StatusPill status={settlement.status} />
                             </div>
-                            <p className="text-sm text-[#8A8A96]">
+                            <p className="text-sm text-cp-muted">
                                 {settlement.orders_count} {settlement.orders_count === 1 ? 'booking' : 'bookings'} · {formatDate(settlement.period_start)} – {formatDate(settlement.period_end)}
                             </p>
                         </div>
@@ -143,19 +143,19 @@ export default function SettlementShow({ settlement, orders, adjustments }: Prop
                                 href={`/dashboard/settlements/${settlement.uuid}/statement`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E4E2DA] bg-white px-3.5 text-sm font-medium text-[#4B4B57] transition hover:bg-[#F6F5F2]"
+                                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-cp-line bg-cp-surface px-3.5 text-sm font-medium text-cp-body transition hover:bg-cp-canvas"
                             >
                                 Statement
                             </a>
-                            <div className="rounded-xl bg-white p-4 text-right shadow-sm">
-                                <p className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">{paid ? 'Paid to you' : 'Payable to you'}</p>
-                                <p className="mt-0.5 text-3xl font-semibold tracking-tight text-[#14141B]">{money(settlement.net_amount)}</p>
+                            <div className="rounded-xl bg-cp-surface p-4 text-right shadow-sm">
+                                <p className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">{paid ? 'Paid to you' : 'Payable to you'}</p>
+                                <p className="mt-0.5 text-3xl font-semibold tracking-tight text-cp-ink">{money(settlement.net_amount)}</p>
                             </div>
                         </div>
                     </div>
 
                     {failed && (
-                        <div className="flex items-start gap-2.5 rounded-xl bg-[#FFEDE8] p-3.5 text-[13px] font-medium text-[#C2410C]">
+                        <div className="flex items-start gap-2.5 rounded-xl bg-cp-coral-soft p-3.5 text-[13px] font-medium text-cp-coral-dark-ink">
                             <XCircle className="mt-0.5 size-[18px] shrink-0" />
                             <div>
                                 This settlement failed{settlement.failure_reason ? ` — ${settlement.failure_reason}` : ''}. All of its bookings have been returned to the queue and will be
@@ -164,7 +164,7 @@ export default function SettlementShow({ settlement, orders, adjustments }: Prop
                         </div>
                     )}
                     {settlement.status === 'pending' && (
-                        <div className="flex items-start gap-2.5 rounded-xl bg-[#FFF4DB] p-3.5 text-[13px] font-medium text-[#B46E00]">
+                        <div className="flex items-start gap-2.5 rounded-xl bg-cp-warning-soft p-3.5 text-[13px] font-medium text-cp-warning-ink">
                             <Hourglass className="mt-0.5 size-[18px] shrink-0" />
                             <div>The amount has been calculated — the UTR reference will appear here once the bank transfer is complete.</div>
                         </div>
@@ -172,15 +172,15 @@ export default function SettlementShow({ settlement, orders, adjustments }: Prop
 
                     <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
                         {/* Booking-wise breakdown */}
-                        <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-                            <div className="border-b border-[#E4E2DA]/70 px-6 py-4">
-                                <h2 className="text-base font-semibold text-[#14141B]">Bookings in this settlement</h2>
-                                <p className="mt-0.5 text-xs text-[#8A8A96]">Each row shows its own commission deduction.</p>
+                        <div className="overflow-hidden rounded-xl bg-cp-surface shadow-sm">
+                            <div className="border-b border-cp-line/70 px-6 py-4">
+                                <h2 className="text-base font-semibold text-cp-ink">Bookings in this settlement</h2>
+                                <p className="mt-0.5 text-xs text-cp-muted">Each row shows its own commission deduction.</p>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full border-collapse text-left text-sm">
                                     <thead>
-                                        <tr className="bg-[#F6F5F2]/60 text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">
+                                        <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
                                             <th className="px-6 py-3">Booking</th>
                                             <th className="px-4 py-3">Product</th>
                                             <th className="px-4 py-3">Buyer</th>
@@ -189,32 +189,32 @@ export default function SettlementShow({ settlement, orders, adjustments }: Prop
                                             <th className="px-6 py-3 text-right">Net</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-[#E4E2DA]/50">
+                                    <tbody className="divide-y divide-cp-line/50">
                                         {orders.map((order) => (
-                                            <tr key={order.id} className="transition hover:bg-[#F6F5F2]/60">
+                                            <tr key={order.id} className="transition hover:bg-cp-canvas/60">
                                                 <td className="px-6 py-3.5 whitespace-nowrap">
-                                                    <span className="block font-mono text-xs font-semibold text-[#14141B]">{order.order_number}</span>
-                                                    <span className="text-xs text-[#8A8A96]">{formatDate(order.paid_at)}</span>
+                                                    <span className="block font-mono text-xs font-semibold text-cp-ink">{order.order_number}</span>
+                                                    <span className="text-xs text-cp-muted">{formatDate(order.paid_at)}</span>
                                                 </td>
                                                 <td className="px-4 py-3.5">
-                                                    <span className="block max-w-[220px] truncate text-[13px] font-semibold text-[#14141B]">{order.product?.title ?? 'Deleted product'}</span>
-                                                    <span className="text-xs text-[#8A8A96]">{TYPE_LABEL[order.product?.type ?? ''] ?? order.product?.type ?? '—'}</span>
+                                                    <span className="block max-w-[220px] truncate text-[13px] font-semibold text-cp-ink">{order.product?.title ?? 'Deleted product'}</span>
+                                                    <span className="text-xs text-cp-muted">{TYPE_LABEL[order.product?.type ?? ''] ?? order.product?.type ?? '—'}</span>
                                                 </td>
                                                 <td className="px-4 py-3.5">
-                                                    <span className="block max-w-[180px] truncate text-[13px] text-[#14141B]">{order.buyer_name ?? '—'}</span>
-                                                    <span className="block max-w-[180px] truncate text-xs text-[#8A8A96]">{order.buyer_email ?? ''}</span>
+                                                    <span className="block max-w-[180px] truncate text-[13px] text-cp-ink">{order.buyer_name ?? '—'}</span>
+                                                    <span className="block max-w-[180px] truncate text-xs text-cp-muted">{order.buyer_email ?? ''}</span>
                                                 </td>
-                                                <td className="px-4 py-3.5 text-right text-[13px] whitespace-nowrap text-[#14141B]">{money(order.total_amount)}</td>
+                                                <td className="px-4 py-3.5 text-right text-[13px] whitespace-nowrap text-cp-ink">{money(order.total_amount)}</td>
                                                 <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                                                    <span className="block text-[13px] text-[#C2410C]">− {money(order.platform_fee)}</span>
-                                                    <span className="text-xs text-[#8A8A96]">{Number(order.commission_rate)}%</span>
+                                                    <span className="block text-[13px] text-cp-coral-dark-ink">− {money(order.platform_fee)}</span>
+                                                    <span className="text-xs text-cp-muted">{Number(order.commission_rate)}%</span>
                                                 </td>
-                                                <td className="px-6 py-3.5 text-right text-[13px] font-bold whitespace-nowrap text-[#14141B]">{money(order.net_payout_amount)}</td>
+                                                <td className="px-6 py-3.5 text-right text-[13px] font-bold whitespace-nowrap text-cp-ink">{money(order.net_payout_amount)}</td>
                                             </tr>
                                         ))}
                                         {orders.length === 0 && (
                                             <tr>
-                                                <td colSpan={6} className="px-6 py-8 text-center text-sm text-[#8A8A96]">
+                                                <td colSpan={6} className="px-6 py-8 text-center text-sm text-cp-muted">
                                                     The bookings from this settlement have been released (failed settlement).
                                                 </td>
                                             </tr>
@@ -222,12 +222,12 @@ export default function SettlementShow({ settlement, orders, adjustments }: Prop
                                     </tbody>
                                     {orders.length > 0 && (
                                         <tfoot>
-                                            <tr className="border-t border-[#E4E2DA] bg-[#F6F5F2]/60 text-[13px] font-bold text-[#14141B]">
+                                            <tr className="border-t border-cp-line bg-cp-canvas/60 text-[13px] font-bold text-cp-ink">
                                                 <td className="px-6 py-3.5" colSpan={3}>
                                                     Total ({settlement.orders_count} {settlement.orders_count === 1 ? 'booking' : 'bookings'})
                                                 </td>
                                                 <td className="px-4 py-3.5 text-right whitespace-nowrap">{money(settlement.gross_amount)}</td>
-                                                <td className="px-4 py-3.5 text-right whitespace-nowrap text-[#C2410C]">− {money(settlement.commission_amount)}</td>
+                                                <td className="px-4 py-3.5 text-right whitespace-nowrap text-cp-coral-dark-ink">− {money(settlement.commission_amount)}</td>
                                                 <td className="px-6 py-3.5 text-right whitespace-nowrap">{money(settlement.net_amount)}</td>
                                             </tr>
                                         </tfoot>
@@ -238,30 +238,30 @@ export default function SettlementShow({ settlement, orders, adjustments }: Prop
 
                         {/* Side: summary + meta + destination */}
                         <div className="flex flex-col gap-5">
-                            <div className="rounded-xl bg-white p-5 shadow-sm">
-                                <h3 className="text-sm font-semibold text-[#14141B]">Summary</h3>
+                            <div className="rounded-xl bg-cp-surface p-5 shadow-sm">
+                                <h3 className="text-sm font-semibold text-cp-ink">Summary</h3>
                                 <div className="mt-4 flex flex-col gap-2.5">
                                     <SummaryTile
                                         label="Gross sales"
                                         value={money(settlement.gross_amount)}
                                         hint={`${settlement.orders_count} ${settlement.orders_count === 1 ? 'booking' : 'bookings'} total`}
                                     />
-                                    <SummaryTile label="Platform commission" value={`− ${money(settlement.commission_amount)}`} tone="text-[#C2410C]" />
+                                    <SummaryTile label="Platform commission" value={`− ${money(settlement.commission_amount)}`} tone="text-cp-coral-dark-ink" />
                                     {adjustments.map((a) => (
                                         <SummaryTile
                                             key={a.uuid}
                                             label={a.label}
                                             value={`${a.amount < 0 ? '−' : '+'} ${money(Math.abs(a.amount))}`}
                                             hint={a.reason}
-                                            tone={a.amount < 0 ? 'text-[#C2410C]' : 'text-[#059669]'}
+                                            tone={a.amount < 0 ? 'text-cp-coral-dark-ink' : 'text-cp-success-ink'}
                                         />
                                     ))}
-                                    <SummaryTile label="Net settled" value={money(settlement.net_amount)} tone="text-[#059669]" />
+                                    <SummaryTile label="Net settled" value={money(settlement.net_amount)} tone="text-cp-success-ink" />
                                 </div>
                             </div>
 
-                            <div className="rounded-xl bg-white p-5 shadow-sm">
-                                <h3 className="text-sm font-semibold text-[#14141B]">Settlement details</h3>
+                            <div className="rounded-xl bg-cp-surface p-5 shadow-sm">
+                                <h3 className="text-sm font-semibold text-cp-ink">Settlement details</h3>
                                 <div className="mt-4 flex flex-col gap-2">
                                     <MetaRow label="Settlement ID" value={settlement.number} mono />
                                     <MetaRow label="Status" value={statusMeta(settlement.status).label} />
@@ -278,20 +278,20 @@ export default function SettlementShow({ settlement, orders, adjustments }: Prop
                                 </div>
                             </div>
 
-                            <div className="rounded-xl bg-white p-5 shadow-sm">
-                                <h3 className="text-sm font-semibold text-[#14141B]">Sent to</h3>
-                                <div className="mt-4 flex items-center gap-3 rounded-xl bg-[#F6F5F2] p-3">
-                                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#4F46E5]">
+                            <div className="rounded-xl bg-cp-surface p-5 shadow-sm">
+                                <h3 className="text-sm font-semibold text-cp-ink">Sent to</h3>
+                                <div className="mt-4 flex items-center gap-3 rounded-xl bg-cp-canvas p-3">
+                                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-cp-surface text-cp-brand-ink">
                                         <MethodIcon type={settlement.payout_method?.type} className="size-4" />
                                     </span>
                                     <div className="min-w-0">
-                                        <span className="block truncate text-[13px] font-semibold text-[#14141B]">{methodTitle(settlement.payout_method)}</span>
-                                        <span className="block truncate text-xs text-[#6B6B78]">{methodSub(settlement.payout_method)}</span>
+                                        <span className="block truncate text-[13px] font-semibold text-cp-ink">{methodTitle(settlement.payout_method)}</span>
+                                        <span className="block truncate text-xs text-cp-subtle">{methodSub(settlement.payout_method)}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <Button variant="outline" asChild className="w-full border-[#E4E2DA]">
+                            <Button variant="outline" asChild className="w-full border-cp-line">
                                 <Link href="/dashboard/settlements">Back to settlements</Link>
                             </Button>
                         </div>

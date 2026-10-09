@@ -9,12 +9,12 @@ export const submissionGradeUrl = (uuid: string) => `/dashboard/assignments/subm
 export const submissionFileUrl = (uuid: string) => `/dashboard/assignments/submissions/${uuid}/file`;
 
 const STATUS_META: Record<string, { label: string; chip: string; dot: string }> = {
-    submitted: { label: 'Needs review', chip: 'bg-[#FFF4DB] text-[#B46E00]', dot: 'bg-amber-500 animate-pulse' },
-    graded: { label: 'Graded', chip: 'bg-[#E6F6EC] text-[#059669]', dot: 'bg-[#059669]' },
+    submitted: { label: 'Needs review', chip: 'bg-cp-warning-soft text-cp-warning-ink', dot: 'bg-amber-500 animate-pulse' },
+    graded: { label: 'Graded', chip: 'bg-cp-success-soft text-cp-success-ink', dot: 'bg-cp-success' },
 };
 
 export function submissionStatusMeta(status: string) {
-    return STATUS_META[status] ?? { label: status.charAt(0).toUpperCase() + status.slice(1), chip: 'bg-[#F0EFEA] text-[#6B6B78]', dot: 'bg-current' };
+    return STATUS_META[status] ?? { label: status.charAt(0).toUpperCase() + status.slice(1), chip: 'bg-cp-surface-3 text-cp-subtle', dot: 'bg-current' };
 }
 
 export function SubmissionStatusPill({ status }: { status: string }) {
@@ -78,10 +78,10 @@ export function GradeForm({ submission, onSaved }: { submission: { id: number; u
     return (
         <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-                <label htmlFor={`feedback-${submission.id}`} className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-[#14141B] uppercase">
-                    <MessageSquareText className="size-3.5 text-[#8A8A96]" /> Your feedback
+                <label htmlFor={`feedback-${submission.id}`} className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-cp-ink uppercase">
+                    <MessageSquareText className="size-3.5 text-cp-muted" /> Your feedback
                 </label>
-                <span className={cn('text-[11px]', value.length > MAX_LENGTH ? 'text-[#D93838]' : 'text-[#8A8A96]')}>
+                <span className={cn('text-[11px]', value.length > MAX_LENGTH ? 'text-cp-red-ink' : 'text-cp-muted')}>
                     {value.length}/{MAX_LENGTH}
                 </span>
             </div>
@@ -95,20 +95,20 @@ export function GradeForm({ submission, onSaved }: { submission: { id: number; u
                     setError(null);
                 }}
                 placeholder="What worked well? What should the student improve?"
-                className="w-full resize-y rounded-lg border border-[#E4E2DA] bg-white px-3 py-2 text-sm text-[#14141B] shadow-sm outline-none placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                className="w-full resize-y rounded-lg border border-cp-line bg-cp-surface px-3 py-2 text-sm text-cp-ink shadow-sm outline-none placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
             />
             {error && (
-                <span role="alert" className="text-xs text-[#D93838]">
+                <span role="alert" className="text-xs text-cp-red-ink">
                     {error}
                 </span>
             )}
             <div className="flex items-center gap-3">
-                <Button onClick={save} disabled={!canSave} size="sm" className="bg-[#4F46E5] hover:bg-[#4338CA]">
+                <Button onClick={save} disabled={!canSave} size="sm" className="text-white bg-cp-brand hover:bg-cp-brand-hover">
                     {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                     {saving ? 'Saving…' : graded ? 'Update feedback' : 'Save & mark graded'}
                 </Button>
                 {saved && !saving && (
-                    <span role="status" className="text-xs font-medium text-[#059669]">
+                    <span role="status" className="text-xs font-medium text-cp-success-ink">
                         Feedback saved
                     </span>
                 )}

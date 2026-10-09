@@ -67,25 +67,25 @@ interface PaymentPagesIndexProps {
 type Notice = { kind: 'success' | 'error'; text: string };
 
 const STATUS_TABS: { key: 'all' | PaymentPageStatus; label: string; dot: string }[] = [
-    { key: 'all', label: 'All', dot: 'bg-[#FF6B4A]' },
-    { key: 'published', label: 'Published', dot: 'bg-[#059669]' },
+    { key: 'all', label: 'All', dot: 'bg-cp-coral' },
+    { key: 'published', label: 'Published', dot: 'bg-cp-success' },
     { key: 'draft', label: 'Draft', dot: 'bg-amber-500' },
-    { key: 'unpublished', label: 'Unpublished', dot: 'bg-[#8A8A96]' },
+    { key: 'unpublished', label: 'Unpublished', dot: 'bg-cp-muted' },
 ];
 
 const STATUS_META: Record<PaymentPageStatus, { label: string; chip: string; dot: string }> = {
-    published: { label: 'Published', chip: 'bg-[#E6F6EC] text-[#059669]', dot: 'bg-[#059669]' },
-    draft: { label: 'Draft', chip: 'bg-[#FFF4DB] text-[#B46E00]', dot: 'bg-amber-500' },
-    unpublished: { label: 'Unpublished', chip: 'bg-[#F0EFEA] text-[#6B6B78]', dot: 'bg-current' },
+    published: { label: 'Published', chip: 'bg-cp-success-soft text-cp-success-ink', dot: 'bg-cp-success' },
+    draft: { label: 'Draft', chip: 'bg-cp-warning-soft text-cp-warning-ink', dot: 'bg-amber-500' },
+    unpublished: { label: 'Unpublished', chip: 'bg-cp-surface-3 text-cp-subtle', dot: 'bg-current' },
 };
 
 const TILE_TONES = [
-    'bg-[#E1F6F3] text-[#0D9488]',
-    'bg-[#EEF2FF] text-[#4F46E5]',
-    'bg-[#FFF4DB] text-[#B46E00]',
-    'bg-[#FFEDE8] text-[#C2410C]',
-    'bg-[#F1EAFE] text-[#7C3AED]',
-    'bg-[#E6F2FF] text-[#0284C7]',
+    'bg-cp-teal-soft text-cp-teal-ink',
+    'bg-cp-brand-soft text-cp-brand-ink',
+    'bg-cp-warning-soft text-cp-warning-ink',
+    'bg-cp-coral-soft text-cp-coral-dark-ink',
+    'bg-cp-accent-soft text-cp-accent-ink',
+    'bg-cp-sky-soft text-cp-sky-ink',
 ];
 
 /* ------------------------------------------------------------------ */
@@ -130,13 +130,13 @@ function StatusPill({ status }: { status: PaymentPageStatus }) {
 }
 
 function PriceCell({ page }: { page: PaymentPageRow }) {
-    if (page.pricing_type === 'customer_decides') return <span className="text-[13px] font-semibold text-[#14141B]">Pay what you want</span>;
+    if (page.pricing_type === 'customer_decides') return <span className="text-[13px] font-semibold text-cp-ink">Pay what you want</span>;
 
     const discounted = page.has_discount && page.discounted_price !== null && Number(page.discounted_price) < Number(page.price);
     return (
         <div className="flex flex-col">
-            <span className="text-[13px] font-semibold text-[#14141B]">{money(discounted ? page.discounted_price : page.price)}</span>
-            {discounted && <span className="text-xs text-[#8A8A96] line-through">{money(page.price)}</span>}
+            <span className="text-[13px] font-semibold text-cp-ink">{money(discounted ? page.discounted_price : page.price)}</span>
+            {discounted && <span className="text-xs text-cp-muted line-through">{money(page.price)}</span>}
         </div>
     );
 }
@@ -163,22 +163,22 @@ function DeleteModal({
     return (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
             <div onClick={() => !busy && onCancel()} className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-            <div role="alertdialog" aria-modal="true" aria-labelledby="delete-payment-page-title" className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
-                <span className="flex size-10 items-center justify-center rounded-lg bg-[#FFEDE8] text-[#C2410C]">
+            <div role="alertdialog" aria-modal="true" aria-labelledby="delete-payment-page-title" className="relative w-full max-w-sm rounded-2xl bg-cp-surface p-6 shadow-2xl">
+                <span className="flex size-10 items-center justify-center rounded-lg bg-cp-coral-soft text-cp-coral-dark-ink">
                     <Trash2 className="size-5" />
                 </span>
-                <h3 id="delete-payment-page-title" className="mt-4 text-base font-semibold text-[#14141B]">
+                <h3 id="delete-payment-page-title" className="mt-4 text-base font-semibold text-cp-ink">
                     Delete this payment page?
                 </h3>
-                <p className="mt-1.5 text-sm text-[#6B6B78]">
-                    <span className="font-semibold text-[#14141B]">{page.title || 'Untitled payment page'}</span> will be removed from your store.
+                <p className="mt-1.5 text-sm text-cp-subtle">
+                    <span className="font-semibold text-cp-ink">{page.title || 'Untitled payment page'}</span> will be removed from your store.
                     Past orders stay on record.
                 </p>
                 <div className="mt-6 flex justify-end gap-2">
-                    <Button variant="outline" onClick={onCancel} disabled={busy} className="border-[#E4E2DA]">
+                    <Button variant="outline" onClick={onCancel} disabled={busy} className="border-cp-line">
                         Cancel
                     </Button>
-                    <Button onClick={onConfirm} disabled={busy} className="bg-[#D93838] text-white hover:bg-[#B92D2D]">
+                    <Button onClick={onConfirm} disabled={busy} className="bg-cp-red text-white hover:bg-cp-danger">
                         {busy ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
                         {busy ? 'Deleting…' : 'Delete page'}
                     </Button>
@@ -199,7 +199,7 @@ function RowActions({
 }) {
     const published = page.status === 'published';
     const itemClass =
-        'cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-[#4B4B57] focus:bg-[#F6F5F2] focus:text-[#14141B] [&_svg]:text-[#8A8A96]';
+        'cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-cp-body focus:bg-cp-canvas focus:text-cp-ink [&_svg]:text-cp-muted';
 
     return (
         <DropdownMenuShim
@@ -208,7 +208,7 @@ function RowActions({
                     type="button"
                     aria-label={`More actions for ${page.title}`}
                     disabled={busy}
-                    className="rounded-lg p-1.5 text-[#8A8A96] transition hover:bg-[#F0EFEA] hover:text-[#14141B] disabled:opacity-50"
+                    className="rounded-lg p-1.5 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink disabled:opacity-50"
                 >
                     {busy ? <Loader2 className="size-4.5 animate-spin" /> : <MoreHorizontal className="size-4.5" />}
                 </button>
@@ -241,7 +241,7 @@ function RowActions({
             <DropdownDividerShim />
             <DropdownItemShim
                 onSelect={() => onAction('delete')}
-                className={cn(itemClass, 'text-[#C2410C] focus:bg-[#FFEDE8] focus:text-[#C2410C] [&_svg]:text-[#C2410C]!')}
+                className={cn(itemClass, 'text-cp-coral-dark-ink focus:bg-cp-coral-soft focus:text-cp-coral-dark-ink [&_svg]:text-cp-coral-dark-ink!')}
             >
                 <Trash2 className="size-4" /> Delete
             </DropdownItemShim>
@@ -365,22 +365,22 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Payment Pages" />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     {/* Title */}
                     <div className="flex flex-col justify-between gap-3 pt-1 md:flex-row md:items-center">
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
-                                <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Payment Pages</h1>
-                                <span className="rounded-full bg-[#E1F6F3] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#0D9488] uppercase">
+                                <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Payment Pages</h1>
+                                <span className="rounded-full bg-cp-teal-soft px-2 py-0.5 text-[10px] font-semibold tracking-wider text-cp-teal-ink uppercase">
                                     Simple Checkout
                                 </span>
                             </div>
-                            <p className="text-sm text-[#8A8A96]">
+                            <p className="text-sm text-cp-muted">
                                 Collect one-time payments for anything — consulting, custom work, donations — with a simple checkout page.
                             </p>
                         </div>
-                        <Button onClick={createPaymentPage} disabled={creating} className="w-fit bg-[#4F46E5] hover:bg-[#4338CA]">
+                        <Button onClick={createPaymentPage} disabled={creating} className="w-fit text-white bg-cp-brand hover:bg-cp-brand-hover">
                             {creating ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
                             {creating ? 'Opening editor…' : 'Create payment page'}
                         </Button>
@@ -392,7 +392,7 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                             role={notice.kind === 'error' ? 'alert' : 'status'}
                             className={cn(
                                 'flex items-start justify-between gap-3 rounded-xl p-3.5 text-[13px] font-semibold',
-                                notice.kind === 'success' ? 'bg-[#E6F6EC] text-[#059669]' : 'bg-[#FFEDE8] text-[#C2410C]',
+                                notice.kind === 'success' ? 'bg-cp-success-soft text-cp-success-ink' : 'bg-cp-coral-soft text-cp-coral-dark-ink',
                             )}
                         >
                             <span className="flex items-start gap-2">
@@ -403,7 +403,7 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                 )}
                                 {notice.text}
                             </span>
-                            <button onClick={() => setNotice(null)} aria-label="Dismiss" className="rounded p-0.5 hover:bg-white/60">
+                            <button onClick={() => setNotice(null)} aria-label="Dismiss" className="rounded p-0.5 hover:bg-cp-surface/60">
                                 <X className="size-4" />
                             </button>
                         </div>
@@ -411,23 +411,23 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
 
                     {/* First-run empty state */}
                     {totalPages === 0 && !hasFilters ? (
-                        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-white px-6 py-14 text-center shadow-sm">
-                            <span className="flex size-14 items-center justify-center rounded-2xl bg-[#E1F6F3] text-[#0D9488]">
+                        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-cp-surface px-6 py-14 text-center shadow-sm">
+                            <span className="flex size-14 items-center justify-center rounded-2xl bg-cp-teal-soft text-cp-teal-ink">
                                 <CreditCard className="size-7" />
                             </span>
-                            <h2 className="text-lg font-semibold text-[#14141B]">Create your first payment page</h2>
-                            <p className="max-w-md text-sm text-[#8A8A96]">
+                            <h2 className="text-lg font-semibold text-cp-ink">Create your first payment page</h2>
+                            <p className="max-w-md text-sm text-cp-muted">
                                 Set up a simple checkout page for anything you sell — consulting, custom work, a quick sale — and start collecting
                                 payments in minutes.
                             </p>
-                            <div className="mt-1 flex flex-wrap items-center justify-center gap-2 text-xs font-medium text-[#4B4B57]">
+                            <div className="mt-1 flex flex-wrap items-center justify-center gap-2 text-xs font-medium text-cp-body">
                                 {['Fixed or pay-what-you-want', 'Coupons', 'FAQs', 'Custom URL'].map((f) => (
-                                    <span key={f} className="rounded-full bg-[#F6F5F2] px-2.5 py-1">
+                                    <span key={f} className="rounded-full bg-cp-canvas px-2.5 py-1">
                                         {f}
                                     </span>
                                 ))}
                             </div>
-                            <Button onClick={createPaymentPage} disabled={creating} className="mt-3 bg-[#4F46E5] hover:bg-[#4338CA]">
+                            <Button onClick={createPaymentPage} disabled={creating} className="mt-3 text-white bg-cp-brand hover:bg-cp-brand-hover">
                                 {creating ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
                                 {creating ? 'Opening editor…' : 'Create payment page'}
                             </Button>
@@ -435,8 +435,8 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                     ) : (
                         <>
                             {/* Filters */}
-                            <div className="flex flex-col gap-4 rounded-xl bg-white p-4 shadow-sm">
-                                <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-[#F6F5F2] p-1">
+                            <div className="flex flex-col gap-4 rounded-xl bg-cp-surface p-4 shadow-sm">
+                                <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
                                     {STATUS_TABS.map((tab) => {
                                         const active = activeStatus === tab.key;
                                         return (
@@ -446,12 +446,12 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                                 onClick={() => applyFilters({ status: tab.key === 'all' ? null : tab.key })}
                                                 className={cn(
                                                     'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
-                                                    active ? 'bg-white text-[#4F46E5] shadow-sm' : 'text-[#8A8A96] hover:text-[#14141B]',
+                                                    active ? 'bg-cp-surface text-cp-brand-ink shadow-sm' : 'text-cp-muted hover:text-cp-ink',
                                                 )}
                                             >
                                                 <span className={cn('size-2 rounded-full', tab.dot)} />
                                                 {tab.label}
-                                                <span className={cn('font-semibold', active ? 'text-[#4F46E5]' : 'text-[#8A8A96]')}>
+                                                <span className={cn('font-semibold', active ? 'text-cp-brand-ink' : 'text-cp-muted')}>
                                                     {countOf(tab.key)}
                                                 </span>
                                             </button>
@@ -459,13 +459,13 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                     })}
                                 </div>
                                 <form onSubmit={submitSearch} className="relative max-w-sm">
-                                    <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#8A8A96]" />
+                                    <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-cp-muted" />
                                     <input
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Search payment pages by title…"
                                         aria-label="Search payment pages"
-                                        className="w-full rounded-lg bg-[#F6F5F2] py-2 pr-9 pl-9 text-sm text-[#14141B] outline-none placeholder:text-[#8A8A96] focus:bg-white focus:ring-2 focus:ring-[#4F46E5]/20"
+                                        className="w-full rounded-lg bg-cp-canvas py-2 pr-9 pl-9 text-sm text-cp-ink outline-none placeholder:text-cp-muted focus:bg-cp-surface focus:ring-2 focus:ring-cp-brand/20"
                                     />
                                     {search && (
                                         <button
@@ -475,7 +475,7 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                                 if (filters.search) applyFilters({ search: null });
                                             }}
                                             aria-label="Clear search"
-                                            className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 text-[#8A8A96] hover:text-[#14141B]"
+                                            className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 text-cp-muted hover:text-cp-ink"
                                         >
                                             <X className="size-3.5" />
                                         </button>
@@ -484,11 +484,11 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                             </div>
 
                             {/* Payment pages table */}
-                            <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-                                <div className="flex items-center justify-between border-b border-[#E4E2DA]/70 px-6 py-4">
+                            <div className="overflow-hidden rounded-xl bg-cp-surface shadow-sm">
+                                <div className="flex items-center justify-between border-b border-cp-line/70 px-6 py-4">
                                     <div>
-                                        <h2 className="text-base font-semibold text-[#14141B]">Your payment pages</h2>
-                                        <p className="mt-0.5 text-xs text-[#8A8A96]">
+                                        <h2 className="text-base font-semibold text-cp-ink">Your payment pages</h2>
+                                        <p className="mt-0.5 text-xs text-cp-muted">
                                             {items.total > 0
                                                 ? `Showing ${items.from ?? 0}–${items.to ?? 0} of ${items.total} payment pages`
                                                 : 'No payment pages match these filters'}
@@ -498,7 +498,7 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                 <div className="overflow-x-auto">
                                     <table className="w-full border-collapse text-left text-sm">
                                         <thead>
-                                            <tr className="bg-[#F6F5F2]/60 text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">
+                                            <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
                                                 <th className="px-6 py-3">Payment page</th>
                                                 <th className="px-4 py-3">Price</th>
                                                 <th className="px-4 py-3">Sales</th>
@@ -506,23 +506,23 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                                 <th className="px-6 py-3 text-right">Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-[#E4E2DA]/50">
+                                        <tbody className="divide-y divide-cp-line/50">
                                             {items.data.length === 0 && (
                                                 <tr>
                                                     <td colSpan={5} className="px-6 py-8">
-                                                        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#E4E2DA] bg-[#FAF9F5] py-8 text-center">
-                                                            <span className="flex size-10 items-center justify-center rounded-full bg-[#ECEBE6] text-[#8A8A96]">
+                                                        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+                                                            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
                                                                 <Inbox className="size-5" />
                                                             </span>
-                                                            <p className="mt-1 text-sm font-semibold text-[#14141B]">No payment pages found</p>
-                                                            <p className="max-w-xs px-4 text-xs text-[#8A8A96]">
+                                                            <p className="mt-1 text-sm font-semibold text-cp-ink">No payment pages found</p>
+                                                            <p className="max-w-xs px-4 text-xs text-cp-muted">
                                                                 Try a different search or status filter.
                                                             </p>
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
                                                                 onClick={clearFilters}
-                                                                className="mt-3 border-[#E4E2DA]"
+                                                                className="mt-3 border-cp-line"
                                                             >
                                                                 Clear filters
                                                             </Button>
@@ -537,7 +537,7 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                                     <tr
                                                         key={page.id}
                                                         onClick={() => router.visit(editUrl)}
-                                                        className="group cursor-pointer transition hover:bg-[#F6F5F2]/60"
+                                                        className="group cursor-pointer transition hover:bg-cp-canvas/60"
                                                     >
                                                         <td className="px-6 py-3.5">
                                                             <div className="flex min-w-65 items-center gap-3">
@@ -550,10 +550,10 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                                                     <CreditCard className="size-5" />
                                                                 </span>
                                                                 <div className="min-w-0">
-                                                                    <span className="block max-w-70 truncate text-[13px] font-semibold text-[#14141B] group-hover:text-[#4F46E5]">
+                                                                    <span className="block max-w-70 truncate text-[13px] font-semibold text-cp-ink group-hover:text-cp-brand-ink">
                                                                         {page.title || 'Untitled payment page'}
                                                                     </span>
-                                                                    <span className="mt-0.5 block max-w-70 truncate text-xs text-[#8A8A96]">
+                                                                    <span className="mt-0.5 block max-w-70 truncate text-xs text-cp-muted">
                                                                         /p/{page.slug}
                                                                     </span>
                                                                 </div>
@@ -563,8 +563,8 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                                             <PriceCell page={page} />
                                                         </td>
                                                         <td className="px-4 py-3.5 whitespace-nowrap">
-                                                            <span className="block text-[13px] font-bold text-[#14141B]">{money(page.revenue_total)}</span>
-                                                            <span className="text-xs text-[#8A8A96]">
+                                                            <span className="block text-[13px] font-bold text-cp-ink">{money(page.revenue_total)}</span>
+                                                            <span className="text-xs text-cp-muted">
                                                                 {page.sales_count} {page.sales_count === 1 ? 'sale' : 'sales'} ·{' '}
                                                                 {conversion === null ? 'no views' : `${conversion.toFixed(1)}% conv.`}
                                                             </span>
@@ -578,7 +578,7 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                                                     href={editUrl}
                                                                     title="Edit payment page"
                                                                     aria-label={`Edit ${page.title}`}
-                                                                    className="rounded-lg p-1.5 text-[#8A8A96] transition hover:bg-[#F0EFEA] hover:text-[#14141B]"
+                                                                    className="rounded-lg p-1.5 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink"
                                                                 >
                                                                     <Pencil className="size-4.5" />
                                                                 </Link>
@@ -592,10 +592,10 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                     </table>
                                 </div>
                                 {items.total > 0 && (
-                                    <div className="flex flex-col items-center justify-between gap-3 border-t border-[#E4E2DA]/60 p-4 sm:flex-row">
-                                        <p className="text-xs text-[#8A8A96]">
-                                            Page <span className="font-semibold text-[#14141B]">{items.current_page}</span> of{' '}
-                                            <span className="font-semibold text-[#14141B]">{items.last_page}</span>
+                                    <div className="flex flex-col items-center justify-between gap-3 border-t border-cp-line/60 p-4 sm:flex-row">
+                                        <p className="text-xs text-cp-muted">
+                                            Page <span className="font-semibold text-cp-ink">{items.current_page}</span> of{' '}
+                                            <span className="font-semibold text-cp-ink">{items.last_page}</span>
                                         </p>
                                         <div className="flex items-center gap-2">
                                             <Button
@@ -603,7 +603,7 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                                 size="sm"
                                                 disabled={items.current_page <= 1}
                                                 onClick={() => goToPage(items.current_page - 1)}
-                                                className="border-[#E4E2DA]"
+                                                className="border-cp-line"
                                             >
                                                 Previous
                                             </Button>
@@ -612,7 +612,7 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                                 size="sm"
                                                 disabled={items.current_page >= items.last_page}
                                                 onClick={() => goToPage(items.current_page + 1)}
-                                                className="border-[#E4E2DA]"
+                                                className="border-cp-line"
                                             >
                                                 Next <ArrowUpRight className="size-3.5" />
                                             </Button>
@@ -621,8 +621,8 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                 )}
                             </div>
 
-                            <p className="flex items-center gap-1.5 text-xs text-[#8A8A96]">
-                                <Link2 className="size-3.5 text-[#FF6B4A]" />
+                            <p className="flex items-center gap-1.5 text-xs text-cp-muted">
+                                <Link2 className="size-3.5 text-cp-coral-ink" />
                                 Buyers get a receipt by email the moment their payment settles.
                             </p>
                         </>
@@ -648,7 +648,7 @@ function DropdownMenuShim({ trigger, children }: { trigger: React.ReactNode; chi
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 rounded-xl border-[#E4E2DA] bg-white p-1.5 shadow-lg">
+            <DropdownMenuContent align="end" className="w-52 rounded-xl border-cp-line bg-cp-surface p-1.5 shadow-lg">
                 {children}
             </DropdownMenuContent>
         </DropdownMenu>
@@ -674,5 +674,5 @@ function DropdownItemShim({
 }
 
 function DropdownDividerShim() {
-    return <DropdownMenuSeparator className="bg-[#E4E2DA]/70" />;
+    return <DropdownMenuSeparator className="bg-cp-line/70" />;
 }

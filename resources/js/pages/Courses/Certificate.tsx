@@ -41,7 +41,7 @@ type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 /** text ke fields ka wahi roop jo server pe jaata hai — "kuch badla ya nahi" isi se tay hota hai */
 const fieldsKey = (accent: string | null, name: string, title: string) => JSON.stringify([accent, name.trim(), title.trim()]);
 
-const INPUT = 'h-10 w-full rounded-lg border border-[#DAD8D0] bg-white px-3 text-sm text-[#14141B] outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15';
+const INPUT = 'h-10 w-full rounded-lg border border-cp-line-strong bg-cp-surface px-3 text-sm text-cp-ink outline-none transition placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15';
 
 /** Dashboard → Courses → Certificate design. Ek design, creator ke saare courses ke certificates pe. */
 export default function CertificateDesign({ settings, resolved, templates, previewUrl }: Props) {
@@ -156,11 +156,11 @@ export default function CertificateDesign({ settings, resolved, templates, previ
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Certificate design" />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-24 md:px-6">
                     <div className="flex flex-col gap-1 pt-1">
-                        <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Certificate design</h1>
-                        <p className="text-sm text-[#8A8A96]">One design for every course that has certificates turned on. It carries your logo and name — students share it as yours.</p>
+                        <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Certificate design</h1>
+                        <p className="text-sm text-cp-muted">One design for every course that has certificates turned on. It carries your logo and name — students share it as yours.</p>
                     </div>
 
                     <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
@@ -173,8 +173,8 @@ export default function CertificateDesign({ settings, resolved, templates, previ
                         >
                             <fieldset disabled={!editable} className="flex flex-col gap-5 disabled:opacity-70">
                                 {/* Template */}
-                                <section className="rounded-xl bg-white p-5 shadow-sm">
-                                    <h2 className="text-sm font-bold text-[#14141B]">Template</h2>
+                                <section className="rounded-xl bg-cp-surface p-5 shadow-sm">
+                                    <h2 className="text-sm font-bold text-cp-ink">Template</h2>
                                     <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3 xl:grid-cols-1" role="radiogroup" aria-label="Template">
                                         {templates.map((t) => (
                                             <button
@@ -185,21 +185,21 @@ export default function CertificateDesign({ settings, resolved, templates, previ
                                                 onClick={() => setTemplate(t.key)}
                                                 className={cn(
                                                     'flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition',
-                                                    template === t.key ? 'border-[#4F46E5] bg-[#EEF2FF]' : 'border-[#E4E2DA] bg-white hover:bg-[#F6F5F2]',
+                                                    template === t.key ? 'border-cp-brand bg-cp-brand-soft' : 'border-cp-line bg-cp-surface hover:bg-cp-canvas',
                                                 )}
                                             >
                                                 <span>
-                                                    <span className="flex items-center gap-1.5 text-sm font-bold text-[#14141B]">
+                                                    <span className="flex items-center gap-1.5 text-sm font-bold text-cp-ink">
                                                         {t.label}
-                                                        {t.key === savedTemplate && <span className="rounded-full bg-[#E6F6EC] px-1.5 py-0.5 text-[10px] font-semibold text-[#059669]">In use</span>}
+                                                        {t.key === savedTemplate && <span className="rounded-full bg-cp-success-soft px-1.5 py-0.5 text-[10px] font-semibold text-cp-success-ink">In use</span>}
                                                     </span>
-                                                    <span className="block text-[11px] text-[#6B6B78]">{TEMPLATE_HINT[t.key]}</span>
+                                                    <span className="block text-[11px] text-cp-subtle">{TEMPLATE_HINT[t.key]}</span>
                                                 </span>
-                                                {template === t.key && <Check className="size-4 shrink-0 text-[#4F46E5]" />}
+                                                {template === t.key && <Check className="size-4 shrink-0 text-cp-brand-ink" />}
                                             </button>
                                         ))}
                                     </div>
-                                    <p className={cn('mt-3 text-xs', templateDirty ? 'font-semibold text-[#B45309]' : 'text-[#8A8A96]')}>
+                                    <p className={cn('mt-3 text-xs', templateDirty ? 'font-semibold text-cp-amber-ink' : 'text-cp-muted')}>
                                         {templateDirty
                                             ? 'Previewing only. Click “Save design” to use this template — it changes every certificate, including ones already issued.'
                                             : 'Picking a template only previews it. It is applied when you click “Save design”.'}
@@ -207,31 +207,31 @@ export default function CertificateDesign({ settings, resolved, templates, previ
                                 </section>
 
                                 {/* Colour */}
-                                <section className="rounded-xl bg-white p-5 shadow-sm">
-                                    <h2 className="text-sm font-bold text-[#14141B]">Accent colour</h2>
+                                <section className="rounded-xl bg-cp-surface p-5 shadow-sm">
+                                    <h2 className="text-sm font-bold text-cp-ink">Accent colour</h2>
                                     <div className="mt-3 flex items-center gap-3">
                                         <input
                                             type="color"
                                             aria-label="Accent colour"
                                             value={accent ?? resolved.accent}
                                             onChange={(e) => setAccent(e.target.value.toUpperCase())}
-                                            className="size-10 shrink-0 cursor-pointer rounded-lg border border-[#DAD8D0] bg-white p-1"
+                                            className="size-10 shrink-0 cursor-pointer rounded-lg border border-cp-line-strong bg-cp-surface p-1"
                                         />
                                         <div className="min-w-0 flex-1">
-                                            <p className="font-mono text-sm font-semibold text-[#14141B]">{accent ?? resolved.accent}</p>
-                                            <p className="text-xs text-[#8A8A96]">{accent ? 'Custom colour for certificates' : "Using your store's brand colour"}</p>
+                                            <p className="font-mono text-sm font-semibold text-cp-ink">{accent ?? resolved.accent}</p>
+                                            <p className="text-xs text-cp-muted">{accent ? 'Custom colour for certificates' : "Using your store's brand colour"}</p>
                                         </div>
                                         {accent && (
-                                            <button type="button" onClick={() => setAccent(null)} className="text-xs font-semibold text-[#6B6B78] hover:text-[#14141B]">
+                                            <button type="button" onClick={() => setAccent(null)} className="text-xs font-semibold text-cp-subtle hover:text-cp-ink">
                                                 Use store colour
                                             </button>
                                         )}
                                     </div>
-                                    {errors.accent_color && <p className="mt-2 text-xs font-medium text-[#C2410C]">{errors.accent_color}</p>}
+                                    {errors.accent_color && <p className="mt-2 text-xs font-medium text-cp-coral-dark-ink">{errors.accent_color}</p>}
                                 </section>
 
                                 {/* Logo + signature */}
-                                <section className="flex flex-col gap-4 rounded-xl bg-white p-5 shadow-sm">
+                                <section className="flex flex-col gap-4 rounded-xl bg-cp-surface p-5 shadow-sm">
                                     <ImageField
                                         label="Logo"
                                         hint={settings.has_logo ? 'Your certificate logo.' : 'No certificate logo yet — your store picture is used. Upload one to replace it.'}
@@ -259,35 +259,35 @@ export default function CertificateDesign({ settings, resolved, templates, previ
                                 </section>
 
                                 {/* Signatory */}
-                                <section className="flex flex-col gap-3 rounded-xl bg-white p-5 shadow-sm">
-                                    <h2 className="text-sm font-bold text-[#14141B]">Signed by</h2>
+                                <section className="flex flex-col gap-3 rounded-xl bg-cp-surface p-5 shadow-sm">
+                                    <h2 className="text-sm font-bold text-cp-ink">Signed by</h2>
                                     <div>
-                                        <label htmlFor="signatory_name" className="text-xs font-semibold text-[#4B4B57]">
+                                        <label htmlFor="signatory_name" className="text-xs font-semibold text-cp-body">
                                             Name
                                         </label>
                                         <input id="signatory_name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} placeholder={resolved.signatory_name} className={cn(INPUT, 'mt-1')} />
-                                        {errors.signatory_name && <p className="mt-1 text-xs font-medium text-[#C2410C]">{errors.signatory_name}</p>}
+                                        {errors.signatory_name && <p className="mt-1 text-xs font-medium text-cp-coral-dark-ink">{errors.signatory_name}</p>}
                                     </div>
                                     <div>
-                                        <label htmlFor="signatory_title" className="text-xs font-semibold text-[#4B4B57]">
+                                        <label htmlFor="signatory_title" className="text-xs font-semibold text-cp-body">
                                             Designation
                                         </label>
                                         <input id="signatory_title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="Instructor" className={cn(INPUT, 'mt-1')} />
-                                        {errors.signatory_title && <p className="mt-1 text-xs font-medium text-[#C2410C]">{errors.signatory_title}</p>}
+                                        {errors.signatory_title && <p className="mt-1 text-xs font-medium text-cp-coral-dark-ink">{errors.signatory_title}</p>}
                                     </div>
                                 </section>
                             </fieldset>
 
-                            {!editable && <p className="text-xs text-[#8A8A96]">You can view this design but not change it.</p>}
+                            {!editable && <p className="text-xs text-cp-muted">You can view this design but not change it.</p>}
                         </form>
 
                         {/* Live preview */}
-                        <div className="flex flex-col gap-3 rounded-xl bg-[#14141B] p-4 shadow-sm xl:sticky xl:top-6">
+                        <div className="flex flex-col gap-3 rounded-xl bg-cp-solid p-4 shadow-sm xl:sticky xl:top-6">
                             <div>
                                 <p className="text-[13px] font-semibold text-white">Preview</p>
                                 <p className="text-[11px] text-white/50">A sample student and course. The real certificate carries their name, your course title and a verify link.</p>
                             </div>
-                            <div className={cn('overflow-hidden rounded-lg bg-white', orientation === 'portrait' && 'mx-auto w-full max-w-[520px]')} style={{ aspectRatio: orientation === 'portrait' ? '210 / 297' : '297 / 210' }}>
+                            <div className={cn('overflow-hidden rounded-lg bg-cp-surface', orientation === 'portrait' && 'mx-auto w-full max-w-[520px]')} style={{ aspectRatio: orientation === 'portrait' ? '210 / 297' : '297 / 210' }}>
                                 <iframe key={previewSrc} src={previewSrc} title="Certificate preview" className="size-full border-0" />
                             </div>
                         </div>
@@ -297,9 +297,9 @@ export default function CertificateDesign({ settings, resolved, templates, previ
 
             {/* Neeche chipka hua bar — Store page jaisa: baayein Save, daayein auto-save ka haal */}
             {editable && (
-                <div className="fixed right-0 bottom-0 left-0 z-40 border-t border-[#E4E2DA] bg-white/95 backdrop-blur-md lg:left-[288px]">
+                <div className="fixed right-0 bottom-(--mobile-nav-offset,0px) left-0 z-40 border-t border-cp-line bg-cp-surface/95 backdrop-blur-md transition-[bottom] duration-200 lg:bottom-0 lg:left-[288px]">
                     <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-4 py-3 md:px-6">
-                        <Button type="button" onClick={() => save(true)} disabled={status === 'saving'} className="bg-[#4F46E5] hover:bg-[#4338CA]">
+                        <Button type="button" onClick={() => save(true)} disabled={status === 'saving'} className="text-white bg-cp-brand hover:bg-cp-brand-hover">
                             {status === 'saving' ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                             {status === 'saving' ? 'Saving…' : 'Save design'}
                         </Button>
@@ -314,27 +314,27 @@ export default function CertificateDesign({ settings, resolved, templates, previ
 function SaveIndicator({ status, dirty, templateDirty }: { status: SaveStatus; dirty: boolean; templateDirty: boolean }) {
     if (status === 'saving') {
         return (
-            <span role="status" className="flex items-center gap-1.5 text-xs font-medium text-[#8A8A96]">
+            <span role="status" className="flex items-center gap-1.5 text-xs font-medium text-cp-muted">
                 <Loader2 className="size-3.5 animate-spin" /> Saving changes…
             </span>
         );
     }
     if (status === 'error') {
         return (
-            <span role="alert" className="flex items-center gap-1.5 text-xs font-medium text-[#C2410C]">
+            <span role="alert" className="flex items-center gap-1.5 text-xs font-medium text-cp-coral-dark-ink">
                 <AlertTriangle className="size-3.5" /> Could not save — check the fields above
             </span>
         );
     }
     if (dirty) {
-        return <span className="text-xs font-medium text-[#8A8A96]">Unsaved changes…</span>;
+        return <span className="text-xs font-medium text-cp-muted">Unsaved changes…</span>;
     }
     if (templateDirty) {
-        return <span className="text-xs font-semibold text-[#B45309]">Template not saved — click Save design</span>;
+        return <span className="text-xs font-semibold text-cp-amber-ink">Template not saved — click Save design</span>;
     }
 
     return (
-        <span role="status" className="flex items-center gap-1.5 text-xs font-medium text-[#059669]">
+        <span role="status" className="flex items-center gap-1.5 text-xs font-medium text-cp-success-ink">
             <CheckCircle2 className="size-3.5" /> {status === 'saved' ? 'All changes saved' : 'Changes save automatically'}
         </span>
     );
@@ -375,28 +375,28 @@ function ImageField({
 
     return (
         <div>
-            <h2 className="text-sm font-bold text-[#14141B]">{label}</h2>
-            <p className="mt-0.5 text-xs text-[#8A8A96]">{hint}</p>
+            <h2 className="text-sm font-bold text-cp-ink">{label}</h2>
+            <p className="mt-0.5 text-xs text-cp-muted">{hint}</p>
             <div className="mt-3 flex items-center gap-3">
-                <span className="flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-[#DAD8D0] bg-[#FAFAF8]">
-                    {shown ? <img src={shown} alt="" className="max-h-full max-w-full object-contain" /> : <ImagePlus className="size-5 text-[#C9C6BC]" />}
+                <span className="flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-cp-line-strong bg-cp-surface-2">
+                    {shown ? <img src={shown} alt="" className="max-h-full max-w-full object-contain" /> : <ImagePlus className="size-5 text-cp-line-stronger" />}
                 </span>
                 <div className="flex flex-wrap gap-2">
                     <button
                         type="button"
                         onClick={() => input.current?.click()}
-                        className="inline-flex h-9 items-center rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm font-medium text-[#4B4B57] transition hover:bg-[#F6F5F2]"
+                        className="inline-flex h-9 items-center rounded-lg border border-cp-line bg-cp-surface px-3 text-sm font-medium text-cp-body transition hover:bg-cp-canvas"
                     >
                         {shown ? 'Replace' : 'Upload'}
                     </button>
                     {file ? (
-                        <button type="button" onClick={() => onFile(null)} className="inline-flex h-9 items-center px-2 text-sm font-medium text-[#6B6B78] hover:text-[#14141B]">
+                        <button type="button" onClick={() => onFile(null)} className="inline-flex h-9 items-center px-2 text-sm font-medium text-cp-subtle hover:text-cp-ink">
                             Undo
                         </button>
                     ) : (
                         current &&
                         onRemove && (
-                            <button type="button" onClick={onRemove} aria-label={`Remove ${label.toLowerCase()}`} className="inline-flex h-9 items-center gap-1 px-2 text-sm font-medium text-[#C2410C] hover:underline">
+                            <button type="button" onClick={onRemove} aria-label={`Remove ${label.toLowerCase()}`} className="inline-flex h-9 items-center gap-1 px-2 text-sm font-medium text-cp-coral-dark-ink hover:underline">
                                 <Trash2 className="size-3.5" /> Remove
                             </button>
                         )
@@ -413,8 +413,8 @@ function ImageField({
                     }}
                 />
             </div>
-            <p className="mt-2 text-[11px] text-[#8A8A96]">PNG, JPG or WebP, up to 2 MB.</p>
-            {error && <p className="mt-1 text-xs font-medium text-[#C2410C]">{error}</p>}
+            <p className="mt-2 text-[11px] text-cp-muted">PNG, JPG or WebP, up to 2 MB.</p>
+            {error && <p className="mt-1 text-xs font-medium text-cp-coral-dark-ink">{error}</p>}
         </div>
     );
 }

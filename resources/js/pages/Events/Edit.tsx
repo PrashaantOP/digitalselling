@@ -82,12 +82,12 @@ interface EventsEditProps {
     publicUrl: string;
 }
 
-const LABEL_CLASS = 'text-xs font-semibold tracking-wider text-[#14141B] uppercase';
+const LABEL_CLASS = 'text-xs font-semibold tracking-wider text-cp-ink uppercase';
 
 const STATUS_BADGE: Record<Status, { label: string; cls: string }> = {
-    draft: { label: 'Draft', cls: 'bg-[#FFF4DB] text-[#B46E00]' },
-    published: { label: 'Published', cls: 'bg-[#E6F6EC] text-[#059669]' },
-    unpublished: { label: 'Unpublished', cls: 'bg-[#F0EFEA] text-[#6B6B78]' },
+    draft: { label: 'Draft', cls: 'bg-cp-warning-soft text-cp-warning-ink' },
+    published: { label: 'Published', cls: 'bg-cp-success-soft text-cp-success-ink' },
+    unpublished: { label: 'Unpublished', cls: 'bg-cp-surface-3 text-cp-subtle' },
 };
 
 /* ------------------------------------------------------------------ */
@@ -156,10 +156,10 @@ function UploadTile({
                 onClick={() => inputRef.current?.click()}
                 className={cn(
                     'group flex aspect-[16/9] w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed text-[13px] font-medium transition',
-                    'border-[#E4E2DA] bg-white text-[#8A8A96] hover:border-[#4F46E5] hover:bg-[#F6F5F2] hover:text-[#4F46E5]',
+                    'border-cp-line bg-cp-surface text-cp-muted hover:border-cp-brand hover:bg-cp-canvas hover:text-cp-brand-ink',
                 )}
             >
-                <span className="flex size-9 items-center justify-center rounded-lg bg-[#F6F5F2] text-[#8A8A96] transition group-hover:bg-white group-hover:text-[#4F46E5]">
+                <span className="flex size-9 items-center justify-center rounded-lg bg-cp-canvas text-cp-muted transition group-hover:bg-cp-surface group-hover:text-cp-brand-ink">
                     <UploadCloud className="size-4" />
                 </span>
                 {label}
@@ -176,7 +176,7 @@ function UploadTile({
                     e.target.value = '';
                 }}
             />
-            {hint && <p className="mt-1.5 text-[11px] text-[#8A8A96]">{hint}</p>}
+            {hint && <p className="mt-1.5 text-[11px] text-cp-muted">{hint}</p>}
         </div>
     );
 }
@@ -217,15 +217,15 @@ function PreviewPane({ item, publicUrl, device }: { item: EventItem; publicUrl: 
             )}
         >
             {/* mock browser frame */}
-            <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-white/10 bg-white shadow-2xl shadow-black/40">
+            <div className="light-island flex h-full w-full flex-col overflow-hidden rounded-xl border border-white/10 bg-cp-surface shadow-2xl shadow-black/40">
                 {/* traffic lights + url */}
-                <div className="flex items-center gap-2 border-b border-[#E4E2DA] bg-[#F6F5F2] px-4 py-2.5">
+                <div className="flex items-center gap-2 border-b border-cp-line bg-cp-canvas px-4 py-2.5">
                     <span className="flex items-center gap-1.5">
                         <span className="size-3 rounded-full bg-[#FF5F57]" />
                         <span className="size-3 rounded-full bg-[#FEBC2E]" />
                         <span className="size-3 rounded-full bg-[#28C840]" />
                     </span>
-                    <div className="mx-auto flex max-w-[420px] flex-1 items-center gap-1.5 rounded-md bg-white px-3 py-1 text-[11px] text-[#8A8A96]">
+                    <div className="mx-auto flex max-w-[420px] flex-1 items-center gap-1.5 rounded-md bg-cp-surface px-3 py-1 text-[11px] text-cp-muted">
                         <Lock className="size-3" />
                         <span className="truncate">{publicUrl}</span>
                     </div>
@@ -236,23 +236,23 @@ function PreviewPane({ item, publicUrl, device }: { item: EventItem; publicUrl: 
                 <div className="h-1 w-full bg-[#2E6EF7]" />
 
                 {/* page content */}
-                <div className={cn('min-h-0 flex-1 overflow-y-auto bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden', isMobile ? 'px-8 py-8' : 'px-12 py-10')}>
+                <div className={cn('min-h-0 flex-1 overflow-y-auto bg-cp-surface [scrollbar-width:none] [&::-webkit-scrollbar]:hidden', isMobile ? 'px-8 py-8' : 'px-12 py-10')}>
                     {/* video link ho to cover ke upar — thumbnail pe click karte hi play */}
                     <VideoEmbed url={item.cover_video_url} accent="#2E6EF7" className="mx-auto mb-7" />
 
                     {/* cover image gallery */}
                     {covers.length > 0 && (
-                        <div className="relative mx-auto mb-7 aspect-video overflow-hidden rounded-xl border border-[#E4E2DA] bg-[#F6F5F2]">
-                            <div ref={coverTrack} onScroll={(event) => setActiveCover(Math.round(event.currentTarget.scrollLeft / event.currentTarget.clientWidth))} className="flex aspect-video snap-x snap-mandatory overflow-x-auto bg-[#F6F5F2] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <div className="relative mx-auto mb-7 aspect-video overflow-hidden rounded-xl border border-cp-line bg-cp-canvas">
+                            <div ref={coverTrack} onScroll={(event) => setActiveCover(Math.round(event.currentTarget.scrollLeft / event.currentTarget.clientWidth))} className="flex aspect-video snap-x snap-mandatory overflow-x-auto bg-cp-canvas [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 {covers.map((cover) => <img key={cover.id} src={assetUrl(cover.image_path)} alt="" className="size-full shrink-0 snap-center object-cover" />)}
                             </div>
-                            {covers.length > 1 && <div className="absolute right-0 bottom-3 left-0 z-10 flex items-center justify-center gap-1.5">{covers.map((cover, index) => <button key={cover.id} type="button" aria-label={`Show image ${index + 1}`} aria-pressed={activeCover === index} onClick={() => showCover(index)} className={cn('size-2 rounded-full border border-white/80 shadow-sm transition', activeCover === index ? 'bg-white' : 'bg-white/45 hover:bg-white/75')} />)}</div>}
+                            {covers.length > 1 && <div className="absolute right-0 bottom-3 left-0 z-10 flex items-center justify-center gap-1.5">{covers.map((cover, index) => <button key={cover.id} type="button" aria-label={`Show image ${index + 1}`} aria-pressed={activeCover === index} onClick={() => showCover(index)} className={cn('size-2 rounded-full border border-cp-surface/80 shadow-sm transition', activeCover === index ? 'bg-cp-surface' : 'bg-white/45 hover:bg-cp-surface/75')} />)}</div>}
                         </div>
                     )}
 
                     <h1
                         className={cn(
-                            'font-extrabold tracking-tight text-[#14141B]',
+                            'font-extrabold tracking-tight text-cp-ink',
                             isMobile ? 'text-left text-[34px] leading-[1.08]' : 'text-center text-[40px] leading-[1.1]',
                         )}
                     >
@@ -271,8 +271,8 @@ function PreviewPane({ item, publicUrl, device }: { item: EventItem; publicUrl: 
                     </div>
 
                     <div className="mx-auto mt-8 max-w-[640px]">
-                        <p className="text-[11px] font-bold tracking-widest text-[#4F46E5] uppercase">About the event</p>
-                        <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-[#14141B]">{description}</p>
+                        <p className="text-[11px] font-bold tracking-widest text-cp-brand-ink uppercase">About the event</p>
+                        <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-cp-ink">{description}</p>
 
                         <button
                             type="button"
@@ -282,9 +282,9 @@ function PreviewPane({ item, publicUrl, device }: { item: EventItem; publicUrl: 
                             <ArrowRight className="size-4" />
                         </button>
 
-                        <p className="mt-8 text-center text-[11px] text-[#8A8A96]">
+                        <p className="mt-8 text-center text-[11px] text-cp-muted">
                             Built with{' '}
-                            <span className="font-semibold text-[#4F46E5]">CreatorPro</span>
+                            <span className="font-semibold text-cp-brand-ink">CreatorPro</span>
                         </p>
                     </div>
                 </div>
@@ -295,9 +295,9 @@ function PreviewPane({ item, publicUrl, device }: { item: EventItem; publicUrl: 
 
 function PreviewPill({ label, value }: { label: string; value: string }) {
     return (
-        <div className="rounded-xl bg-[#F6F5F2] px-4 py-3">
-            <p className="text-[10px] font-bold tracking-widest text-[#8A8A96] uppercase">{label}</p>
-            <p className="mt-1 truncate text-[14px] font-semibold text-[#14141B]">{value}</p>
+        <div className="rounded-xl bg-cp-canvas px-4 py-3">
+            <p className="text-[10px] font-bold tracking-widest text-cp-muted uppercase">{label}</p>
+            <p className="mt-1 truncate text-[14px] font-semibold text-cp-ink">{value}</p>
         </div>
     );
 }
@@ -502,25 +502,25 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
     const statusMeta = STATUS_BADGE[item.status] ?? STATUS_BADGE.draft;
 
     return (
-        <div className="h-screen overflow-hidden bg-white">
+        <div className="h-screen overflow-hidden bg-cp-surface">
             <Head title={`${item.title || 'Untitled event'} · Edit event`} />
 
             {/* full-bleed split — left is the form, right is the dark preview */}
             <div className="flex h-full min-h-0 flex-col overflow-hidden lg:flex-row">
                 {/* LEFT — editor */}
-                <section className="flex min-h-0 w-full flex-col overflow-hidden border-r border-[#E4E2DA] bg-white lg:w-[520px] lg:shrink-0">
+                <section className="flex min-h-0 w-full flex-col overflow-hidden border-r border-cp-line bg-cp-surface lg:w-[520px] lg:shrink-0">
                     {/* top bar */}
-                    <div className="flex items-center justify-between border-b border-[#E4E2DA] px-4 py-3 md:px-6">
+                    <div className="flex items-center justify-between border-b border-cp-line px-4 py-3 md:px-6">
                         <div className="flex min-w-0 items-center gap-3">
                             <button
                                 type="button"
                                 onClick={() => leave('/dashboard/events')}
                                 aria-label="Back to events"
-                                className="rounded-lg p-1 text-[#8A8A96] transition hover:bg-[#F6F5F2] hover:text-[#14141B]"
+                                className="rounded-lg p-1 text-cp-muted transition hover:bg-cp-canvas hover:text-cp-ink"
                             >
                                 <X className="size-5" />
                             </button>
-                            <h2 className="truncate text-[13px] font-semibold tracking-wider text-[#14141B] uppercase">
+                            <h2 className="truncate text-[13px] font-semibold tracking-wider text-cp-ink uppercase">
                                 {item.title || 'Your event title here'}
                             </h2>
                         </div>
@@ -537,15 +537,15 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                     {/* scrollable form body */}
                     <div className="flex-1 overflow-y-auto px-4 py-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:px-6 md:py-6">
                         <div className="mx-auto flex max-w-[440px] flex-col gap-5">
-                            <h1 className="text-xl font-bold tracking-tight text-[#14141B]">Tell us about your event</h1>
+                            <h1 className="text-xl font-bold tracking-tight text-cp-ink">Tell us about your event</h1>
 
                             {/* Event title */}
                             <div className="order-1 flex flex-col gap-1.5">
                                 <div className="flex items-center justify-between">
                                     <label htmlFor="event_title" className={LABEL_CLASS}>
-                                        Event title <span className="text-[#D93838]">*</span>
+                                        Event title <span className="text-cp-red-ink">*</span>
                                     </label>
-                                    <span className={cn('text-[11px]', titleOk ? 'text-[#8A8A96]' : 'text-[#D93838]')}>
+                                    <span className={cn('text-[11px]', titleOk ? 'text-cp-muted' : 'text-cp-red-ink')}>
                                         {titleCount}/75
                                     </span>
                                 </div>
@@ -555,7 +555,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                     value={form.title}
                                     onChange={(e) => patch({ title: e.target.value })}
                                     placeholder="Your event title here"
-                                    className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                    className="h-11 w-full rounded-lg border border-cp-line bg-cp-surface px-3 text-sm text-cp-ink shadow-sm outline-none transition placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                 />
                             </div>
 
@@ -576,12 +576,12 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                                 className={cn(
                                                     'flex h-12 items-center justify-between rounded-lg border px-3 text-sm font-semibold transition',
                                                     active
-                                                        ? 'border-[#4F46E5] bg-[#EEF2FF] text-[#4F46E5]'
-                                                        : 'border-[#E4E2DA] bg-white text-[#14141B] hover:border-[#4F46E5]/45',
+                                                        ? 'border-cp-brand bg-cp-brand-soft text-cp-brand-ink'
+                                                        : 'border-cp-line bg-cp-surface text-cp-ink hover:border-cp-brand/45',
                                                 )}
                                             >
                                                 {option.label}
-                                                <span className={cn('flex size-4 items-center justify-center rounded-full border', active ? 'border-[#4F46E5] bg-[#4F46E5] text-white' : 'border-[#D9D7CE]')}>
+                                                <span className={cn('flex size-4 items-center justify-center rounded-full border', active ? 'border-cp-brand bg-cp-brand text-white' : 'border-cp-line-strong')}>
                                                     {active && <Check className="size-2.5" />}
                                                 </span>
                                             </button>
@@ -589,9 +589,9 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                     })}
                                 </div>
                                 <div className="flex flex-col gap-1.5">
-                                    <label htmlFor="event_price" className={LABEL_CLASS}>Ticket price <span className="text-[#D93838]">*</span></label>
+                                    <label htmlFor="event_price" className={LABEL_CLASS}>Ticket price <span className="text-cp-red-ink">*</span></label>
                                     <div className="relative">
-                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-[#8A8A96]">₹</span>
+                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-cp-muted">₹</span>
                                         <input
                                             id="event_price"
                                             type="number"
@@ -600,7 +600,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                             disabled={form.pricing_type === 'free'}
                                             value={form.pricing_type === 'free' ? 0 : form.price}
                                             onChange={(e) => patch({ price: Number(e.target.value) || 0 })}
-                                            className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white py-0 pr-3 pl-7 text-sm text-[#14141B] shadow-sm outline-none transition disabled:cursor-not-allowed disabled:bg-[#F6F5F2] disabled:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                            className="h-11 w-full rounded-lg border border-cp-line bg-cp-surface py-0 pr-3 pl-7 text-sm text-cp-ink shadow-sm outline-none transition disabled:cursor-not-allowed disabled:bg-cp-canvas disabled:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                         />
                                     </div>
                                 </div>
@@ -614,16 +614,16 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                     value={form.button_text}
                                     onChange={(e) => patch({ button_text: e.target.value })}
                                     placeholder="Register now"
-                                    className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                    className="h-11 w-full rounded-lg border border-cp-line bg-cp-surface px-3 text-sm text-cp-ink shadow-sm outline-none transition placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                 />
                             </div>
 
-                            <label className="order-9 flex cursor-pointer items-center gap-2.5 text-[12px] font-semibold text-[#14141B]">
+                            <label className="order-9 flex cursor-pointer items-center gap-2.5 text-[12px] font-semibold text-cp-ink">
                                 <input
                                     type="checkbox"
                                     checked={form.has_discount}
                                     onChange={(e) => patch({ has_discount: e.target.checked })}
-                                    className="size-3.5 rounded border-[#D9D7CE] text-[#4F46E5] focus:ring-[#4F46E5]"
+                                    className="size-3.5 rounded border-cp-line-strong text-cp-brand-ink focus:ring-cp-brand"
                                 />
                                 Offer discounted price
                             </label>
@@ -632,7 +632,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                 <div className="order-10 flex flex-col gap-1.5">
                                     <label htmlFor="event_discounted_price" className={LABEL_CLASS}>Discounted ticket price</label>
                                     <div className="relative">
-                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-[#8A8A96]">₹</span>
+                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-cp-muted">₹</span>
                                         <input
                                             id="event_discounted_price"
                                             type="number"
@@ -642,7 +642,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                             value={form.discounted_price}
                                             onChange={(e) => patch({ discounted_price: e.target.value === '' ? '' : Number(e.target.value) })}
                                             placeholder="0"
-                                            className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white py-0 pr-3 pl-7 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                            className="h-11 w-full rounded-lg border border-cp-line bg-cp-surface py-0 pr-3 pl-7 text-sm text-cp-ink shadow-sm outline-none transition placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                         />
                                     </div>
                                 </div>
@@ -651,16 +651,16 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                             <div className="order-11 flex flex-col gap-2">
                                 <label className={LABEL_CLASS}>Discount coupons</label>
                                 {coupons.map((coupon) => (
-                                    <div key={coupon.id} className="flex items-center gap-2 rounded-lg border border-[#E4E2DA] bg-[#F8F7F4] px-3 py-2 text-[11px]">
-                                        <span className="font-bold text-[#4F46E5]">{coupon.code}</span>
-                                        <span className="font-semibold text-[#14141B]">{coupon.discount_percent}% off</span>
-                                        <span className={cn('ml-auto', coupon.is_active ? 'text-[#059669]' : 'text-[#8A8A96]')}>{coupon.is_active ? 'Active' : 'Inactive'}</span>
+                                    <div key={coupon.id} className="flex items-center gap-2 rounded-lg border border-cp-line bg-cp-surface-2 px-3 py-2 text-[11px]">
+                                        <span className="font-bold text-cp-brand-ink">{coupon.code}</span>
+                                        <span className="font-semibold text-cp-ink">{coupon.discount_percent}% off</span>
+                                        <span className={cn('ml-auto', coupon.is_active ? 'text-cp-success-ink' : 'text-cp-muted')}>{coupon.is_active ? 'Active' : 'Inactive'}</span>
                                         <button
                                             type="button"
                                             onClick={() => removeCoupon(coupon)}
                                             disabled={removingCouponId === coupon.id}
                                             aria-label={`Remove ${coupon.code} coupon`}
-                                            className="rounded p-0.5 text-[#D93838] transition hover:bg-[#FFEDE8] disabled:opacity-40"
+                                            className="rounded p-0.5 text-cp-red-ink transition hover:bg-cp-coral-soft disabled:opacity-40"
                                         >
                                             {removingCouponId === coupon.id ? <Loader2 className="size-3 animate-spin" /> : <X className="size-3" />}
                                         </button>
@@ -672,7 +672,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                         maxLength={30}
                                         onChange={(e) => setCouponCode(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))}
                                         placeholder="CODE"
-                                        className="h-10 min-w-0 flex-1 rounded-lg border border-[#E4E2DA] bg-white px-3 text-xs font-semibold text-[#14141B] outline-none focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                        className="h-10 min-w-0 flex-1 rounded-lg border border-cp-line bg-cp-surface px-3 text-xs font-semibold text-cp-ink outline-none focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                     />
                                     <div className="relative w-24">
                                         <input
@@ -681,15 +681,15 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                             max="100"
                                             value={couponPercent}
                                             onChange={(e) => setCouponPercent(e.target.value)}
-                                            className="h-10 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 pr-7 text-xs text-[#14141B] outline-none focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                            className="h-10 w-full rounded-lg border border-cp-line bg-cp-surface px-3 pr-7 text-xs text-cp-ink outline-none focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                         />
-                                        <span className="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-[#8A8A96]">%</span>
+                                        <span className="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-cp-muted">%</span>
                                     </div>
-                                    <button type="button" onClick={addCoupon} disabled={addingCoupon || !couponCode.trim()} className="h-10 rounded-lg bg-[#14141B] px-3 text-xs font-semibold text-white transition hover:bg-[#2B2B34] disabled:cursor-not-allowed disabled:opacity-40">
+                                    <button type="button" onClick={addCoupon} disabled={addingCoupon || !couponCode.trim()} className="h-10 rounded-lg bg-cp-solid px-3 text-xs font-semibold text-white transition hover:bg-[#2B2B34] disabled:cursor-not-allowed disabled:opacity-40">
                                         {addingCoupon ? '…' : '+ Add'}
                                     </button>
                                 </div>
-                                <p className="text-[10px] text-[#8A8A96]">Buyers enter this code at checkout for a discount.</p>
+                                <p className="text-[10px] text-cp-muted">Buyers enter this code at checkout for a discount.</p>
                             </div>
 
                             <div className="order-12">
@@ -697,20 +697,20 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                             </div>
 
                             <div className="order-14 flex flex-col gap-1.5">
-                                <label htmlFor="event_slug" className={LABEL_CLASS}>Page URL <span className="text-[#D93838]">*</span></label>
-                                <div className="flex h-11 items-center rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm shadow-sm focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/15">
-                                    <span className="mr-1 text-[#8A8A96]">/e/</span>
+                                <label htmlFor="event_slug" className={LABEL_CLASS}>Page URL <span className="text-cp-red-ink">*</span></label>
+                                <div className="flex h-11 items-center rounded-lg border border-cp-line bg-cp-surface px-3 text-sm shadow-sm focus-within:border-cp-brand focus-within:ring-2 focus-within:ring-cp-brand/15">
+                                    <span className="mr-1 text-cp-muted">/e/</span>
                                     <input
                                         id="event_slug"
                                         value={form.slug}
                                         maxLength={150}
                                         onChange={(e) => patch({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
                                         placeholder="your-event"
-                                        className="min-w-0 flex-1 bg-transparent text-sm text-[#14141B] outline-none placeholder:text-[#8A8A96]"
+                                        className="min-w-0 flex-1 bg-transparent text-sm text-cp-ink outline-none placeholder:text-cp-muted"
                                     />
                                 </div>
-                                <p className="text-[10px] text-[#8A8A96]">Required before publishing.</p>
-                                {saveErrors.slug && <p className="text-[11px] font-medium text-[#D93838]">{saveErrors.slug}</p>}
+                                <p className="text-[10px] text-cp-muted">Required before publishing.</p>
+                                {saveErrors.slug && <p className="text-[11px] font-medium text-cp-red-ink">{saveErrors.slug}</p>}
                             </div>
 
                             {/* Cover images */}
@@ -718,9 +718,9 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                 <label className={LABEL_CLASS}>Cover images</label>
                                 <div className="grid grid-cols-4 gap-2">
                                     {coverImages.map((image, index) => (
-                                        <div key={image.id} className="group relative aspect-video overflow-hidden rounded-lg bg-[#F6F5F2]">
+                                        <div key={image.id} className="group relative aspect-video overflow-hidden rounded-lg bg-cp-canvas">
                                             <img src={assetUrl(image.image_path)} alt={`Cover ${index + 1}`} className="size-full object-cover" />
-                                            <button type="button" onClick={() => removeCover(image)} disabled={coverBusy} aria-label={`Remove cover image ${index + 1}`} className="absolute top-1 right-1 rounded-full bg-white/90 p-1 text-[#D93838] shadow hover:bg-white disabled:opacity-50">
+                                            <button type="button" onClick={() => removeCover(image)} disabled={coverBusy} aria-label={`Remove cover image ${index + 1}`} className="absolute top-1 right-1 rounded-full bg-cp-surface/90 p-1 text-cp-red-ink shadow hover:bg-cp-surface disabled:opacity-50">
                                                 <X className="size-3.5" />
                                             </button>
                                         </div>
@@ -734,7 +734,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                         multiple
                                     />
                                 )}
-                                {coverError && <p className="text-[11px] font-medium text-[#D93838]">{coverError}</p>}
+                                {coverError && <p className="text-[11px] font-medium text-cp-red-ink">{coverError}</p>}
                             </div>
 
                             {/* Video link */}
@@ -748,7 +748,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                     value={form.cover_video_url}
                                     onChange={(e) => patch({ cover_video_url: e.target.value })}
                                     placeholder="https://youtu.be/…"
-                                    className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                    className="h-11 w-full rounded-lg border border-cp-line bg-cp-surface px-3 text-sm text-cp-ink shadow-sm outline-none transition placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                 />
                             </div>
 
@@ -756,9 +756,9 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                             <div className="order-4 flex flex-col gap-1.5">
                                 <div className="flex items-center justify-between">
                                     <label htmlFor="event_desc" className={LABEL_CLASS}>
-                                        Description <span className="text-[#D93838]">*</span>
+                                        Description <span className="text-cp-red-ink">*</span>
                                     </label>
-                                    <span className="text-[11px] text-[#8A8A96]">{descCount}/20000</span>
+                                    <span className="text-[11px] text-cp-muted">{descCount}/20000</span>
                                 </div>
                                 <textarea
                                     id="event_desc"
@@ -766,7 +766,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                     value={form.description}
                                     onChange={(e) => patch({ description: e.target.value })}
                                     placeholder="Describe your event — purpose, key activities, notable speakers. Make it engaging."
-                                    className="w-full rounded-lg border border-[#E4E2DA] bg-white px-3 py-2.5 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                    className="w-full rounded-lg border border-cp-line bg-cp-surface px-3 py-2.5 text-sm text-cp-ink shadow-sm outline-none transition placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                 />
                             </div>
 
@@ -774,7 +774,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                             <div className="order-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="flex flex-col gap-1.5">
                                     <label htmlFor="event_start" className={LABEL_CLASS}>
-                                        Starts at <span className="text-[#D93838]">*</span>
+                                        Starts at <span className="text-cp-red-ink">*</span>
                                     </label>
                                     <div className="relative">
                                         <input
@@ -782,11 +782,11 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                             type="datetime-local"
                                             value={isoToLocalInput(form.starts_at)}
                                             onChange={(e) => patch({ starts_at: localInputToIso(e.target.value) })}
-                                            className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                            className="h-11 w-full rounded-lg border border-cp-line bg-cp-surface px-3 text-sm text-cp-ink shadow-sm outline-none transition focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                         />
                                     </div>
                                     {startLabel && (
-                                        <span className="text-[11px] text-[#8A8A96]">
+                                        <span className="text-[11px] text-cp-muted">
                                             {startLabel}
                                             {timeLabel && ` · ${timeLabel}`}
                                         </span>
@@ -801,9 +801,9 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                         type="datetime-local"
                                         value={isoToLocalInput(form.ends_at)}
                                         onChange={(e) => patch({ ends_at: localInputToIso(e.target.value) })}
-                                        className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                        className="h-11 w-full rounded-lg border border-cp-line bg-cp-surface px-3 text-sm text-cp-ink shadow-sm outline-none transition focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                     />
-                                    {endLabel && <span className="text-[11px] text-[#8A8A96]">{endLabel}</span>}
+                                    {endLabel && <span className="text-[11px] text-cp-muted">{endLabel}</span>}
                                 </div>
                             </div>
 
@@ -829,7 +829,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                             {form.mode === 'online' ? (
                                 <div className="order-7 flex flex-col gap-1.5">
                                     <label htmlFor="event_join" className={LABEL_CLASS}>
-                                        Join link <span className="font-normal text-[#8A8A96] normal-case">(shared with attendees)</span>
+                                        Join link <span className="font-normal text-cp-muted normal-case">(shared with attendees)</span>
                                     </label>
                                     <input
                                         id="event_join"
@@ -837,9 +837,9 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                         value={form.join_link}
                                         onChange={(e) => patch({ join_link: e.target.value })}
                                         placeholder="https://zoom.us/j/…"
-                                        className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                        className="h-11 w-full rounded-lg border border-cp-line bg-cp-surface px-3 text-sm text-cp-ink shadow-sm outline-none transition placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                     />
-                                    <p className="text-[11px] text-[#8A8A96]">
+                                    <p className="text-[11px] text-cp-muted">
                                         Leave blank to share it from the registration panel after each ticket is paid.
                                     </p>
                                 </div>
@@ -853,16 +853,16 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                         value={form.venue_address}
                                         onChange={(e) => patch({ venue_address: e.target.value })}
                                         placeholder="91 Springboard, HSR Layout, Bengaluru"
-                                        className="h-11 w-full rounded-lg border border-[#E4E2DA] bg-white px-3 text-sm text-[#14141B] shadow-sm outline-none transition placeholder:text-[#8A8A96] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                        className="h-11 w-full rounded-lg border border-cp-line bg-cp-surface px-3 text-sm text-cp-ink shadow-sm outline-none transition placeholder:text-cp-muted focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                     />
-                                    <p className="text-[11px] text-[#8A8A96]">
+                                    <p className="text-[11px] text-cp-muted">
                                         Buyers see this on the page once they register.
                                     </p>
                                 </div>
                             )}
 
                             {publishError && (
-                                <div className="flex items-start gap-2 rounded-lg border border-[#FFEDE8] bg-[#FFF6F1] p-3 text-[12px] font-semibold text-[#C2410C]">
+                                <div className="flex items-start gap-2 rounded-lg border border-cp-coral-soft bg-cp-coral-soft p-3 text-[12px] font-semibold text-cp-coral-dark-ink">
                                     <Info className="mt-px size-4 shrink-0" />
                                     {publishError}
                                 </div>
@@ -871,8 +871,8 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                     </div>
 
                     {/* bottom action bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E4E2DA] bg-white px-4 py-3 md:px-6">
-                        <div className="flex items-center gap-2 text-[11px] text-[#8A8A96]">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-cp-line bg-cp-surface px-4 py-3 md:px-6">
+                        <div className="flex items-center gap-2 text-[11px] text-cp-muted">
                             <SaveStatusPill status={saveStatus} />
                             <span>All changes saved automatically</span>
                         </div>
@@ -881,11 +881,11 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                 variant="outline"
                                 onClick={saveDraft}
                                 disabled={saveStatus === 'saving'}
-                                className="border-[#E4E2DA] text-[#4B4B57] hover:bg-[#F6F5F2]"
+                                className="border-cp-line text-cp-body hover:bg-cp-canvas"
                             >
                                 <Save className="size-4" /> Save draft
                             </Button>
-                            <Button onClick={publish} disabled={publishing} className="bg-[#4F46E5] hover:bg-[#4338CA]">
+                            <Button onClick={publish} disabled={publishing} className="text-white bg-cp-brand hover:bg-cp-brand-hover">
                                 {publishing ? <Loader2 className="size-4 animate-spin" /> : <Rocket className="size-4" />}
                                 {publishing ? 'Publishing…' : 'Publish'} <ArrowRight className="size-3.5" />
                             </Button>
@@ -931,7 +931,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                     {/* helper tip */}
                     <div className="border-t border-white/5 px-4 py-2.5 md:px-6">
                         <p className="flex items-center gap-1.5 text-[11px] text-white/40">
-                            <Sparkles className="size-3 text-[#FF6B4A]" />
+                            <Sparkles className="size-3 text-cp-coral-ink" />
                             Tip — the join link is hidden until a buyer registers.
                         </p>
                     </div>
@@ -966,26 +966,26 @@ function ModeCard({
             className={cn(
                 'group relative flex min-h-[76px] items-start rounded-lg border p-3 text-left transition',
                 active
-                    ? 'border-[#4F46E5] bg-[#EEF2FF]'
-                    : 'border-[#E4E2DA] bg-white hover:border-[#4F46E5]/40 hover:bg-[#F6F5F2]',
+                    ? 'border-cp-brand bg-cp-brand-soft'
+                    : 'border-cp-line bg-cp-surface hover:border-cp-brand/40 hover:bg-cp-canvas',
             )}
         >
             <span
                 className={cn(
                     'hidden',
-                    active ? 'bg-[#4F46E5] text-white' : 'bg-[#F6F5F2] text-[#8A8A96] group-hover:text-[#4F46E5]',
+                    active ? 'bg-cp-brand text-white' : 'bg-cp-canvas text-cp-muted group-hover:text-cp-brand-ink',
                 )}
             >
                 {icon}
             </span>
             <span className="flex min-w-0 flex-col">
-                <span className="text-[13px] font-semibold text-[#14141B]">{label}</span>
-                <span className={cn('mt-1 text-[10px] leading-snug', active ? 'text-[#4F46E5]/80' : 'text-[#8A8A96]')}>{hint}</span>
+                <span className="text-[13px] font-semibold text-cp-ink">{label}</span>
+                <span className={cn('mt-1 text-[10px] leading-snug', active ? 'text-cp-brand-ink/80' : 'text-cp-muted')}>{hint}</span>
             </span>
             <span
                 className={cn(
                     'absolute top-3 right-3 flex size-4 items-center justify-center rounded-full border transition',
-                    active ? 'border-[#4F46E5] bg-[#4F46E5] text-white' : 'border-[#E4E2DA] bg-white',
+                    active ? 'border-cp-brand bg-cp-brand text-white' : 'border-cp-line bg-cp-surface',
                 )}
             >
                 {active && <Check className="size-2.5" />}
@@ -1003,7 +1003,7 @@ function DeviceToggle({ device, onChange }: { device: 'desktop' | 'mobile'; onCh
                 aria-pressed={device === 'desktop'}
                 className={cn(
                     'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition',
-                    device === 'desktop' ? 'bg-white text-[#14141B]' : 'text-white/60 hover:text-white',
+                    device === 'desktop' ? 'light-island bg-cp-surface text-cp-ink' : 'text-white/60 hover:text-white',
                 )}
             >
                 <Monitor className="size-3.5" /> Desktop
@@ -1014,7 +1014,7 @@ function DeviceToggle({ device, onChange }: { device: 'desktop' | 'mobile'; onCh
                 aria-pressed={device === 'mobile'}
                 className={cn(
                     'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition',
-                    device === 'mobile' ? 'bg-white text-[#14141B]' : 'text-white/60 hover:text-white',
+                    device === 'mobile' ? 'light-island bg-cp-surface text-cp-ink' : 'text-white/60 hover:text-white',
                 )}
             >
                 <Smartphone className="size-3.5" /> Mobile
@@ -1026,24 +1026,24 @@ function DeviceToggle({ device, onChange }: { device: 'desktop' | 'mobile'; onCh
 function SaveStatusPill({ status }: { status: SaveStatus }) {
     if (status === 'saving')
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#4F46E5]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-cp-brand-soft px-2 py-0.5 text-[10px] font-semibold text-cp-brand-ink">
                 <Loader2 className="size-3 animate-spin" /> Saving
             </span>
         );
     if (status === 'saved')
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#E6F6EC] px-2 py-0.5 text-[10px] font-semibold text-[#059669]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-cp-success-soft px-2 py-0.5 text-[10px] font-semibold text-cp-success-ink">
                 <Check className="size-3" /> Saved
             </span>
         );
     if (status === 'error')
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#FFEDE8] px-2 py-0.5 text-[10px] font-semibold text-[#C2410C]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-cp-coral-soft px-2 py-0.5 text-[10px] font-semibold text-cp-coral-dark-ink">
                 <Info className="size-3" /> Save failed
             </span>
         );
     return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-white/0 px-2 py-0.5 text-[10px] font-semibold text-[#8A8A96]">
+        <span className="inline-flex items-center gap-1 rounded-full bg-white/0 px-2 py-0.5 text-[10px] font-semibold text-cp-muted">
             <Eye className="size-3" /> Live
         </span>
     );

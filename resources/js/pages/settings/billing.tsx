@@ -118,21 +118,21 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Billing" />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     <div className="flex flex-col gap-1 pt-1">
-                        <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">Billing</h1>
-                        <p className="text-sm text-[#8A8A96]">Your plan, Plus payments and tax invoices.</p>
+                        <h1 className="text-2xl font-bold tracking-tight text-cp-ink">Billing</h1>
+                        <p className="text-sm text-cp-muted">Your plan, Plus payments and tax invoices.</p>
                     </div>
 
                     {notice && (
-                        <div role="status" className="flex items-center gap-2 rounded-xl bg-[#E6F6EC] p-3.5 text-[13px] font-semibold text-[#059669]">
+                        <div role="status" className="flex items-center gap-2 rounded-xl bg-cp-success-soft p-3.5 text-[13px] font-semibold text-cp-success-ink">
                             <Check className="size-4 shrink-0" /> {notice}
                         </div>
                     )}
 
                     {endingSoon && (
-                        <div className="flex items-start gap-2.5 rounded-xl bg-[#FFF4DB] p-3.5 text-[13px] font-medium text-[#B46E00]">
+                        <div className="flex items-start gap-2.5 rounded-xl bg-cp-warning-soft p-3.5 text-[13px] font-medium text-cp-warning-ink">
                             <AlertTriangle className="mt-px size-4 shrink-0" />
                             <span>
                                 Plus ends {daysLeft === 0 ? 'today' : `in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`}. Auto-renew is off — after that
@@ -142,20 +142,20 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                     )}
 
                     {/* Current plan */}
-                    <section className="flex flex-col justify-between gap-4 rounded-xl bg-white p-5 shadow-sm sm:flex-row sm:items-center">
+                    <section className="flex flex-col justify-between gap-4 rounded-xl bg-cp-surface p-5 shadow-sm sm:flex-row sm:items-center">
                         <div className="flex items-start gap-3.5">
                             <span
                                 className={cn(
                                     'flex size-11 shrink-0 items-center justify-center rounded-xl',
-                                    onPlus ? 'bg-[#F1EAFE] text-[#7C3AED]' : 'bg-[#F0EFEA] text-[#6B6B78]',
+                                    onPlus ? 'bg-cp-accent-soft text-cp-accent-ink' : 'bg-cp-surface-3 text-cp-subtle',
                                 )}
                             >
                                 {onPlus ? <Crown className="size-5" /> : <Zap className="size-5" />}
                             </span>
                             <div>
-                                <p className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">Current plan</p>
-                                <p className="mt-0.5 text-lg font-bold text-[#14141B]">{onPlus ? plus.name : 'Free'}</p>
-                                <p className="mt-0.5 text-sm text-[#6B6B78]">
+                                <p className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">Current plan</p>
+                                <p className="mt-0.5 text-lg font-bold text-cp-ink">{onPlus ? plus.name : 'Free'}</p>
+                                <p className="mt-0.5 text-sm text-cp-subtle">
                                     {plan.permanent
                                         ? 'Plus with no end date.'
                                         : renewing && subscription?.next_charge_at
@@ -166,40 +166,40 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                                 </p>
                             </div>
                         </div>
-                        <div className="rounded-lg bg-[#F6F5F2] px-4 py-3 sm:text-right">
-                            <p className="text-2xl font-bold text-[#14141B] tabular-nums">{pct(plan.commission_rate)}</p>
-                            <p className="text-xs text-[#8A8A96]">commission per sale</p>
+                        <div className="rounded-lg bg-cp-canvas px-4 py-3 sm:text-right">
+                            <p className="text-2xl font-bold text-cp-ink tabular-nums">{pct(plan.commission_rate)}</p>
+                            <p className="text-xs text-cp-muted">commission per sale</p>
                         </div>
                     </section>
 
                     <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
                         {/* Subscribe / manage auto-renew */}
-                        <section className="flex flex-col gap-5 rounded-xl bg-white p-5 shadow-sm">
+                        <section className="flex flex-col gap-5 rounded-xl bg-cp-surface p-5 shadow-sm">
                             <div>
-                                <h2 className="text-base font-bold text-[#14141B]">{renewing ? 'Auto-renew' : onPlus ? 'Keep Plus with auto-renew' : 'Upgrade to Plus'}</h2>
-                                <p className="mt-0.5 text-sm text-[#8A8A96]">
+                                <h2 className="text-base font-bold text-cp-ink">{renewing ? 'Auto-renew' : onPlus ? 'Keep Plus with auto-renew' : 'Upgrade to Plus'}</h2>
+                                <p className="mt-0.5 text-sm text-cp-muted">
                                     {money(price.amount)} a month, charged automatically to your card or UPI. Turn it off any time.
                                 </p>
                             </div>
 
                             {plan.permanent ? (
-                                <div className="flex items-start gap-2.5 rounded-lg bg-[#EEF0FF] p-3.5 text-[13px] font-medium text-[#4338CA]">
+                                <div className="flex items-start gap-2.5 rounded-lg bg-cp-brand-soft p-3.5 text-[13px] font-medium text-cp-brand-hover-ink">
                                     <BadgeCheck className="mt-px size-4 shrink-0" /> Your account already has Plus with no end date — there is nothing to buy.
                                 </div>
                             ) : renewing && subscription ? (
                                 <>
-                                    <div className="flex flex-col gap-3 rounded-xl bg-[#F6F5F2] p-4 text-sm">
-                                        <div className="flex items-center gap-2 font-semibold text-[#059669]">
+                                    <div className="flex flex-col gap-3 rounded-xl bg-cp-canvas p-4 text-sm">
+                                        <div className="flex items-center gap-2 font-semibold text-cp-success-ink">
                                             <Repeat className="size-4" /> Auto-renew is on
                                         </div>
                                         <dl className="flex flex-col gap-1.5">
                                             <div className="flex justify-between gap-4">
-                                                <dt className="text-[#6B6B78]">Plan</dt>
-                                                <dd className="font-medium text-[#14141B]">{plus.name} · monthly</dd>
+                                                <dt className="text-cp-subtle">Plan</dt>
+                                                <dd className="font-medium text-cp-ink">{plus.name} · monthly</dd>
                                             </div>
                                             <div className="flex justify-between gap-4">
-                                                <dt className="text-[#6B6B78]">Next charge</dt>
-                                                <dd className="font-medium text-[#14141B] tabular-nums">
+                                                <dt className="text-cp-subtle">Next charge</dt>
+                                                <dd className="font-medium text-cp-ink tabular-nums">
                                                     {money(price.amount)} on {date(subscription.next_charge_at)}
                                                 </dd>
                                             </div>
@@ -207,7 +207,7 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                                     </div>
 
                                     {subscription.status === 'pending' && (
-                                        <div className="flex items-start gap-2 rounded-lg bg-[#FFF4DB] p-3 text-[13px] font-medium text-[#B46E00]">
+                                        <div className="flex items-start gap-2 rounded-lg bg-cp-warning-soft p-3 text-[13px] font-medium text-cp-warning-ink">
                                             <AlertTriangle className="mt-px size-4 shrink-0" />
                                             <span>
                                                 The last charge did not go through{subscription.failure_reason ? ` (${subscription.failure_reason})` : ''}. Razorpay will try again
@@ -217,19 +217,19 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                                     )}
 
                                     {error && (
-                                        <div role="alert" className="flex items-start gap-2 rounded-lg bg-[#FDECEC] p-3 text-[13px] font-medium text-[#B42318]">
+                                        <div role="alert" className="flex items-start gap-2 rounded-lg bg-cp-danger-soft p-3 text-[13px] font-medium text-cp-danger-ink">
                                             <AlertTriangle className="mt-px size-4 shrink-0" /> {error}
                                         </div>
                                     )}
 
                                     {confirmCancel ? (
-                                        <div className="flex flex-col gap-3 rounded-xl border border-[#F3C7C3] p-4">
-                                            <p className="text-sm text-[#4B4B57]">
+                                        <div className="flex flex-col gap-3 rounded-xl border border-cp-danger-line-soft p-4">
+                                            <p className="text-sm text-cp-body">
                                                 Turn off auto-renew? Plus stays on until {date(plan.expires_at ?? subscription.next_charge_at)}, then commission goes
                                                 back to {pct(freeRate)}. You can subscribe again later.
                                             </p>
                                             <div className="flex gap-2">
-                                                <Button onClick={cancel} disabled={busy} className="h-10 flex-1 bg-[#B42318] text-sm font-bold hover:bg-[#912018]">
+                                                <Button onClick={cancel} disabled={busy} className="h-10 flex-1 text-white bg-cp-danger text-sm font-bold hover:bg-cp-danger-hover">
                                                     {busy ? <Loader2 className="size-4 animate-spin" /> : 'Turn off auto-renew'}
                                                 </Button>
                                                 <Button variant="outline" onClick={() => setConfirmCancel(false)} disabled={busy} className="h-10 flex-1 text-sm font-semibold">
@@ -241,7 +241,7 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                                         <button
                                             type="button"
                                             onClick={() => setConfirmCancel(true)}
-                                            className="self-start text-sm font-semibold text-[#B42318] hover:underline"
+                                            className="self-start text-sm font-semibold text-cp-danger-ink hover:underline"
                                         >
                                             Cancel auto-renew
                                         </button>
@@ -250,7 +250,7 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                             ) : (
                                 <>
                                     {subscription?.status === 'halted' && (
-                                        <div className="flex items-start gap-2 rounded-lg bg-[#FDECEC] p-3 text-[13px] font-medium text-[#B42318]">
+                                        <div className="flex items-start gap-2 rounded-lg bg-cp-danger-soft p-3 text-[13px] font-medium text-cp-danger-ink">
                                             <AlertTriangle className="mt-px size-4 shrink-0" />
                                             <span>
                                                 Auto-renew stopped because the payments kept failing{subscription.failure_reason ? ` (${subscription.failure_reason})` : ''}.
@@ -259,34 +259,34 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                                         </div>
                                     )}
 
-                                    <ul className="flex flex-col gap-2 rounded-xl bg-[#F6F5F2] p-4 text-sm text-[#4B4B57]">
+                                    <ul className="flex flex-col gap-2 rounded-xl bg-cp-canvas p-4 text-sm text-cp-body">
                                         <li className="flex gap-2">
-                                            <CalendarClock className="mt-0.5 size-4 shrink-0 text-[#4F46E5]" />
+                                            <CalendarClock className="mt-0.5 size-4 shrink-0 text-cp-brand-ink" />
                                             {price.first_charge_at
                                                 ? `Your current Plus runs till ${date(price.first_charge_at)} — the first ${money(price.amount)} is charged then, not today.`
                                                 : `${money(price.amount)} today, then every month on the same date.`}
                                         </li>
                                         <li className="flex gap-2">
-                                            <Repeat className="mt-0.5 size-4 shrink-0 text-[#4F46E5]" /> Renews on its own — no reminders to miss. Cancel any time; the month
+                                            <Repeat className="mt-0.5 size-4 shrink-0 text-cp-brand-ink" /> Renews on its own — no reminders to miss. Cancel any time; the month
                                             you paid for still runs out.
                                         </li>
                                         <li className="flex gap-2">
-                                            <FileText className="mt-0.5 size-4 shrink-0 text-[#4F46E5]" /> A GST invoice for every payment (includes {money(price.gst)} GST at{' '}
+                                            <FileText className="mt-0.5 size-4 shrink-0 text-cp-brand-ink" /> A GST invoice for every payment (includes {money(price.gst)} GST at{' '}
                                             {pct(price.gst_rate)}).
                                         </li>
                                     </ul>
 
                                     {needsState && (
                                         <div>
-                                            <label htmlFor="billing-state" className="text-sm font-semibold text-[#14141B]">
+                                            <label htmlFor="billing-state" className="text-sm font-semibold text-cp-ink">
                                                 Your state
                                             </label>
-                                            <p className="mt-0.5 text-xs text-[#8A8A96]">Needed once, for the GST lines on your invoice.</p>
+                                            <p className="mt-0.5 text-xs text-cp-muted">Needed once, for the GST lines on your invoice.</p>
                                             <select
                                                 id="billing-state"
                                                 value={state}
                                                 onChange={(e) => setState(e.target.value)}
-                                                className="mt-2 h-10 w-full rounded-lg border border-[#DAD8D0] bg-white px-3 text-sm text-[#14141B] outline-none focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15"
+                                                className="mt-2 h-10 w-full rounded-lg border border-cp-line-strong bg-cp-surface px-3 text-sm text-cp-ink outline-none focus:border-cp-brand focus:ring-2 focus:ring-cp-brand/15"
                                             >
                                                 <option value="">Select state</option>
                                                 {states.map((s) => (
@@ -299,24 +299,24 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                                     )}
 
                                     {error && (
-                                        <div role="alert" className="flex items-start gap-2 rounded-lg bg-[#FDECEC] p-3 text-[13px] font-medium text-[#B42318]">
+                                        <div role="alert" className="flex items-start gap-2 rounded-lg bg-cp-danger-soft p-3 text-[13px] font-medium text-cp-danger-ink">
                                             <AlertTriangle className="mt-px size-4 shrink-0" /> {error}
                                         </div>
                                     )}
 
                                     {unverified ? (
-                                        <div className="flex items-start gap-2 rounded-lg bg-[#FFF4DB] p-3 text-[13px] font-medium text-[#B46E00]">
+                                        <div className="flex items-start gap-2 rounded-lg bg-cp-warning-soft p-3 text-[13px] font-medium text-cp-warning-ink">
                                             <Info className="mt-px size-4 shrink-0" /> Verify your email address before making a payment.
                                         </div>
                                     ) : (
                                         !paymentsReady && (
-                                            <div className="flex items-start gap-2 rounded-lg bg-[#FFF4DB] p-3 text-[13px] font-medium text-[#B46E00]">
+                                            <div className="flex items-start gap-2 rounded-lg bg-cp-warning-soft p-3 text-[13px] font-medium text-cp-warning-ink">
                                                 <Info className="mt-px size-4 shrink-0" /> Online payments are not set up yet. Please check back soon.
                                             </div>
                                         )
                                     )}
 
-                                    <Button onClick={subscribe} disabled={busy || !canSubscribe} className="h-11 w-full bg-[#4F46E5] text-sm font-bold hover:bg-[#4338CA]">
+                                    <Button onClick={subscribe} disabled={busy || !canSubscribe} className="h-11 w-full text-white bg-cp-brand text-sm font-bold hover:bg-cp-brand-hover">
                                         {busy ? (
                                             <Loader2 className="size-4 animate-spin" />
                                         ) : price.first_charge_at ? (
@@ -325,15 +325,15 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                                             `Subscribe — ${money(price.amount)}/month`
                                         )}
                                     </Button>
-                                    <p className="flex items-center justify-center gap-1.5 text-xs text-[#8A8A96]">
+                                    <p className="flex items-center justify-center gap-1.5 text-xs text-cp-muted">
                                         <ShieldCheck className="size-3.5" /> Secure payment by Razorpay · cards and UPI AutoPay
                                     </p>
                                 </>
                             )}
 
                             {creditBalance > 0 && !plan.permanent && (
-                                <div className="flex items-start gap-2.5 rounded-lg border border-[#E4E2DA] p-3 text-[13px] text-[#4B4B57]">
-                                    <Gift className="mt-px size-4 shrink-0 text-[#7C3AED]" />
+                                <div className="flex items-start gap-2.5 rounded-lg border border-cp-line p-3 text-[13px] text-cp-body">
+                                    <Gift className="mt-px size-4 shrink-0 text-cp-accent-ink" />
                                     <span>
                                         You have {money(creditBalance)} referral credit.{' '}
                                         {renewing ? (
@@ -341,7 +341,7 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                                         ) : (
                                             <>
                                                 Turn it into Plus months on{' '}
-                                                <Link href="/dashboard/refer-earn" className="font-semibold text-[#4F46E5] hover:underline">
+                                                <Link href="/dashboard/refer-earn" className="font-semibold text-cp-brand-ink hover:underline">
                                                     Refer &amp; Earn
                                                 </Link>
                                                 .
@@ -354,62 +354,62 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
 
                         {/* Why Plus */}
                         <aside className="flex flex-col gap-5">
-                            <section className="rounded-xl bg-white p-5 shadow-sm">
-                                <h2 className="text-base font-bold text-[#14141B]">What Plus changes</h2>
+                            <section className="rounded-xl bg-cp-surface p-5 shadow-sm">
+                                <h2 className="text-base font-bold text-cp-ink">What Plus changes</h2>
                                 <div className="mt-3 grid grid-cols-2 gap-2.5">
-                                    <div className="rounded-lg bg-[#F6F5F2] p-3">
-                                        <p className="text-xs text-[#8A8A96]">Free</p>
-                                        <p className="text-lg font-bold text-[#14141B] tabular-nums">{pct(freeRate)}</p>
+                                    <div className="rounded-lg bg-cp-canvas p-3">
+                                        <p className="text-xs text-cp-muted">Free</p>
+                                        <p className="text-lg font-bold text-cp-ink tabular-nums">{pct(freeRate)}</p>
                                     </div>
-                                    <div className="rounded-lg bg-[#F1EAFE] p-3">
-                                        <p className="text-xs text-[#7C3AED]">Plus</p>
-                                        <p className="text-lg font-bold text-[#14141B] tabular-nums">{pct(plus.commission_rate)}</p>
+                                    <div className="rounded-lg bg-cp-accent-soft p-3">
+                                        <p className="text-xs text-cp-accent-ink">Plus</p>
+                                        <p className="text-lg font-bold text-cp-ink tabular-nums">{pct(plus.commission_rate)}</p>
                                     </div>
                                 </div>
-                                <ul className="mt-4 flex flex-col gap-2 text-sm text-[#4B4B57]">
+                                <ul className="mt-4 flex flex-col gap-2 text-sm text-cp-body">
                                     {plus.features.map((feature) => (
                                         <li key={feature} className="flex gap-2">
-                                            <Check className="mt-0.5 size-4 shrink-0 text-[#059669]" /> {feature}
+                                            <Check className="mt-0.5 size-4 shrink-0 text-cp-success-ink" /> {feature}
                                         </li>
                                     ))}
                                 </ul>
                             </section>
 
                             {savings.sales_30d > 0 && (
-                                <section className="flex items-start gap-3 rounded-xl bg-white p-5 shadow-sm">
-                                    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#E6F6EC] text-[#059669]">
+                                <section className="flex items-start gap-3 rounded-xl bg-cp-surface p-5 shadow-sm">
+                                    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-cp-success-soft text-cp-success-ink">
                                         <TrendingUp className="size-5" />
                                     </span>
-                                    <div className="text-sm text-[#4B4B57]">
-                                        <p className="font-semibold text-[#14141B]">Your last 30 days</p>
+                                    <div className="text-sm text-cp-body">
+                                        <p className="font-semibold text-cp-ink">Your last 30 days</p>
                                         <p className="mt-0.5">
                                             You sold {money(savings.sales_30d)}. The gap between Free and Plus commission on that is{' '}
-                                            <span className="font-semibold text-[#14141B]">{money(savings.extra_commission)}</span>, against{' '}
+                                            <span className="font-semibold text-cp-ink">{money(savings.extra_commission)}</span>, against{' '}
                                             {money(plus.monthly_price)} for a month of Plus.
                                         </p>
                                     </div>
                                 </section>
                             )}
 
-                            <section className="rounded-xl bg-white p-5 text-sm shadow-sm">
-                                <h2 className="text-base font-bold text-[#14141B]">Invoice details</h2>
+                            <section className="rounded-xl bg-cp-surface p-5 text-sm shadow-sm">
+                                <h2 className="text-base font-bold text-cp-ink">Invoice details</h2>
                                 <dl className="mt-3 flex flex-col gap-1.5">
                                     <div className="flex justify-between gap-4">
-                                        <dt className="text-[#8A8A96]">Billed to</dt>
-                                        <dd className="truncate font-medium text-[#14141B]">{billing.name}</dd>
+                                        <dt className="text-cp-muted">Billed to</dt>
+                                        <dd className="truncate font-medium text-cp-ink">{billing.name}</dd>
                                     </div>
                                     <div className="flex justify-between gap-4">
-                                        <dt className="text-[#8A8A96]">GSTIN</dt>
-                                        <dd className="font-medium text-[#14141B]">{billing.gstin ?? 'Not added'}</dd>
+                                        <dt className="text-cp-muted">GSTIN</dt>
+                                        <dd className="font-medium text-cp-ink">{billing.gstin ?? 'Not added'}</dd>
                                     </div>
                                     <div className="flex justify-between gap-4">
-                                        <dt className="text-[#8A8A96]">State</dt>
-                                        <dd className="font-medium text-[#14141B]">{billing.state ?? 'Not set'}</dd>
+                                        <dt className="text-cp-muted">State</dt>
+                                        <dd className="font-medium text-cp-ink">{billing.state ?? 'Not set'}</dd>
                                     </div>
                                 </dl>
-                                <p className="mt-3 text-xs text-[#8A8A96]">
+                                <p className="mt-3 text-xs text-cp-muted">
                                     Name comes from your{' '}
-                                    <Link href="/dashboard/payments/account" className="font-semibold text-[#4F46E5] hover:underline">
+                                    <Link href="/dashboard/payments/account" className="font-semibold text-cp-brand-ink hover:underline">
                                         payout profile
                                     </Link>
                                     ; GSTIN from your verified KYC.
@@ -419,17 +419,17 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                     </div>
 
                     {/* Invoices */}
-                    <section className="rounded-xl bg-white shadow-sm">
+                    <section className="rounded-xl bg-cp-surface shadow-sm">
                         <div className="flex items-center justify-between p-5 pb-3">
-                            <h2 className="text-base font-bold text-[#14141B]">Invoices</h2>
+                            <h2 className="text-base font-bold text-cp-ink">Invoices</h2>
                         </div>
                         {invoices.length === 0 ? (
-                            <p className="px-5 pb-6 text-sm text-[#8A8A96]">No invoices yet. A GST invoice appears here after each Plus payment.</p>
+                            <p className="px-5 pb-6 text-sm text-cp-muted">No invoices yet. A GST invoice appears here after each Plus payment.</p>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full min-w-[560px] text-sm">
                                     <thead>
-                                        <tr className="border-y border-[#F0EFEA] bg-[#FAFAF8] text-left text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">
+                                        <tr className="border-y border-cp-surface-3 bg-cp-surface-2 text-left text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
                                             <th className="px-5 py-2.5">Invoice</th>
                                             <th className="px-3 py-2.5">Date</th>
                                             <th className="px-3 py-2.5">Period</th>
@@ -439,22 +439,22 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                                     </thead>
                                     <tbody>
                                         {invoices.map((invoice) => (
-                                            <tr key={invoice.uuid} className="border-b border-[#F0EFEA] last:border-0">
+                                            <tr key={invoice.uuid} className="border-b border-cp-surface-3 last:border-0">
                                                 <td className="px-5 py-3">
-                                                    <p className="font-semibold text-[#14141B]">{invoice.number}</p>
-                                                    <p className="text-xs text-[#8A8A96]">{invoice.description ?? 'Plus plan'}</p>
+                                                    <p className="font-semibold text-cp-ink">{invoice.number}</p>
+                                                    <p className="text-xs text-cp-muted">{invoice.description ?? 'Plus plan'}</p>
                                                 </td>
-                                                <td className="px-3 py-3 whitespace-nowrap text-[#4B4B57]">{date(invoice.paid_at)}</td>
-                                                <td className="px-3 py-3 whitespace-nowrap text-[#4B4B57]">
+                                                <td className="px-3 py-3 whitespace-nowrap text-cp-body">{date(invoice.paid_at)}</td>
+                                                <td className="px-3 py-3 whitespace-nowrap text-cp-body">
                                                     {invoice.period_start ? `${date(invoice.period_start)} – ${date(invoice.period_end)}` : '—'}
                                                 </td>
-                                                <td className="px-3 py-3 text-right font-semibold text-[#14141B] tabular-nums">{money(invoice.amount)}</td>
+                                                <td className="px-3 py-3 text-right font-semibold text-cp-ink tabular-nums">{money(invoice.amount)}</td>
                                                 <td className="px-5 py-3 text-right">
                                                     <a
                                                         href={`/dashboard/settings/billing/invoices/${invoice.uuid}`}
                                                         target="_blank"
                                                         rel="noreferrer"
-                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#4F46E5] hover:underline"
+                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-cp-brand-ink hover:underline"
                                                     >
                                                         <FileText className="size-3.5" /> View
                                                     </a>

@@ -205,17 +205,16 @@ export default function DashboardIndex({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            <div className="relative isolate min-h-full">
-                <div aria-hidden="true" className="dashboard-glow pointer-events-none absolute inset-0 -z-10" />
-                <div aria-hidden="true" className="dashboard-dots pointer-events-none absolute inset-0 -z-10" />
+            <div className="relative isolate min-h-full overflow-x-clip">
+                {/* background — landing (/) jaisa: upar halka blue wash, blue grid lines (neeche fade), beech me blue glow */}
+                <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] bg-linear-to-b from-blue-50/80 to-transparent dark:from-indigo-500/10" />
+                <div aria-hidden="true" className="home-grid pointer-events-none absolute inset-0 -z-10 mask-[radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
+                <div aria-hidden="true" className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-blue-400/20 dark:bg-indigo-500/10 blur-3xl" />
                 <main className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-8">
                     {/* Hero */}
-                    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-secondary to-[#7c3aed] p-6 text-white shadow-lg md:p-8 dark:from-[#1e2a6b] dark:via-[#2a2470] dark:to-[#3b1d6e]">
-                        <div
-                            aria-hidden="true"
-                            className="pointer-events-none absolute inset-0 [mask-image:linear-gradient(to_left,black,transparent_75%)] opacity-25"
-                            style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '18px 18px' }}
-                        />
+                    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-secondary to-cp-accent p-6 text-white shadow-lg md:p-8 dark:from-[#1e2a6b] dark:via-[#2a2470] dark:to-[#3b1d6e]">
+                        {/* landing ke CTA band jaisi safed grid lines (pehle dots the) */}
+                        <div aria-hidden="true" className="home-grid-light pointer-events-none absolute inset-0 mask-[linear-gradient(to_left,black,transparent_75%)] opacity-40" />
                         <div className="pointer-events-none absolute -top-16 -right-16 size-64 rounded-full bg-white/10 blur-2xl" />
                         <div className="pointer-events-none absolute -bottom-24 left-1/3 size-72 rounded-full bg-white/5 blur-3xl" />
                         <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">

@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/brand';
 import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 
@@ -93,29 +94,9 @@ export function SectionHeading({
     );
 }
 
+/** CreatorPro logo — tone 'dark' = light background pe (rangeen), 'light' = blue / navy background pe (poora safed — footer, login panel). */
 export function Logo({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
-    return (
-        <span className="flex items-center gap-2.5">
-            <span className="grid size-9 place-items-center rounded-xl bg-linear-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-600/30">
-                <svg
-                    viewBox="0 0 24 24"
-                    className="size-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2.2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                >
-                    <path d="M4 7l8-4 8 4-8 4-8-4z" />
-                    <path d="M4 12l8 4 8-4" />
-                    <path d="M4 17l8 4 8-4" />
-                </svg>
-            </span>
-            <span className={cn('text-lg font-semibold tracking-tight', tone === 'dark' ? 'text-slate-900' : 'text-white')}>
-                Creator<span className={tone === 'dark' ? 'text-blue-600' : 'text-blue-300'}>Pro</span>
-            </span>
-        </span>
-    );
+    return <BrandLogo variant={tone === 'dark' ? 'color' : 'mono-white'} className="h-10" />;
 }
 
 export const primaryBtn =

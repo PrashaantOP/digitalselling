@@ -28,9 +28,9 @@ const TAB_FIELDS: Record<Exclude<Tab, 'settings'>, string[]> = {
 const tabOf = (field: string): Tab => (TAB_FIELDS.page.includes(field) ? 'page' : TAB_FIELDS.course.includes(field) ? 'course' : 'settings');
 
 const STATUS_CHIP: Record<CourseItem['status'], { label: string; cls: string }> = {
-    draft: { label: 'Draft', cls: 'bg-[#FFF4DB] text-[#B46E00]' },
-    published: { label: 'Live', cls: 'bg-[#E6F6EC] text-[#059669]' },
-    unpublished: { label: 'Unpublished', cls: 'bg-[#F0EFEA] text-[#6B6B78]' },
+    draft: { label: 'Draft', cls: 'bg-cp-warning-soft text-cp-warning-ink' },
+    published: { label: 'Live', cls: 'bg-cp-success-soft text-cp-success-ink' },
+    unpublished: { label: 'Unpublished', cls: 'bg-cp-surface-3 text-cp-subtle' },
 };
 
 function validateForm(f: FormState): Record<string, string> {
@@ -216,21 +216,21 @@ export default function CourseEdit({ item: rawItem, publicUrl }: { item: CourseI
     return (
         <>
             <Head title={`${form.title.trim() || 'Untitled course'} · Edit course`} />
-            <div className="fixed inset-0 z-40 flex bg-[#ECEBE6]">
+            <div className="fixed inset-0 z-40 flex bg-cp-surface-3">
                 {/* ---------------- Editor panel ---------------- */}
-                <section className={cn('flex h-full w-full flex-col border-r border-[#E4E2DA] bg-white lg:w-[520px] lg:shrink-0', pane === 'preview' && 'hidden lg:flex')}>
+                <section className={cn('flex h-full w-full flex-col border-r border-cp-line bg-cp-surface lg:w-[520px] lg:shrink-0', pane === 'preview' && 'hidden lg:flex')}>
                     <header>
                         <div className="flex items-center gap-3 px-5 py-4">
-                            <button type="button" onClick={close} aria-label="Close editor" className="rounded-lg p-1.5 text-[#4B4B57] transition hover:bg-[#F0EFEA] hover:text-[#14141B]">
+                            <button type="button" onClick={close} aria-label="Close editor" className="rounded-lg p-1.5 text-cp-body transition hover:bg-cp-surface-3 hover:text-cp-ink">
                                 <X className="size-5" />
                             </button>
-                            <h1 className="min-w-0 flex-1 truncate text-sm font-bold tracking-wide text-[#14141B] uppercase">{form.title.trim() || 'Untitled course'}</h1>
+                            <h1 className="min-w-0 flex-1 truncate text-sm font-bold tracking-wide text-cp-ink uppercase">{form.title.trim() || 'Untitled course'}</h1>
                             <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase', chip.cls)}>{chip.label}</span>
-                            <button type="button" onClick={() => setPane('preview')} className="flex items-center gap-1 rounded-lg border border-[#E4E2DA] px-2.5 py-1 text-xs font-semibold text-[#14141B] lg:hidden">
+                            <button type="button" onClick={() => setPane('preview')} className="flex items-center gap-1 rounded-lg border border-cp-line px-2.5 py-1 text-xs font-semibold text-cp-ink lg:hidden">
                                 <Eye className="size-3.5" /> Preview
                             </button>
                         </div>
-                        <div role="tablist" className="flex gap-1 border-b border-[#E4E2DA] px-5">
+                        <div role="tablist" className="flex gap-1 border-b border-cp-line px-5">
                             {TABS.map((t) => (
                                 <button
                                     key={t.key}
@@ -238,10 +238,10 @@ export default function CourseEdit({ item: rawItem, publicUrl }: { item: CourseI
                                     type="button"
                                     aria-selected={tab === t.key}
                                     onClick={() => setTab(t.key)}
-                                    className={cn('relative px-3 py-3 text-sm font-semibold transition-colors', tab === t.key ? 'text-[#14141B] after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-[#4F46E5]' : 'text-[#8A8A96] hover:text-[#14141B]')}
+                                    className={cn('relative px-3 py-3 text-sm font-semibold transition-colors', tab === t.key ? 'text-cp-ink after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-cp-brand' : 'text-cp-muted hover:text-cp-ink')}
                                 >
                                     {t.label}
-                                    {tabHasError(t.key) && <span className="absolute top-2.5 -right-0.5 size-1.5 rounded-full bg-[#D93838]" aria-label="Has errors" />}
+                                    {tabHasError(t.key) && <span className="absolute top-2.5 -right-0.5 size-1.5 rounded-full bg-cp-red" aria-label="Has errors" />}
                                 </button>
                             ))}
                         </div>
@@ -256,7 +256,7 @@ export default function CourseEdit({ item: rawItem, publicUrl }: { item: CourseI
                             {detail ? (
                                 <CourseTab courseId={item.uuid} modules={detail.modules} liveClasses={detail.live_classes} form={form} setField={setField} errors={errors} />
                             ) : (
-                                <p role="alert" className="rounded-lg bg-[#FFEDE8] px-3 py-2 text-xs font-medium text-[#C2410C]">
+                                <p role="alert" className="rounded-lg bg-cp-coral-soft px-3 py-2 text-xs font-medium text-cp-coral-dark-ink">
                                     Course details are missing for this product. Please re-create the course.
                                 </p>
                             )}
@@ -267,7 +267,7 @@ export default function CourseEdit({ item: rawItem, publicUrl }: { item: CourseI
                     </div>
 
                     {banner && (
-                        <div role={banner.kind === 'error' ? 'alert' : 'status'} className={cn('mx-5 mb-2 flex items-start justify-between gap-3 rounded-lg px-3 py-2 text-xs font-medium', banner.kind === 'error' ? 'bg-[#FFEDE8] text-[#C2410C]' : 'bg-[#E6F6EC] text-[#059669]')}>
+                        <div role={banner.kind === 'error' ? 'alert' : 'status'} className={cn('mx-5 mb-2 flex items-start justify-between gap-3 rounded-lg px-3 py-2 text-xs font-medium', banner.kind === 'error' ? 'bg-cp-coral-soft text-cp-coral-dark-ink' : 'bg-cp-success-soft text-cp-success-ink')}>
                             <span>
                                 {banner.text}
                                 {banner.link && (
@@ -276,43 +276,43 @@ export default function CourseEdit({ item: rawItem, publicUrl }: { item: CourseI
                                     </a>
                                 )}
                             </span>
-                            <button type="button" onClick={() => setBanner(null)} aria-label="Dismiss" className="shrink-0 rounded hover:bg-white/60">
+                            <button type="button" onClick={() => setBanner(null)} aria-label="Dismiss" className="shrink-0 rounded hover:bg-cp-surface/60">
                                 <X className="size-3.5" />
                             </button>
                         </div>
                     )}
 
-                    <footer className="flex items-center gap-3 border-t border-[#E4E2DA] bg-white px-5 py-3">
+                    <footer className="flex items-center gap-3 border-t border-cp-line bg-cp-surface px-5 py-3">
                         <span className="flex min-w-0 flex-1 items-center gap-1.5 text-xs font-medium" data-testid="save-state">
                             {saving ? (
-                                <span className="flex items-center gap-1.5 text-[#6B6B78]">
+                                <span className="flex items-center gap-1.5 text-cp-subtle">
                                     <Loader2 className="size-3.5 animate-spin" /> Saving…
                                 </span>
                             ) : dirty ? (
-                                <span className="flex items-center gap-1.5 text-[#B46E00]">
+                                <span className="flex items-center gap-1.5 text-cp-warning-ink">
                                     <span className="size-2 rounded-full bg-amber-500" /> Unsaved changes
                                 </span>
                             ) : (
-                                <span className="flex items-center gap-1.5 text-[#059669]">
+                                <span className="flex items-center gap-1.5 text-cp-success-ink">
                                     <Check className="size-3.5" /> All saved
                                 </span>
                             )}
                         </span>
                         {published ? (
                             <>
-                                <button type="button" onClick={() => setPublished(false)} disabled={busy} className="h-10 rounded-lg border border-[#E4E2DA] px-4 text-sm font-semibold text-[#4B4B57] transition hover:bg-[#F6F5F2] disabled:opacity-50">
+                                <button type="button" onClick={() => setPublished(false)} disabled={busy} className="h-10 rounded-lg border border-cp-line px-4 text-sm font-semibold text-cp-body transition hover:bg-cp-canvas disabled:opacity-50">
                                     Unpublish
                                 </button>
-                                <button type="button" onClick={saveDraft} disabled={busy || !dirty} className="flex h-10 items-center gap-1.5 rounded-lg bg-[#4F46E5] px-5 text-sm font-semibold text-white transition hover:bg-[#4338CA] disabled:opacity-50">
+                                <button type="button" onClick={saveDraft} disabled={busy || !dirty} className="flex h-10 items-center gap-1.5 rounded-lg bg-cp-brand px-5 text-sm font-semibold text-white transition hover:bg-cp-brand-hover disabled:opacity-50">
                                     {saving && <Loader2 className="size-4 animate-spin" />} Save changes
                                 </button>
                             </>
                         ) : (
                             <>
-                                <button type="button" onClick={saveDraft} disabled={busy} className="h-10 rounded-lg border border-[#E4E2DA] px-4 text-sm font-semibold text-[#4B4B57] transition hover:bg-[#F6F5F2] disabled:opacity-50">
+                                <button type="button" onClick={saveDraft} disabled={busy} className="h-10 rounded-lg border border-cp-line px-4 text-sm font-semibold text-cp-body transition hover:bg-cp-canvas disabled:opacity-50">
                                     Save draft
                                 </button>
-                                <button type="button" onClick={() => setPublished(true)} disabled={busy} className="flex h-10 items-center gap-1.5 rounded-lg bg-[#4F46E5] px-5 text-sm font-semibold text-white transition hover:bg-[#4338CA] disabled:opacity-50">
+                                <button type="button" onClick={() => setPublished(true)} disabled={busy} className="flex h-10 items-center gap-1.5 rounded-lg bg-cp-brand px-5 text-sm font-semibold text-white transition hover:bg-cp-brand-hover disabled:opacity-50">
                                     {publishing && <Loader2 className="size-4 animate-spin" />} Publish →
                                 </button>
                             </>
@@ -339,28 +339,31 @@ export default function CourseEdit({ item: rawItem, publicUrl }: { item: CourseI
                                 <Pencil className="size-3.5" /> Edit
                             </button>
                             <div role="group" aria-label="Preview device" className="flex items-center rounded-lg border border-white/10 bg-white/5 p-0.5">
-                                <button type="button" onClick={() => setDevice('desktop')} aria-pressed={device === 'desktop'} className={cn('flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition', device === 'desktop' ? 'bg-white text-[#14141B]' : 'text-white/60 hover:text-white')}>
+                                <button type="button" onClick={() => setDevice('desktop')} aria-pressed={device === 'desktop'} className={cn('flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition', device === 'desktop' ? 'light-island bg-cp-surface text-cp-ink' : 'text-white/60 hover:text-white')}>
                                     <Monitor className="size-3.5" /> Desktop
                                 </button>
-                                <button type="button" onClick={() => setDevice('mobile')} aria-pressed={device === 'mobile'} className={cn('flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition', device === 'mobile' ? 'bg-white text-[#14141B]' : 'text-white/60 hover:text-white')}>
+                                <button type="button" onClick={() => setDevice('mobile')} aria-pressed={device === 'mobile'} className={cn('flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition', device === 'mobile' ? 'light-island bg-cp-surface text-cp-ink' : 'text-white/60 hover:text-white')}>
                                     <Smartphone className="size-3.5" /> Mobile
                                 </button>
                             </div>
                         </div>
                     </div>
                     <div className="no-scrollbar flex min-h-0 flex-1 items-start justify-center overflow-hidden p-4 md:p-6 xl:p-8">
-                        <CoursePreview form={form} detail={detail} coverImages={item.cover_images} checkoutQuestions={item.checkout_questions} drafts={drafts} device={device} host={window.location.host} />
+                        {/* buyer view — dark dashboard me bhi light */}
+                        <div className="light-island contents">
+                            <CoursePreview form={form} detail={detail} coverImages={item.cover_images} checkoutQuestions={item.checkout_questions} drafts={drafts} device={device} host={window.location.host} />
+                        </div>
                     </div>
                 </section>
             </div>
 
             <Modal open={confirmClose} onClose={() => setConfirmClose(false)} title="Discard unsaved changes?">
-                <p className="text-sm text-[#6B6B78]">You have changes that haven't been saved. If you leave now, they will be lost.</p>
+                <p className="text-sm text-cp-subtle">You have changes that haven't been saved. If you leave now, they will be lost.</p>
                 <div className="mt-5 flex justify-end gap-2">
-                    <button type="button" onClick={() => setConfirmClose(false)} className="h-9 rounded-lg border border-[#E4E2DA] px-4 text-sm font-semibold text-[#4B4B57] hover:bg-[#F6F5F2]">
+                    <button type="button" onClick={() => setConfirmClose(false)} className="h-9 rounded-lg border border-cp-line px-4 text-sm font-semibold text-cp-body hover:bg-cp-canvas">
                         Keep editing
                     </button>
-                    <button type="button" onClick={() => router.visit('/dashboard/courses')} className="h-9 rounded-lg bg-[#D93838] px-4 text-sm font-semibold text-white hover:bg-[#B92D2D]">
+                    <button type="button" onClick={() => router.visit('/dashboard/courses')} className="h-9 rounded-lg bg-cp-red px-4 text-sm font-semibold text-white hover:bg-cp-danger">
                         Discard &amp; leave
                     </button>
                 </div>

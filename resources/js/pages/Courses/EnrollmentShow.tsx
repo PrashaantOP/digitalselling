@@ -74,12 +74,12 @@ const LESSON_TYPES: Record<string, { label: string; icon: LucideIcon }> = {
 };
 
 const AVATAR_TONES = [
-    'bg-[#EEF2FF] text-[#4F46E5]',
-    'bg-[#E6F2FF] text-[#0284C7]',
-    'bg-[#FFF4DB] text-[#B46E00]',
-    'bg-[#FFEDE8] text-[#C2410C]',
-    'bg-[#F1EAFE] text-[#7C3AED]',
-    'bg-[#E1F6F3] text-[#0D9488]',
+    'bg-cp-brand-soft text-cp-brand-ink',
+    'bg-cp-sky-soft text-cp-sky-ink',
+    'bg-cp-warning-soft text-cp-warning-ink',
+    'bg-cp-coral-soft text-cp-coral-dark-ink',
+    'bg-cp-accent-soft text-cp-accent-ink',
+    'bg-cp-teal-soft text-cp-teal-ink',
 ];
 
 /* ------------------------------------------------------------------ */
@@ -125,11 +125,11 @@ function scoreOf(a: QuizAttemptRow) {
 }
 
 function accessLabel(expires: string | null): { text: string; tone: string } {
-    if (!expires) return { text: 'Lifetime access', tone: 'text-[#14141B]' };
+    if (!expires) return { text: 'Lifetime access', tone: 'text-cp-ink' };
     const days = Math.ceil((new Date(expires).getTime() - Date.now()) / 86_400_000);
-    if (days < 0) return { text: `Expired on ${formatDate(expires)}`, tone: 'text-[#C2410C]' };
-    if (days <= 7) return { text: `${days} ${days === 1 ? 'day' : 'days'} left · ${formatDate(expires)}`, tone: 'text-[#B46E00]' };
-    return { text: `Until ${formatDate(expires)}`, tone: 'text-[#14141B]' };
+    if (days < 0) return { text: `Expired on ${formatDate(expires)}`, tone: 'text-cp-coral-dark-ink' };
+    if (days <= 7) return { text: `${days} ${days === 1 ? 'day' : 'days'} left · ${formatDate(expires)}`, tone: 'text-cp-warning-ink' };
+    return { text: `Until ${formatDate(expires)}`, tone: 'text-cp-ink' };
 }
 
 /* ------------------------------------------------------------------ */
@@ -138,24 +138,24 @@ function accessLabel(expires: string | null): { text: string; tone: string } {
 
 function KpiCard({ label, value, sub, icon, tone }: { label: string; value: string; sub: string; icon: React.ReactNode; tone: string }) {
     return (
-        <div className="flex flex-col justify-between rounded-xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+        <div className="flex flex-col justify-between rounded-xl bg-cp-surface p-4 shadow-sm transition-shadow hover:shadow-md">
             <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">{label}</span>
+                <span className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">{label}</span>
                 <span className={cn('flex size-6 items-center justify-center rounded-md', tone)}>{icon}</span>
             </div>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-[#14141B]">{value}</span>
-            <span className="mt-1 text-xs text-[#8A8A96]">{sub}</span>
+            <span className="mt-3 text-2xl font-semibold tracking-tight text-cp-ink">{value}</span>
+            <span className="mt-1 text-xs text-cp-muted">{sub}</span>
         </div>
     );
 }
 
 function Card({ title, description, action, children }: { title: string; description?: string; action?: React.ReactNode; children: React.ReactNode }) {
     return (
-        <section className="overflow-hidden rounded-xl bg-white shadow-sm">
-            <div className="flex items-center justify-between gap-3 border-b border-[#E4E2DA]/70 px-6 py-4">
+        <section className="overflow-hidden rounded-xl bg-cp-surface shadow-sm">
+            <div className="flex items-center justify-between gap-3 border-b border-cp-line/70 px-6 py-4">
                 <div>
-                    <h2 className="text-base font-semibold text-[#14141B]">{title}</h2>
-                    {description && <p className="mt-0.5 text-xs text-[#8A8A96]">{description}</p>}
+                    <h2 className="text-base font-semibold text-cp-ink">{title}</h2>
+                    {description && <p className="mt-0.5 text-xs text-cp-muted">{description}</p>}
                 </div>
                 {action}
             </div>
@@ -165,14 +165,14 @@ function Card({ title, description, action, children }: { title: string; descrip
 }
 
 function EmptyNote({ children }: { children: React.ReactNode }) {
-    return <p className="px-6 py-8 text-center text-xs text-[#8A8A96]">{children}</p>;
+    return <p className="px-6 py-8 text-center text-xs text-cp-muted">{children}</p>;
 }
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div className="flex items-start justify-between gap-4 py-2.5">
-            <span className="text-[13px] text-[#8A8A96]">{label}</span>
-            <span className="text-right text-[13px] font-semibold text-[#14141B]">{children}</span>
+            <span className="text-[13px] text-cp-muted">{label}</span>
+            <span className="text-right text-[13px] font-semibold text-cp-ink">{children}</span>
         </div>
     );
 }
@@ -214,12 +214,12 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
     const expired = Boolean(enrollment.access_expires_at && new Date(enrollment.access_expires_at).getTime() < Date.now());
     const finished = Boolean(enrollment.completed_at) || percent >= 100;
     const status = finished
-        ? { label: 'Completed', chip: 'bg-[#E6F6EC] text-[#059669]', dot: 'bg-[#059669]' }
+        ? { label: 'Completed', chip: 'bg-cp-success-soft text-cp-success-ink', dot: 'bg-cp-success' }
         : expired
-          ? { label: 'Access expired', chip: 'bg-[#FFEDE8] text-[#C2410C]', dot: 'bg-[#FF6B4A]' }
+          ? { label: 'Access expired', chip: 'bg-cp-coral-soft text-cp-coral-dark-ink', dot: 'bg-cp-coral' }
           : percent > 0
-            ? { label: 'In progress', chip: 'bg-[#EEF2FF] text-[#4F46E5]', dot: 'bg-[#4F46E5]' }
-            : { label: 'Not started', chip: 'bg-[#F0EFEA] text-[#6B6B78]', dot: 'bg-current' };
+            ? { label: 'In progress', chip: 'bg-cp-brand-soft text-cp-brand-ink', dot: 'bg-cp-brand' }
+            : { label: 'Not started', chip: 'bg-cp-surface-3 text-cp-subtle', dot: 'bg-current' };
 
     const attempts = [...enrollment.quiz_attempts].sort((a, b) => new Date(b.attempted_at ?? 0).getTime() - new Date(a.attempted_at ?? 0).getTime());
     const bestByLesson = new Map<number, number>();
@@ -247,21 +247,21 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${name ?? 'Student'} · ${courseTitle}`} />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
-                    <Link href={studentsUrl} className="flex w-fit items-center gap-1.5 text-xs font-medium text-[#8A8A96] transition hover:text-[#14141B]">
+                    <Link href={studentsUrl} className="flex w-fit items-center gap-1.5 text-xs font-medium text-cp-muted transition hover:text-cp-ink">
                         <ArrowLeft className="size-3.5" /> All students
                     </Link>
 
                     {/* Student header */}
-                    <div className="flex flex-col justify-between gap-4 rounded-xl bg-white p-5 shadow-sm sm:flex-row sm:items-center">
+                    <div className="flex flex-col justify-between gap-4 rounded-xl bg-cp-surface p-5 shadow-sm sm:flex-row sm:items-center">
                         <div className="flex min-w-0 items-center gap-4">
                             <div className={cn('flex size-14 shrink-0 items-center justify-center rounded-full text-lg font-bold', avatarTone(name))}>{initials(name)}</div>
                             <div className="min-w-0">
-                                <h1 className="truncate text-xl font-bold tracking-tight text-[#14141B]">{name ?? 'Anonymous'}</h1>
-                                <p className="mt-0.5 truncate text-sm text-[#8A8A96]">{[customer?.email, customer?.phone].filter(Boolean).join(' · ') || 'No contact details'}</p>
-                                <p className="mt-0.5 truncate text-xs text-[#8A8A96]">
-                                    Enrolled in <span className="font-semibold text-[#4B4B57]">{courseTitle}</span> on {formatDate(enrollment.created_at)}
+                                <h1 className="truncate text-xl font-bold tracking-tight text-cp-ink">{name ?? 'Anonymous'}</h1>
+                                <p className="mt-0.5 truncate text-sm text-cp-muted">{[customer?.email, customer?.phone].filter(Boolean).join(' · ') || 'No contact details'}</p>
+                                <p className="mt-0.5 truncate text-xs text-cp-muted">
+                                    Enrolled in <span className="font-semibold text-cp-body">{courseTitle}</span> on {formatDate(enrollment.created_at)}
                                 </p>
                             </div>
                         </div>
@@ -272,22 +272,22 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
 
                     {/* KPI cards */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                        <KpiCard label="Progress" value={`${percent}%`} sub={`${doneCount} of ${publishedLessons.length} lessons done`} icon={<Check className="size-3.5" />} tone="bg-[#EEF2FF] text-[#4F46E5]" />
+                        <KpiCard label="Progress" value={`${percent}%`} sub={`${doneCount} of ${publishedLessons.length} lessons done`} icon={<Check className="size-3.5" />} tone="bg-cp-brand-soft text-cp-brand-ink" />
                         <KpiCard
                             label="Quizzes"
                             value={avgBest === null ? '—' : `${avgBest}%`}
                             sub={attempts.length ? `Avg. best score · ${attempts.length} ${attempts.length === 1 ? 'attempt' : 'attempts'}` : 'No attempts yet'}
                             icon={<ListChecks className="size-3.5" />}
-                            tone="bg-[#E6F2FF] text-[#0284C7]"
+                            tone="bg-cp-sky-soft text-cp-sky-ink"
                         />
                         <KpiCard
                             label="Assignments"
                             value={String(submissions.length)}
                             sub={submissions.length ? `${awaiting} awaiting your review` : 'Nothing submitted yet'}
                             icon={<ClipboardCheck className="size-3.5" />}
-                            tone="bg-[#FFF4DB] text-[#B46E00]"
+                            tone="bg-cp-warning-soft text-cp-warning-ink"
                         />
-                        <KpiCard label="Certificate" value={certificateValue} sub={certificateSub} icon={<Award className="size-3.5" />} tone="bg-[#F1EAFE] text-[#7C3AED]" />
+                        <KpiCard label="Certificate" value={certificateValue} sub={certificateSub} icon={<Award className="size-3.5" />} tone="bg-cp-accent-soft text-cp-accent-ink" />
                     </div>
 
                     <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -297,19 +297,19 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
                                 {modules.length === 0 ? (
                                     <EmptyNote>This course has no published lessons yet.</EmptyNote>
                                 ) : (
-                                    <div className="divide-y divide-[#E4E2DA]/60">
+                                    <div className="divide-y divide-cp-line/60">
                                         {modules.map((module) => {
                                             const moduleDone = module.lessons.filter((l) => completedAt.has(l.id)).length;
                                             const modulePercent = Math.round((moduleDone / module.lessons.length) * 100);
                                             return (
                                                 <div key={module.id} className="px-6 py-4">
                                                     <div className="flex items-center justify-between gap-3">
-                                                        <h3 className="truncate text-[13px] font-semibold text-[#14141B]">{module.title}</h3>
+                                                        <h3 className="truncate text-[13px] font-semibold text-cp-ink">{module.title}</h3>
                                                         <div className="flex shrink-0 items-center gap-2.5">
-                                                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-[#ECEBE6]">
-                                                                <span className={cn('block h-full rounded-full', modulePercent === 100 ? 'bg-[#059669]' : 'bg-[#4F46E5]')} style={{ width: `${modulePercent}%` }} />
+                                                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-cp-surface-3">
+                                                                <span className={cn('block h-full rounded-full', modulePercent === 100 ? 'bg-cp-success' : 'bg-cp-brand')} style={{ width: `${modulePercent}%` }} />
                                                             </div>
-                                                            <span className="text-xs text-[#8A8A96]">
+                                                            <span className="text-xs text-cp-muted">
                                                                 {moduleDone}/{module.lessons.length}
                                                             </span>
                                                         </div>
@@ -321,19 +321,19 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
                                                             const best = bestByLesson.get(lesson.id);
                                                             const submission = submissionByLesson.get(lesson.id);
                                                             return (
-                                                                <li key={lesson.id} className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#F6F5F2]/70">
-                                                                    <span className={cn('flex size-5 shrink-0 items-center justify-center rounded-full', done ? 'bg-[#E6F6EC] text-[#059669]' : 'border border-[#E4E2DA] text-transparent')}>
+                                                                <li key={lesson.id} className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-cp-canvas/70">
+                                                                    <span className={cn('flex size-5 shrink-0 items-center justify-center rounded-full', done ? 'bg-cp-success-soft text-cp-success-ink' : 'border border-cp-line text-transparent')}>
                                                                         <Check className="size-3" />
                                                                         <span className="sr-only">{done ? 'Completed' : 'Not completed'}</span>
                                                                     </span>
-                                                                    <type.icon className="size-4 shrink-0 text-[#8A8A96]" />
+                                                                    <type.icon className="size-4 shrink-0 text-cp-muted" />
                                                                     <span className="min-w-0 flex-1">
-                                                                        <span className={cn('block truncate text-[13px]', done ? 'font-medium text-[#14141B]' : 'text-[#4B4B57]')}>{lesson.title}</span>
-                                                                        <span className="text-[11px] text-[#8A8A96]">{type.label}</span>
+                                                                        <span className={cn('block truncate text-[13px]', done ? 'font-medium text-cp-ink' : 'text-cp-body')}>{lesson.title}</span>
+                                                                        <span className="text-[11px] text-cp-muted">{type.label}</span>
                                                                     </span>
-                                                                    {best !== undefined && <span className="rounded-full bg-[#E6F2FF] px-2 py-0.5 text-[10px] font-semibold text-[#0284C7]">Best {Math.round(best)}%</span>}
+                                                                    {best !== undefined && <span className="rounded-full bg-cp-sky-soft px-2 py-0.5 text-[10px] font-semibold text-cp-sky-ink">Best {Math.round(best)}%</span>}
                                                                     {submission && <SubmissionStatusPill status={submission.status} />}
-                                                                    <span className="hidden w-24 shrink-0 text-right text-xs text-[#8A8A96] sm:block">{done ? formatDate(completedAt.get(lesson.id) ?? null) : '—'}</span>
+                                                                    <span className="hidden w-24 shrink-0 text-right text-xs text-cp-muted sm:block">{done ? formatDate(completedAt.get(lesson.id) ?? null) : '—'}</span>
                                                                 </li>
                                                             );
                                                         })}
@@ -353,27 +353,27 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
                                     <div className="overflow-x-auto">
                                         <table className="w-full border-collapse text-left text-sm">
                                             <thead>
-                                                <tr className="bg-[#F6F5F2]/60 text-[11px] font-semibold tracking-wider text-[#8A8A96] uppercase">
+                                                <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
                                                     <th className="px-6 py-3">Quiz</th>
                                                     <th className="px-4 py-3">Attempted</th>
                                                     <th className="px-4 py-3">Correct</th>
                                                     <th className="px-6 py-3">Score</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-[#E4E2DA]/50">
+                                            <tbody className="divide-y divide-cp-line/50">
                                                 {attempts.map((a) => (
                                                     <tr key={a.id}>
-                                                        <td className="px-6 py-3 text-[13px] font-medium text-[#14141B]">{a.quiz?.title || lessonTitle.get(a.quiz?.lesson_id ?? -1) || 'Quiz'}</td>
-                                                        <td className="px-4 py-3 text-xs whitespace-nowrap text-[#4B4B57]">{formatDateTime(a.attempted_at)}</td>
-                                                        <td className="px-4 py-3 text-xs whitespace-nowrap text-[#4B4B57]">
+                                                        <td className="px-6 py-3 text-[13px] font-medium text-cp-ink">{a.quiz?.title || lessonTitle.get(a.quiz?.lesson_id ?? -1) || 'Quiz'}</td>
+                                                        <td className="px-4 py-3 text-xs whitespace-nowrap text-cp-body">{formatDateTime(a.attempted_at)}</td>
+                                                        <td className="px-4 py-3 text-xs whitespace-nowrap text-cp-body">
                                                             {a.correct_answers} / {a.total_questions}
                                                         </td>
                                                         <td className="px-6 py-3">
                                                             <div className="flex min-w-[130px] items-center gap-2.5">
-                                                                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#ECEBE6]">
-                                                                    <span className="block h-full rounded-full bg-[#4F46E5]" style={{ width: `${scoreOf(a)}%` }} />
+                                                                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-cp-surface-3">
+                                                                    <span className="block h-full rounded-full bg-cp-brand" style={{ width: `${scoreOf(a)}%` }} />
                                                                 </div>
-                                                                <span className="w-10 text-right text-xs font-semibold text-[#14141B]">{Math.round(scoreOf(a))}%</span>
+                                                                <span className="w-10 text-right text-xs font-semibold text-cp-ink">{Math.round(scoreOf(a))}%</span>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -390,7 +390,7 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
                                 description={submissions.length ? `${submissions.length} submitted · ${awaiting} awaiting review` : undefined}
                                 action={
                                     awaiting > 0 ? (
-                                        <Link href={`/dashboard/assignments/submissions?course=${courseIdOf(course)}&status=submitted`} className="text-xs font-semibold text-[#4F46E5] hover:underline">
+                                        <Link href={`/dashboard/assignments/submissions?course=${courseIdOf(course)}&status=submitted`} className="text-xs font-semibold text-cp-brand-ink hover:underline">
                                             Open review queue
                                         </Link>
                                     ) : undefined
@@ -399,20 +399,20 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
                                 {submissions.length === 0 ? (
                                     <EmptyNote>No assignment submissions from this student yet.</EmptyNote>
                                 ) : (
-                                    <div className="divide-y divide-[#E4E2DA]/60">
+                                    <div className="divide-y divide-cp-line/60">
                                         {submissions.map((s) => (
                                             <div key={s.id} className="flex flex-col gap-3 px-6 py-5">
                                                 <div className="flex items-center justify-between gap-3">
                                                     <div className="min-w-0">
-                                                        <p className="truncate text-[13px] font-semibold text-[#14141B]">{lessonTitle.get(s.assignment?.lesson_id ?? -1) ?? 'Assignment'}</p>
-                                                        <p className="text-xs text-[#8A8A96]">Submitted {formatDateTime(s.submitted_at)}</p>
+                                                        <p className="truncate text-[13px] font-semibold text-cp-ink">{lessonTitle.get(s.assignment?.lesson_id ?? -1) ?? 'Assignment'}</p>
+                                                        <p className="text-xs text-cp-muted">Submitted {formatDateTime(s.submitted_at)}</p>
                                                     </div>
                                                     <SubmissionStatusPill status={s.status} />
                                                 </div>
-                                                {s.submission_text && <p className="max-h-40 overflow-y-auto rounded-lg bg-[#F6F5F2] p-3 text-[13px] break-words whitespace-pre-wrap text-[#4B4B57]">{s.submission_text}</p>}
+                                                {s.submission_text && <p className="max-h-40 overflow-y-auto rounded-lg bg-cp-canvas p-3 text-[13px] break-words whitespace-pre-wrap text-cp-body">{s.submission_text}</p>}
                                                 {s.submission_file_path && (
-                                                    <a href={submissionFileUrl(s.uuid)} className="flex w-fit items-center gap-2 rounded-lg border border-[#E4E2DA] px-3 py-2 text-xs font-medium text-[#4B4B57] transition hover:bg-[#F6F5F2]">
-                                                        <Download className="size-3.5 text-[#8A8A96]" /> Download attachment
+                                                    <a href={submissionFileUrl(s.uuid)} className="flex w-fit items-center gap-2 rounded-lg border border-cp-line px-3 py-2 text-xs font-medium text-cp-body transition hover:bg-cp-canvas">
+                                                        <Download className="size-3.5 text-cp-muted" /> Download attachment
                                                     </a>
                                                 )}
                                                 <GradeForm submission={s} />
@@ -425,9 +425,9 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
 
                         {/* Side */}
                         <div className="flex flex-col gap-5">
-                            <div className="rounded-xl bg-white p-5 shadow-sm">
-                                <h3 className="text-sm font-semibold text-[#14141B]">Enrollment</h3>
-                                <div className="mt-2 divide-y divide-[#E4E2DA]/60">
+                            <div className="rounded-xl bg-cp-surface p-5 shadow-sm">
+                                <h3 className="text-sm font-semibold text-cp-ink">Enrollment</h3>
+                                <div className="mt-2 divide-y divide-cp-line/60">
                                     <DetailRow label="Enrolled">{formatDate(enrollment.created_at)}</DetailRow>
                                     <DetailRow label="Access">
                                         <span className={accessLabel(enrollment.access_expires_at).tone}>{accessLabel(enrollment.access_expires_at).text}</span>
@@ -437,25 +437,25 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
                                         {enrollment.certificate ? (
                                             <span className="flex flex-col items-end">
                                                 <span className="font-mono text-xs">{enrollment.certificate.certificate_number}</span>
-                                                <span className="text-[11px] font-normal text-[#8A8A96]">{formatDate(enrollment.certificate.issued_at ?? enrollment.certificate_issued_at)}</span>
+                                                <span className="text-[11px] font-normal text-cp-muted">{formatDate(enrollment.certificate.issued_at ?? enrollment.certificate_issued_at)}</span>
                                             </span>
                                         ) : (
-                                            <span className="font-normal text-[#8A8A96]">{certificateEnabled ? 'Not issued' : 'Not enabled'}</span>
+                                            <span className="font-normal text-cp-muted">{certificateEnabled ? 'Not issued' : 'Not enabled'}</span>
                                         )}
                                     </DetailRow>
                                 </div>
                                 {enrollment.certificate && <CertificateActions enrollmentUuid={enrollment.uuid} certificate={enrollment.certificate} />}
                             </div>
 
-                            <div className="rounded-xl bg-white p-5 shadow-sm">
-                                <h3 className="text-sm font-semibold text-[#14141B]">Order</h3>
+                            <div className="rounded-xl bg-cp-surface p-5 shadow-sm">
+                                <h3 className="text-sm font-semibold text-cp-ink">Order</h3>
                                 {enrollment.order ? (
-                                    <div className="mt-2 divide-y divide-[#E4E2DA]/60">
+                                    <div className="mt-2 divide-y divide-cp-line/60">
                                         <DetailRow label="Order ref">
                                             <span className="inline-flex items-center gap-1">
                                                 <span className="font-mono text-xs">{enrollment.order.order_number}</span>
-                                                <button onClick={() => copyOrder(enrollment.order!.order_number)} aria-label="Copy order reference" className="p-0.5 text-[#8A8A96] hover:text-[#14141B]">
-                                                    {copied ? <Check className="size-3.5 text-[#059669]" /> : <Copy className="size-3.5" />}
+                                                <button onClick={() => copyOrder(enrollment.order!.order_number)} aria-label="Copy order reference" className="p-0.5 text-cp-muted hover:text-cp-ink">
+                                                    {copied ? <Check className="size-3.5 text-cp-success-ink" /> : <Copy className="size-3.5" />}
                                                 </button>
                                             </span>
                                         </DetailRow>
@@ -463,7 +463,7 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
                                         <DetailRow label="Paid on">{formatDateTime(enrollment.order.paid_at)}</DetailRow>
                                     </div>
                                 ) : (
-                                    <p className="mt-3 text-xs text-[#8A8A96]">No order linked to this enrollment.</p>
+                                    <p className="mt-3 text-xs text-cp-muted">No order linked to this enrollment.</p>
                                 )}
                             </div>
                         </div>
@@ -507,18 +507,18 @@ function CertificateActions({ enrollmentUuid, certificate }: { enrollmentUuid: s
         });
     }
 
-    const link = 'text-xs font-semibold text-[#4F46E5] hover:underline disabled:opacity-50';
-    const field = 'h-9 w-full rounded-lg border border-[#DAD8D0] bg-white px-3 text-sm text-[#14141B] outline-none focus:border-[#4F46E5]';
+    const link = 'text-xs font-semibold text-cp-brand-ink hover:underline disabled:opacity-50';
+    const field = 'h-9 w-full rounded-lg border border-cp-line-strong bg-cp-surface px-3 text-sm text-cp-ink outline-none focus:border-cp-brand';
 
     return (
-        <div className="mt-3 border-t border-[#E4E2DA]/60 pt-3">
+        <div className="mt-3 border-t border-cp-line/60 pt-3">
             {revoked && (
-                <p className="mb-2 rounded-lg bg-[#FFEDE8] px-3 py-2 text-xs font-medium text-[#C2410C]">
+                <p className="mb-2 rounded-lg bg-cp-coral-soft px-3 py-2 text-xs font-medium text-cp-coral-dark-ink">
                     Revoked{certificate.revoke_reason ? ` — ${certificate.revoke_reason}` : ''}. The public verify page shows it as no longer valid.
                 </p>
             )}
-            <p className="text-xs text-[#8A8A96]">
-                Name on certificate: <span className="font-semibold text-[#14141B]">{certificate.student_name ?? '—'}</span>
+            <p className="text-xs text-cp-muted">
+                Name on certificate: <span className="font-semibold text-cp-ink">{certificate.student_name ?? '—'}</span>
             </p>
 
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
@@ -535,7 +535,7 @@ function CertificateActions({ enrollmentUuid, certificate }: { enrollmentUuid: s
                                 Restore
                             </button>
                         ) : (
-                            <button type="button" onClick={() => setMode(mode === 'revoke' ? 'idle' : 'revoke')} className="text-xs font-semibold text-[#C2410C] hover:underline">
+                            <button type="button" onClick={() => setMode(mode === 'revoke' ? 'idle' : 'revoke')} className="text-xs font-semibold text-cp-coral-dark-ink hover:underline">
                                 Revoke
                             </button>
                         )}
@@ -551,11 +551,11 @@ function CertificateActions({ enrollmentUuid, certificate }: { enrollmentUuid: s
                     }}
                     className="mt-3 flex flex-col gap-2"
                 >
-                    <label htmlFor="cert-name" className="text-xs font-semibold text-[#4B4B57]">
+                    <label htmlFor="cert-name" className="text-xs font-semibold text-cp-body">
                         Name as it should appear
                     </label>
                     <input id="cert-name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={150} className={field} />
-                    <button type="submit" disabled={busy || name.trim() === ''} className="h-9 w-fit rounded-lg bg-[#4F46E5] px-3 text-xs font-semibold text-white disabled:opacity-50">
+                    <button type="submit" disabled={busy || name.trim() === ''} className="h-9 w-fit rounded-lg bg-cp-brand px-3 text-xs font-semibold text-white disabled:opacity-50">
                         Save name
                     </button>
                 </form>
@@ -569,18 +569,18 @@ function CertificateActions({ enrollmentUuid, certificate }: { enrollmentUuid: s
                     }}
                     className="mt-3 flex flex-col gap-2"
                 >
-                    <label htmlFor="cert-reason" className="text-xs font-semibold text-[#4B4B57]">
+                    <label htmlFor="cert-reason" className="text-xs font-semibold text-cp-body">
                         Why are you revoking it? (only you see this)
                     </label>
                     <input id="cert-reason" value={reason} onChange={(e) => setReason(e.target.value)} required maxLength={255} placeholder="e.g. Order refunded" className={field} />
-                    <button type="submit" disabled={busy || reason.trim() === ''} className="h-9 w-fit rounded-lg bg-[#C2410C] px-3 text-xs font-semibold text-white disabled:opacity-50">
+                    <button type="submit" disabled={busy || reason.trim() === ''} className="h-9 w-fit rounded-lg bg-cp-coral-dark px-3 text-xs font-semibold text-white disabled:opacity-50">
                         Revoke certificate
                     </button>
                 </form>
             )}
 
             {error && (
-                <p role="alert" className="mt-2 text-xs font-medium text-[#C2410C]">
+                <p role="alert" className="mt-2 text-xs font-medium text-cp-coral-dark-ink">
                     {error}
                 </p>
             )}

@@ -125,16 +125,16 @@ function PreviewPane({ item, host, device }: { item: BookItem; host: string; dev
     const main = (
         <div className="flex min-w-0 flex-col gap-8">
             <div>
-                <h1 className="text-3xl font-extrabold tracking-tight break-words text-[#14141B]">{title}</h1>
-                {subtitle && <p className="mt-2 text-lg leading-snug text-[#4B4B57]">{subtitle}</p>}
-                {author && <p className="mt-2 text-[15px] text-[#6B6B78]">by {author}</p>}
+                <h1 className="text-3xl font-extrabold tracking-tight break-words text-cp-ink">{title}</h1>
+                {subtitle && <p className="mt-2 text-lg leading-snug text-cp-body">{subtitle}</p>}
+                {author && <p className="mt-2 text-[15px] text-cp-subtle">by {author}</p>}
             </div>
 
             {/* video trailer cover ke upar — public page jaisa hi thumbnail + play */}
             <VideoEmbed url={videoUrl} accent={accent} />
 
             {covers.length > 0 && (
-                <div className="relative aspect-video overflow-hidden rounded-xl border border-[#E4E2DA] bg-[#F6F5F2]">
+                <div className="relative aspect-video overflow-hidden rounded-xl border border-cp-line bg-cp-canvas">
                     <div
                         ref={coverTrack}
                         onScroll={(event) => setActiveCover(Math.round(event.currentTarget.scrollLeft / event.currentTarget.clientWidth))}
@@ -154,7 +154,7 @@ function PreviewPane({ item, host, device }: { item: BookItem; host: string; dev
                                     aria-pressed={activeCover === index}
                                     onClick={() => showCover(index)}
                                     className={cn(
-                                        'size-2 rounded-full border border-white/80 shadow-sm transition',
+                                        'size-2 rounded-full border border-cp-surface/80 shadow-sm transition',
                                         activeCover === index ? 'bg-white' : 'bg-white/45 hover:bg-white/75',
                                     )}
                                 />
@@ -173,11 +173,11 @@ function PreviewPane({ item, host, device }: { item: BookItem; host: string; dev
                 {label('About this book')}
                 {description ? (
                     <div
-                        className="text-[15px] leading-relaxed text-[#14141B] [&_li]:ml-4 [&_p]:mb-2 [&_ul]:list-disc"
+                        className="text-[15px] leading-relaxed text-cp-ink [&_li]:ml-4 [&_p]:mb-2 [&_ul]:list-disc"
                         dangerouslySetInnerHTML={{ __html: description }}
                     />
                 ) : (
-                    <p className="text-[15px] leading-relaxed text-[#6B6B78]">What's this book about? Who is it for?</p>
+                    <p className="text-[15px] leading-relaxed text-cp-subtle">What's this book about? Who is it for?</p>
                 )}
             </div>
 
@@ -186,7 +186,7 @@ function PreviewPane({ item, host, device }: { item: BookItem; host: string; dev
                     {label("What's inside")}
                     <ul className="flex flex-col gap-2.5">
                         {points.map((point, i) => (
-                            <li key={i} className="flex items-start gap-3 text-[15px] text-[#14141B]">
+                            <li key={i} className="flex items-start gap-3 text-[15px] text-cp-ink">
                                 <span
                                     className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-white"
                                     style={{ background: accent }}
@@ -205,11 +205,11 @@ function PreviewPane({ item, host, device }: { item: BookItem; host: string; dev
                     {label('FAQ')}
                     <div className="flex flex-col gap-2">
                         {faqs.map((faq, i) => (
-                            <div key={i} className="rounded-xl border border-[#E4E2DA] bg-white px-4 py-3">
-                                <div className="flex items-center justify-between gap-2 text-sm font-semibold text-[#14141B]">
-                                    {faq.question} <ChevronDown className="size-4 shrink-0 text-[#6B6B78]" />
+                            <div key={i} className="rounded-xl border border-cp-line bg-cp-surface px-4 py-3">
+                                <div className="flex items-center justify-between gap-2 text-sm font-semibold text-cp-ink">
+                                    {faq.question} <ChevronDown className="size-4 shrink-0 text-cp-subtle" />
                                 </div>
-                                {faq.answer && <p className="mt-1.5 text-sm whitespace-pre-line text-[#6B6B78]">{faq.answer}</p>}
+                                {faq.answer && <p className="mt-1.5 text-sm whitespace-pre-line text-cp-subtle">{faq.answer}</p>}
                             </div>
                         ))}
                     </div>
@@ -484,9 +484,9 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
             <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
                     <label htmlFor="book_title" className={LABEL_CLASS}>
-                        Book title <span className="text-[#D93838]">*</span>
+                        Book title <span className="text-cp-red-ink">*</span>
                     </label>
-                    <span className={cn('text-[11px]', titleOk ? 'text-[#8A8A96]' : 'text-[#D93838]')}>{titleCount}/75</span>
+                    <span className={cn('text-[11px]', titleOk ? 'text-cp-muted' : 'text-cp-red-ink')}>{titleCount}/75</span>
                 </div>
                 <input
                     id="book_title"
@@ -575,9 +575,9 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
             <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
                     <label htmlFor="book_desc" className={LABEL_CLASS}>
-                        Description <span className="text-[#D93838]">*</span>
+                        Description <span className="text-cp-red-ink">*</span>
                     </label>
-                    <span className="text-[11px] text-[#8A8A96]">{descCount}/20000</span>
+                    <span className="text-[11px] text-cp-muted">{descCount}/20000</span>
                 </div>
                 <RichText
                     id="book_desc"
@@ -656,28 +656,28 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
             {/* Book file / external link — required to publish */}
             <div className="flex flex-col gap-2">
                 <label className={LABEL_CLASS}>
-                    Book file <span className="text-[#D93838]">*</span>
+                    Book file <span className="text-cp-red-ink">*</span>
                 </label>
 
                 {hasFile ? (
-                    <div className="flex items-center gap-3 rounded-lg border border-[#E4E2DA] bg-[#F8F7F4] px-3 py-2.5">
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#FFEDE8] text-[#C2410C]">
+                    <div className="flex items-center gap-3 rounded-lg border border-cp-line bg-cp-surface-2 px-3 py-2.5">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-cp-coral-soft text-cp-coral-dark-ink">
                             <FileText className="size-4" />
                         </span>
                         <div className="min-w-0 flex-1">
-                            <p className="truncate text-[13px] font-semibold text-[#14141B]">{fileName ?? 'Book file uploaded'}</p>
-                            <p className="text-[11px] text-[#8A8A96]">{FORMAT_LABEL[bookDetail?.format ?? 'pdf'] ?? 'PDF'} · ready to sell</p>
+                            <p className="truncate text-[13px] font-semibold text-cp-ink">{fileName ?? 'Book file uploaded'}</p>
+                            <p className="text-[11px] text-cp-muted">{FORMAT_LABEL[bookDetail?.format ?? 'pdf'] ?? 'PDF'} · ready to sell</p>
                         </div>
                         <RemoveButton label="Remove book file" onClick={removeBookFile} busy={fileBusy} />
                     </div>
                 ) : hasLink ? (
-                    <div className="flex items-center gap-3 rounded-lg border border-[#E4E2DA] bg-[#F8F7F4] px-3 py-2.5">
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#E6F2FF] text-[#0284C7]">
+                    <div className="flex items-center gap-3 rounded-lg border border-cp-line bg-cp-surface-2 px-3 py-2.5">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-cp-sky-soft text-cp-sky-ink">
                             <Link2 className="size-4" />
                         </span>
                         <div className="min-w-0 flex-1">
-                            <p className="truncate text-[13px] font-semibold text-[#14141B]">{bookDetail?.external_link}</p>
-                            <p className="text-[11px] text-[#8A8A96]">External link · ready to sell</p>
+                            <p className="truncate text-[13px] font-semibold text-cp-ink">{bookDetail?.external_link}</p>
+                            <p className="text-[11px] text-cp-muted">External link · ready to sell</p>
                         </div>
                         <RemoveButton label="Remove book link" onClick={removeBookFile} busy={fileBusy} />
                     </div>
@@ -697,8 +697,8 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
                                 '+ Upload file'
                             )}
                         </PickButton>
-                        <div className="flex items-center gap-3 text-[10px] font-semibold tracking-widest text-[#8A8A96] uppercase">
-                            <span className="h-px flex-1 bg-[#E4E2DA]" /> or <span className="h-px flex-1 bg-[#E4E2DA]" />
+                        <div className="flex items-center gap-3 text-[10px] font-semibold tracking-widest text-cp-muted uppercase">
+                            <span className="h-px flex-1 bg-cp-line" /> or <span className="h-px flex-1 bg-cp-line" />
                         </div>
                         <input
                             type="url"
@@ -735,15 +735,15 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
                             className={cn(
                                 'flex h-14 items-center justify-between rounded-xl border px-4 text-sm font-semibold transition',
                                 active
-                                    ? 'border-[#4F46E5] bg-[#EEF2FF] text-[#14141B]'
-                                    : 'border-[#E4E2DA] bg-white text-[#14141B] hover:border-[#4F46E5]/45',
+                                    ? 'border-cp-brand bg-cp-brand-soft text-cp-ink'
+                                    : 'border-cp-line bg-cp-surface text-cp-ink hover:border-cp-brand/45',
                             )}
                         >
                             {option.label}
                             <span
                                 className={cn(
                                     'flex size-5 items-center justify-center rounded-full border',
-                                    active ? 'border-[#4F46E5] bg-[#4F46E5] text-white' : 'border-[#D9D7CE]',
+                                    active ? 'border-cp-brand bg-cp-brand text-white' : 'border-cp-line-strong',
                                 )}
                             >
                                 {active && <Check className="size-3" />}
@@ -755,7 +755,7 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
 
             <div className="flex flex-col gap-1.5">
                 <label htmlFor="book_price" className={LABEL_CLASS}>
-                    {form.pricing_type === 'customer_decides' ? 'Minimum price (₹)' : 'Price (₹)'} <span className="text-[#D93838]">*</span>
+                    {form.pricing_type === 'customer_decides' ? 'Minimum price (₹)' : 'Price (₹)'} <span className="text-cp-red-ink">*</span>
                 </label>
                 <input
                     id="book_price"
@@ -773,12 +773,12 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
 
             {form.pricing_type === 'fixed' && (
                 <>
-                    <label className="flex cursor-pointer items-center gap-2.5 text-[13px] font-semibold text-[#14141B]">
+                    <label className="flex cursor-pointer items-center gap-2.5 text-[13px] font-semibold text-cp-ink">
                         <input
                             type="checkbox"
                             checked={form.has_discount}
                             onChange={(e) => patch({ has_discount: e.target.checked })}
-                            className="size-4 rounded border-[#D9D7CE] text-[#4F46E5] focus:ring-[#4F46E5]"
+                            className="size-4 rounded border-cp-line-strong text-cp-brand-ink focus:ring-cp-brand"
                         />
                         Offer discounted price
                     </label>
@@ -812,7 +812,7 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
             <div className="flex flex-col gap-2">
                 <label className={LABEL_CLASS}>FAQs</label>
                 {form.faqs.map((faq, index) => (
-                    <div key={index} className="flex flex-col gap-2 rounded-xl border border-[#E4E2DA] bg-[#F8F7F4] p-3">
+                    <div key={index} className="flex flex-col gap-2 rounded-xl border border-cp-line bg-cp-surface-2 p-3">
                         <div className="flex items-center gap-2">
                             <input
                                 value={faq.question}
@@ -852,7 +852,7 @@ export default function BooksEdit({ item, publicUrl }: BooksEditProps) {
                     <label htmlFor="book_button_text" className={LABEL_CLASS}>
                         Button text
                     </label>
-                    <span className="text-[11px] text-[#8A8A96]">{form.button_text.length}/25</span>
+                    <span className="text-[11px] text-cp-muted">{form.button_text.length}/25</span>
                 </div>
                 <input
                     id="book_button_text"

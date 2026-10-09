@@ -29,35 +29,35 @@ interface KycDetails {
     verified_at?: string | null;
 }
 
-const LABEL_CLASS = 'text-xs font-semibold tracking-wider text-[#14141B] uppercase';
-const INPUT_CLASS = 'h-10 border-[#E4E2DA] shadow-sm focus-visible:ring-[#4F46E5]/15';
+const LABEL_CLASS = 'text-xs font-semibold tracking-wider text-cp-ink uppercase';
+const INPUT_CLASS = 'h-10 border-cp-line shadow-sm focus-visible:ring-cp-brand/15';
 
 const STATUS_META: Record<KycStatus, { label: string; chip: string; banner: string; title: string; body: string }> = {
     not_started: {
         label: 'Not started',
-        chip: 'bg-[#F0EFEA] text-[#6B6B78]',
-        banner: 'bg-[#F6F5F2] text-[#4B4B57]',
+        chip: 'bg-cp-surface-3 text-cp-subtle',
+        banner: 'bg-cp-canvas text-cp-body',
         title: 'Verify your PAN and bank account to unlock settlements',
         body: 'Until then, your earnings are held safely and will be settled once you are verified.',
     },
     pending: {
         label: 'Pending',
-        chip: 'bg-[#FFF4DB] text-[#B46E00]',
-        banner: 'bg-[#FFF4DB] text-[#B46E00]',
+        chip: 'bg-cp-warning-soft text-cp-warning-ink',
+        banner: 'bg-cp-warning-soft text-cp-warning-ink',
         title: 'Your KYC is under review',
         body: 'Reviews usually take 24–48 hours. Settlements start automatically once approved.',
     },
     verified: {
         label: 'Verified',
-        chip: 'bg-[#E6F6EC] text-[#059669]',
-        banner: 'bg-[#E6F6EC] text-[#059669]',
+        chip: 'bg-cp-success-soft text-cp-success-ink',
+        banner: 'bg-cp-success-soft text-cp-success-ink',
         title: 'Your KYC is verified',
         body: 'Your PAN and bank details are verified. Settlements are unlocked.',
     },
     rejected: {
         label: 'Rejected',
-        chip: 'bg-[#FFEDE8] text-[#C2410C]',
-        banner: 'bg-[#FFEDE8] text-[#C2410C]',
+        chip: 'bg-cp-coral-soft text-cp-coral-dark-ink',
+        banner: 'bg-cp-coral-soft text-cp-coral-dark-ink',
         title: 'Your KYC was not approved',
         body: 'Please correct your details below and submit again.',
     },
@@ -70,14 +70,14 @@ function formatDate(iso?: string | null) {
 
 function FieldError({ message }: { message?: string }) {
     if (!message) return null;
-    return <span className="text-xs text-[#D93838]">{message}</span>;
+    return <span className="text-xs text-cp-red-ink">{message}</span>;
 }
 
 function DetailRow({ label, value, mono }: { label: string; value?: string | null; mono?: boolean }) {
     return (
-        <div className="flex items-center justify-between gap-4 rounded-lg bg-[#F6F5F2]/60 p-3">
-            <span className="text-[13px] text-[#8A8A96]">{label}</span>
-            <span className={cn('truncate text-[13px] font-semibold text-[#14141B]', mono && 'font-mono text-xs')}>{value || '—'}</span>
+        <div className="flex items-center justify-between gap-4 rounded-lg bg-cp-canvas/60 p-3">
+            <span className="text-[13px] text-cp-muted">{label}</span>
+            <span className={cn('truncate text-[13px] font-semibold text-cp-ink', mono && 'font-mono text-xs')}>{value || '—'}</span>
         </div>
     );
 }
@@ -133,23 +133,23 @@ export default function PaymentsKyc({ kyc }: { kyc: KycDetails }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="KYC verification" />
-            <div className="flex flex-1 flex-col bg-[#F6F5F2]">
+            <div className="flex flex-1 flex-col bg-cp-canvas">
                 <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-6">
                     <Link
                         href="/dashboard/payments/account"
-                        className="flex w-fit items-center gap-1.5 text-xs font-semibold text-[#8A8A96] transition hover:text-[#14141B]"
+                        className="flex w-fit items-center gap-1.5 text-xs font-semibold text-cp-muted transition hover:text-cp-ink"
                     >
                         <ArrowLeft className="size-3.5" /> Back to payout account
                     </Link>
 
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-bold tracking-tight text-[#14141B]">KYC verification</h1>
+                            <h1 className="text-2xl font-bold tracking-tight text-cp-ink">KYC verification</h1>
                             <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase', meta.chip)}>
                                 {meta.label}
                             </span>
                         </div>
-                        <p className="text-sm text-[#8A8A96]">We need your PAN, bank account and an ID document to release settlements.</p>
+                        <p className="text-sm text-cp-muted">We need your PAN, bank account and an ID document to release settlements.</p>
                     </div>
 
                     <div className={cn('flex items-start gap-3 rounded-xl p-4', meta.banner)}>
@@ -172,12 +172,12 @@ export default function PaymentsKyc({ kyc }: { kyc: KycDetails }) {
                     </div>
 
                     {canSubmit ? (
-                        <form onSubmit={submit} className="rounded-xl bg-white p-6 shadow-sm">
-                            <h2 className="text-base font-semibold text-[#14141B]">Identity</h2>
+                        <form onSubmit={submit} className="rounded-xl bg-cp-surface p-6 shadow-sm">
+                            <h2 className="text-base font-semibold text-cp-ink">Identity</h2>
                             <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
                                 <div className="flex flex-col gap-1.5 md:col-span-2">
                                     <Label htmlFor="legal_name" className={LABEL_CLASS}>
-                                        Legal name <span className="text-[#D93838]">*</span>
+                                        Legal name <span className="text-cp-red-ink">*</span>
                                     </Label>
                                     <Input
                                         id="legal_name"
@@ -190,7 +190,7 @@ export default function PaymentsKyc({ kyc }: { kyc: KycDetails }) {
                                 </div>
                                 <div className="flex flex-col gap-1.5">
                                     <Label htmlFor="pan_number" className={LABEL_CLASS}>
-                                        PAN <span className="text-[#D93838]">*</span>
+                                        PAN <span className="text-cp-red-ink">*</span>
                                     </Label>
                                     <Input
                                         id="pan_number"
@@ -204,7 +204,7 @@ export default function PaymentsKyc({ kyc }: { kyc: KycDetails }) {
                                 </div>
                                 <div className="flex flex-col gap-1.5">
                                     <Label htmlFor="gst_number" className={LABEL_CLASS}>
-                                        GSTIN <span className="font-normal tracking-normal text-[#8A8A96] normal-case">(optional)</span>
+                                        GSTIN <span className="font-normal tracking-normal text-cp-muted normal-case">(optional)</span>
                                     </Label>
                                     <Input
                                         id="gst_number"
@@ -218,11 +218,11 @@ export default function PaymentsKyc({ kyc }: { kyc: KycDetails }) {
                                 </div>
                             </div>
 
-                            <h2 className="mt-8 text-base font-semibold text-[#14141B]">Bank account</h2>
+                            <h2 className="mt-8 text-base font-semibold text-cp-ink">Bank account</h2>
                             <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
                                 <div className="flex flex-col gap-1.5 md:col-span-2">
                                     <Label htmlFor="bank_account_holder" className={LABEL_CLASS}>
-                                        Account holder name <span className="text-[#D93838]">*</span>
+                                        Account holder name <span className="text-cp-red-ink">*</span>
                                     </Label>
                                     <Input
                                         id="bank_account_holder"
@@ -235,7 +235,7 @@ export default function PaymentsKyc({ kyc }: { kyc: KycDetails }) {
                                 </div>
                                 <div className="flex flex-col gap-1.5">
                                     <Label htmlFor="bank_account_number" className={LABEL_CLASS}>
-                                        Account number <span className="text-[#D93838]">*</span>
+                                        Account number <span className="text-cp-red-ink">*</span>
                                     </Label>
                                     <Input
                                         id="bank_account_number"
@@ -249,7 +249,7 @@ export default function PaymentsKyc({ kyc }: { kyc: KycDetails }) {
                                 </div>
                                 <div className="flex flex-col gap-1.5">
                                     <Label htmlFor="ifsc" className={LABEL_CLASS}>
-                                        IFSC <span className="text-[#D93838]">*</span>
+                                        IFSC <span className="text-cp-red-ink">*</span>
                                     </Label>
                                     <Input
                                         id="ifsc"
@@ -263,23 +263,23 @@ export default function PaymentsKyc({ kyc }: { kyc: KycDetails }) {
                                 </div>
                             </div>
 
-                            <h2 className="mt-8 text-base font-semibold text-[#14141B]">ID document</h2>
+                            <h2 className="mt-8 text-base font-semibold text-cp-ink">ID document</h2>
                             <label
                                 htmlFor="id_document"
-                                className="mt-4 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-[#E4E2DA] bg-[#FAF9F5] p-4 transition hover:border-[#4F46E5]/50"
+                                className="mt-4 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 p-4 transition hover:border-cp-brand/50"
                             >
-                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white text-[#4F46E5] shadow-sm">
+                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-cp-surface text-cp-brand-ink shadow-sm">
                                     {idDocument ? <FileText className="size-5" /> : <Upload className="size-5" />}
                                 </span>
                                 <div className="min-w-0">
-                                    <span className="block truncate text-[13px] font-semibold text-[#14141B]">
+                                    <span className="block truncate text-[13px] font-semibold text-cp-ink">
                                         {idDocument
                                             ? idDocument.name
                                             : kyc.has_document
                                               ? 'Document already uploaded — choose a file to replace it'
                                               : 'Upload PAN card or Aadhaar'}
                                     </span>
-                                    <span className="text-xs text-[#8A8A96]">JPG, PNG or PDF · 5 MB max</span>
+                                    <span className="text-xs text-cp-muted">JPG, PNG or PDF · 5 MB max</span>
                                 </div>
                                 <input
                                     id="id_document"
@@ -293,7 +293,7 @@ export default function PaymentsKyc({ kyc }: { kyc: KycDetails }) {
 
                             <div className="mt-6 flex max-w-sm flex-col gap-1.5">
                                 <Label htmlFor="kyc_password" className={LABEL_CLASS}>
-                                    Your account password <span className="text-[#D93838]">*</span>
+                                    Your account password <span className="text-cp-red-ink">*</span>
                                 </Label>
                                 <Input
                                     id="kyc_password"
@@ -307,15 +307,15 @@ export default function PaymentsKyc({ kyc }: { kyc: KycDetails }) {
                                 <FieldError message={errors.current_password} />
                             </div>
 
-                            <Button type="submit" disabled={!ready || saving} className="mt-6 bg-[#4F46E5] hover:bg-[#4338CA]">
+                            <Button type="submit" disabled={!ready || saving} className="mt-6 text-white bg-cp-brand hover:bg-cp-brand-hover">
                                 {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                                 {saving ? 'Submitting…' : 'Submit for verification'}
                             </Button>
-                            <p className="mt-2 text-[11px] text-[#8A8A96]">Your documents are stored privately and only used for verification.</p>
+                            <p className="mt-2 text-[11px] text-cp-muted">Your documents are stored privately and only used for verification.</p>
                         </form>
                     ) : (
-                        <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <h2 className="text-base font-semibold text-[#14141B]">Submitted details</h2>
+                        <div className="rounded-xl bg-cp-surface p-6 shadow-sm">
+                            <h2 className="text-base font-semibold text-cp-ink">Submitted details</h2>
                             <div className="mt-4 flex flex-col gap-2">
                                 <DetailRow label="Legal name" value={kyc.legal_name} />
                                 <DetailRow label="PAN" value={kyc.pan_number} mono />
