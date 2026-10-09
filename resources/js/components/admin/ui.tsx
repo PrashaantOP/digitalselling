@@ -92,7 +92,7 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 /** Status tabs — query string me `status` badalte hain */
 export function FilterTabs({ base, tabs, active, params = {} }: { base: string; tabs: { key: string; label: string }[]; active: string; params?: Record<string, string | null | undefined> }) {
     return (
-        <div className="flex gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1">
+        <div data-scroll-x className="flex gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1">
             {tabs.map((t) => (
                 <Link
                     key={t.key}

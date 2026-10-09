@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { MetaDot, MOBILE_ICON_ACTION, MobileCard, MobileCardList } from '@/components/mobile-card-list';
 import AppLayout from '@/layouts/app-layout';
 import { completePayment, firstError, postJson, type PaymentPayload } from '@/lib/razorpay';
 import { cn } from '@/lib/utils';
@@ -426,7 +427,41 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                         {invoices.length === 0 ? (
                             <p className="px-5 pb-6 text-sm text-cp-muted">No invoices yet. A GST invoice appears here after each Plus payment.</p>
                         ) : (
-                            <div className="overflow-x-auto">
+                            <>
+                            {/* phone: table ki jagah cards (same data + same actions) */}
+                            {invoices.length > 0 && (
+                                <MobileCardList>
+                                    {invoices.map((invoice) => {
+                                        return (
+                                            <MobileCard
+                                                key={invoice.uuid}
+                                                title={invoice.number}
+                                                subtitle={invoice.description ?? 'Plus plan'}
+                                                trailing={<span className="text-sm font-bold text-cp-ink tabular-nums">{money(invoice.amount)}</span>}
+                                                meta={
+                                                    <>
+                                                        <span>{date(invoice.paid_at)}</span>
+                                                        {invoice.period_start && (
+                                                            <>
+                                                                <MetaDot />
+                                                                <span>
+                                                                    {date(invoice.period_start)} – {date(invoice.period_end)}
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                    </>
+                                                }
+                                                actions={
+                                                    <a href={`/dashboard/settings/billing/invoices/${invoice.uuid}`} target="_blank" rel="noreferrer" aria-label={`View invoice ${invoice.number}`} className={MOBILE_ICON_ACTION}>
+                                                        <FileText className="size-4.5" />
+                                                    </a>
+                                                }
+                                            />
+                                        );
+                                    })}
+                                </MobileCardList>
+                            )}
+                            <div className="hidden overflow-x-auto md:block">
                                 <table className="w-full min-w-[560px] text-sm">
                                     <thead>
                                         <tr className="border-y border-cp-surface-3 bg-cp-surface-2 text-left text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
@@ -464,6 +499,7 @@ export default function Billing({ plan, plus, freeRate, price, subscription, cre
                                     </tbody>
                                 </table>
                             </div>
+                            </>
                         )}
                     </section>
                 </div>

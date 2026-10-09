@@ -1,4 +1,5 @@
 import { GradeForm, submissionFileUrl, SubmissionStatusPill } from '@/components/submission-grader';
+import { MobileCard, MobileCardList } from '@/components/mobile-card-list';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -143,7 +144,7 @@ function KpiCard({ label, value, sub, icon, tone }: { label: string; value: stri
                 <span className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">{label}</span>
                 <span className={cn('flex size-6 items-center justify-center rounded-md', tone)}>{icon}</span>
             </div>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-cp-ink">{value}</span>
+            <span className="mt-3 text-xl font-semibold tracking-tight text-cp-ink sm:text-2xl">{value}</span>
             <span className="mt-1 text-xs text-cp-muted">{sub}</span>
         </div>
     );
@@ -271,7 +272,7 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
                     </div>
 
                     {/* KPI cards */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
                         <KpiCard label="Progress" value={`${percent}%`} sub={`${doneCount} of ${publishedLessons.length} lessons done`} icon={<Check className="size-3.5" />} tone="bg-cp-brand-soft text-cp-brand-ink" />
                         <KpiCard
                             label="Quizzes"
@@ -350,7 +351,28 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
                                 {attempts.length === 0 ? (
                                     <EmptyNote>This student hasn't attempted any quiz yet.</EmptyNote>
                                 ) : (
-                                    <div className="overflow-x-auto">
+                                    <>
+                                    {/* phone: table ki jagah cards (same data + same actions) */}
+                                    {attempts.length > 0 && (
+                                        <MobileCardList>
+                                            {attempts.map((a) => {
+                                                return (
+                                                    <MobileCard
+                                                        key={a.id}
+                                                        title={a.quiz?.title || lessonTitle.get(a.quiz?.lesson_id ?? -1) || 'Quiz'}
+                                                        subtitle={formatDateTime(a.attempted_at)}
+                                                        trailing={<span className="text-sm font-bold text-cp-ink">{Math.round(scoreOf(a))}%</span>}
+                                                        meta={
+                                                            <span>
+                                                                {a.correct_answers} / {a.total_questions} correct
+                                                            </span>
+                                                        }
+                                                    />
+                                                );
+                                            })}
+                                        </MobileCardList>
+                                    )}
+                                    <div className="hidden overflow-x-auto md:block">
                                         <table className="w-full border-collapse text-left text-sm">
                                             <thead>
                                                 <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
@@ -381,6 +403,7 @@ export default function EnrollmentShow({ enrollment }: { enrollment: EnrollmentD
                                             </tbody>
                                         </table>
                                     </div>
+                                    </>
                                 )}
                             </Card>
 

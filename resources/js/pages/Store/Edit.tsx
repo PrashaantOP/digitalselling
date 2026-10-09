@@ -1074,9 +1074,9 @@ function AnalyticsTab({ analytics, store }: { analytics?: AnalyticsData; store: 
                     </div>
                     <p className="text-sm text-cp-muted">Where your visitors come from, and what they do across {store.display_name}.</p>
                 </div>
-                <div className="flex items-center gap-1 rounded-lg bg-cp-surface p-1 shadow-sm">
+                <div className="flex w-fit items-center gap-1 rounded-lg bg-cp-surface p-1 shadow-sm">
                     {[7, 30, 90].map((option) => (
-                        <button key={option} type="button" onClick={() => changeDays(option)} className={cn('rounded-md px-3 py-1.5 text-xs font-medium transition-colors', days === option ? 'bg-cp-brand-soft text-cp-brand-ink' : 'text-cp-muted hover:text-cp-ink')}>
+                        <button key={option} type="button" onClick={() => changeDays(option)} className={cn('rounded-md px-3 py-2 text-xs font-medium transition-colors md:py-1.5', days === option ? 'bg-cp-brand-soft text-cp-brand-ink' : 'text-cp-muted hover:text-cp-ink')}>
                             Last {option} days
                         </button>
                     ))}

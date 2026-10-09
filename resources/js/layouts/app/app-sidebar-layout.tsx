@@ -5,7 +5,7 @@ import { type PropsWithChildren } from 'react';
 
 export default function AppSidebarLayout({ children }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
     return (
-        <div className="flex min-h-screen w-full bg-cp-canvas">
+        <div className="flex min-h-dvh w-full bg-cp-canvas">
             <AppSidebar />
             {/* mobile pe neeche fixed tab bar ki jagah chhodo (MobileNav --mobile-nav-offset set karta hai) */}
             <div className="flex min-w-0 flex-1 flex-col overflow-x-clip pb-(--mobile-nav-offset,0px) lg:pb-0">

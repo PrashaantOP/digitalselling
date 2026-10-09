@@ -136,7 +136,7 @@ function SideNav({ active, onChange, kycStatus, hasMethod }: { active: Section; 
     ];
 
     return (
-        <nav className="flex gap-1.5 overflow-x-auto rounded-xl bg-cp-surface p-2 shadow-sm lg:sticky lg:top-20 lg:flex-col lg:overflow-visible">
+        <nav data-scroll-x className="flex gap-1.5 overflow-x-auto rounded-xl bg-cp-surface p-2 shadow-sm lg:sticky lg:top-20 lg:flex-col lg:overflow-visible">
             {items.map((item) => {
                 const isActive = active === item.key;
                 return (

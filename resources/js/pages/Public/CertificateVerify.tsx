@@ -30,7 +30,7 @@ export default function CertificateVerify({ number, result }: { number: string |
     }
 
     return (
-        <div className="flex min-h-screen flex-col items-center bg-[#F6F5F2] px-4 py-10 text-[#14141B]">
+        <div className="flex min-h-dvh flex-col items-center bg-[#F6F5F2] px-4 py-10 text-[#14141B]">
             <Head title={number ? `Certificate ${number}` : 'Verify a certificate'}>
                 <meta name="robots" content="noindex" />
             </Head>

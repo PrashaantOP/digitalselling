@@ -78,7 +78,7 @@ export default function TeamRoles({ roles, matrix }: Props) {
                         </p>
                         <div className="flex-1" />
                         <div className="mt-4 flex items-center justify-end gap-1 border-t border-cp-line/70 pt-3">
-                            <button type="button" onClick={() => setEditing(r)} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-cp-body hover:bg-cp-canvas">
+                            <button type="button" onClick={() => setEditing(r)} className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-cp-body hover:bg-cp-canvas md:py-1.5">
                                 <Pencil className="size-3.5" /> Edit
                             </button>
                             <button
@@ -86,7 +86,7 @@ export default function TeamRoles({ roles, matrix }: Props) {
                                 onClick={() => remove(r)}
                                 disabled={r.members > 0}
                                 title={r.members > 0 ? 'Move members to another role first' : 'Delete role'}
-                                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-cp-coral-dark-ink hover:bg-cp-coral-soft disabled:cursor-not-allowed disabled:opacity-40"
+                                className="flex items-center gap-1.5 rounded-lg px-3 py-2 md:py-1.5 text-xs font-semibold text-cp-coral-dark-ink hover:bg-cp-coral-soft disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 <Trash2 className="size-3.5" /> Delete
                             </button>

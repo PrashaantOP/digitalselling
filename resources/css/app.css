@@ -450,6 +450,26 @@
     display: none;
 }
 
+/*
+ | Phone (<768px):
+ |  - input / select / textarea kam se kam 16px — iPhone Safari isse chhote input pe focus karte hi page zoom kar deta hai.
+ |    @layer ke bahar (unlayered) hai, isliye Tailwind ke text-sm / text-xs pe bhaari padta hai. Desktop pe koi fark nahi.
+ |  - [data-scroll-x] = jaan-boojh ke side-scroll hone wali row (filter chips, tabs) — dahine kinare pe fade,
+ |    taaki dikhe ki aage aur bhi hai.
+ */
+@media (max-width: 767px) {
+    input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']),
+    select,
+    textarea {
+        font-size: 16px;
+    }
+
+    [data-scroll-x] {
+        mask-image: linear-gradient(to right, black calc(100% - 28px), transparent);
+        scroll-padding-inline: 16px;
+    }
+}
+
 /* Poori app me scrollbar hidden — scroll (wheel/touch/keyboard) chalta rahega, bas bar nahi dikhega */
 * {
     scrollbar-width: none;

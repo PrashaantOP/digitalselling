@@ -447,7 +447,7 @@ export function DeviceToggle({ device, onChange }: { device: Device; onChange: (
                 onClick={() => onChange('desktop')}
                 aria-pressed={device === 'desktop'}
                 className={cn(
-                    'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition',
+                    'flex items-center gap-1.5 rounded-md px-2.5 py-2 text-[11px] font-medium transition lg:py-1',
                     device === 'desktop' ? 'light-island bg-cp-surface text-cp-ink' : 'text-white/60 hover:text-white',
                 )}
             >
@@ -458,7 +458,7 @@ export function DeviceToggle({ device, onChange }: { device: Device; onChange: (
                 onClick={() => onChange('mobile')}
                 aria-pressed={device === 'mobile'}
                 className={cn(
-                    'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition',
+                    'flex items-center gap-1.5 rounded-md px-2.5 py-2 text-[11px] font-medium transition lg:py-1',
                     device === 'mobile' ? 'light-island bg-cp-surface text-cp-ink' : 'text-white/60 hover:text-white',
                 )}
             >

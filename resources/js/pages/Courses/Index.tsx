@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useRefreshOnBack } from '@/hooks/use-refresh-on-back';
 import AppLayout from '@/layouts/app-layout';
+import { MetaDot, MOBILE_ICON_ACTION, MobileCard, MobileCardList } from '@/components/mobile-card-list';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
@@ -212,7 +213,7 @@ function RowActions({ course, busy, onAction }: { course: CourseRow; busy: boole
                     type="button"
                     aria-label={`More actions for ${course.title}`}
                     disabled={busy}
-                    className="rounded-lg p-1.5 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink disabled:opacity-50 data-[state=open]:bg-cp-surface-3"
+                    className="flex size-9 items-center justify-center rounded-lg p-1.5 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink disabled:opacity-50 data-[state=open]:bg-cp-surface-3 md:size-auto"
                 >
                     {busy ? <Loader2 className="size-[18px] animate-spin" /> : <MoreHorizontal className="size-[18px]" />}
                 </button>
@@ -350,6 +351,20 @@ export default function CoursesIndex({ items, counts, filters }: CoursesIndexPro
         });
     }
 
+    // filter se kuch na mile — table aur phone cards dono me yahi
+    const noResults = (
+        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
+                <Inbox className="size-5" />
+            </span>
+            <p className="mt-1 text-sm font-semibold text-cp-ink">No courses found</p>
+            <p className="max-w-xs px-4 text-xs text-cp-muted">Try a different search or status filter.</p>
+            <Button variant="outline" size="sm" onClick={clearFilters} className="mt-3 border-cp-line">
+                Clear filters
+            </Button>
+        </div>
+    );
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Courses" />
@@ -416,7 +431,7 @@ export default function CoursesIndex({ items, counts, filters }: CoursesIndexPro
                         <>
                             {/* Filters */}
                             <div className="flex flex-col gap-4 rounded-xl bg-cp-surface p-4 shadow-sm">
-                                <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
+                                <div data-scroll-x className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
                                     {STATUS_TABS.map((tab) => {
                                         const active = activeStatus === tab.key;
                                         return (
@@ -425,7 +440,7 @@ export default function CoursesIndex({ items, counts, filters }: CoursesIndexPro
                                                 type="button"
                                                 onClick={() => applyFilters({ status: tab.key === 'all' ? null : tab.key })}
                                                 className={cn(
-                                                    'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
+                                                    'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-xs md:py-1.5 font-medium whitespace-nowrap transition-colors',
                                                     active ? 'bg-cp-surface text-cp-brand-ink shadow-sm' : 'text-cp-muted hover:text-cp-ink',
                                                 )}
                                             >
@@ -471,7 +486,50 @@ export default function CoursesIndex({ items, counts, filters }: CoursesIndexPro
                                         </p>
                                     </div>
                                 </div>
-                                <div className="overflow-x-auto">
+                                {/* phone: table ki jagah cards (same data + same actions) */}
+                                {items.data.length === 0 ? (
+                                    <div className="p-4 md:hidden">{noResults}</div>
+                                ) : (
+                                    <MobileCardList>
+                                        {items.data.map((course) => {
+                                            const detail = course.course_detail;
+                                            const lessons = detail?.total_lessons ?? 0;
+                                            return (
+                                                <MobileCard
+                                                    key={course.id}
+                                                    href={`${BASE}/${course.uuid}/edit`}
+                                                    leading={
+                                                        <span className={cn('flex size-10 items-center justify-center rounded-xl', tileTone(course.title || String(course.id)))}>
+                                                            <GraduationCap className="size-5" />
+                                                        </span>
+                                                    }
+                                                    title={course.title || 'Untitled course'}
+                                                    subtitle={`${lessons} ${lessons === 1 ? 'lesson' : 'lessons'} · ${detail?.access_type === 'days' ? `${detail.access_days ?? '—'} days access` : 'Lifetime access'}`}
+                                                    trailing={<PriceCell course={course} />}
+                                                    meta={
+                                                        <>
+                                                            <StatusPill status={course.status} />
+                                                            <span>
+                                                                {course.sales_count} {course.sales_count === 1 ? 'sale' : 'sales'}
+                                                            </span>
+                                                            <MetaDot />
+                                                            <span>{Number(course.views_count).toLocaleString('en-IN')} views</span>
+                                                        </>
+                                                    }
+                                                    actions={
+                                                        <>
+                                                            <Link href={`${BASE}/${course.uuid}/students`} aria-label={`Students of ${course.title}`} className={MOBILE_ICON_ACTION}>
+                                                                <Users className="size-[18px]" />
+                                                            </Link>
+                                                            <RowActions course={course} busy={busyId === course.id} onAction={(a) => runAction(course, a)} />
+                                                        </>
+                                                    }
+                                                />
+                                            );
+                                        })}
+                                    </MobileCardList>
+                                )}
+                                <div className="hidden overflow-x-auto md:block">
                                     <table className="w-full border-collapse text-left text-sm">
                                         <thead>
                                             <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
@@ -488,16 +546,7 @@ export default function CoursesIndex({ items, counts, filters }: CoursesIndexPro
                                             {items.data.length === 0 && (
                                                 <tr>
                                                     <td colSpan={7} className="px-6 py-8">
-                                                        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
-                                                            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
-                                                                <Inbox className="size-5" />
-                                                            </span>
-                                                            <p className="mt-1 text-sm font-semibold text-cp-ink">No courses found</p>
-                                                            <p className="max-w-xs px-4 text-xs text-cp-muted">Try a different search or status filter.</p>
-                                                            <Button variant="outline" size="sm" onClick={clearFilters} className="mt-3 border-cp-line">
-                                                                Clear filters
-                                                            </Button>
-                                                        </div>
+                                                        {noResults}
                                                     </td>
                                                 </tr>
                                             )}

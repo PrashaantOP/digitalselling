@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { MobileCard, MobileCardList } from '@/components/mobile-card-list';
 import { Label } from '@/components/ui/label';
 import { useRefreshOnBack } from '@/hooks/use-refresh-on-back';
 import AppLayout from '@/layouts/app-layout';
@@ -468,7 +469,7 @@ function RowActions({
                         type="button"
                         aria-label={`More actions for ${book.title}`}
                         disabled={busy}
-                        className="rounded-lg p-1.5 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink disabled:opacity-50"
+                        className="flex size-9 items-center justify-center rounded-lg p-1.5 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink disabled:opacity-50 md:size-auto"
                     >
                         {busy ? <Loader2 className="size-[18px] animate-spin" /> : <MoreHorizontal className="size-[18px]" />}
                     </button>
@@ -623,6 +624,27 @@ export default function BooksIndex({ items, counts, filters }: BooksIndexProps) 
         });
     }
 
+    // filter se kuch na mile — table aur phone cards dono me yahi
+    const noResults = (
+        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
+                <Inbox className="size-5" />
+            </span>
+            <p className="mt-1 text-sm font-semibold text-cp-ink">No books found</p>
+            <p className="max-w-xs px-4 text-xs text-cp-muted">
+                Try a different search or status filter.
+            </p>
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="mt-3 border-cp-line"
+            >
+                Clear filters
+            </Button>
+        </div>
+    );
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Books" />
@@ -697,7 +719,7 @@ export default function BooksIndex({ items, counts, filters }: BooksIndexProps) 
                         <>
                             {/* Filters */}
                             <div className="flex flex-col gap-4 rounded-xl bg-cp-surface p-4 shadow-sm">
-                                <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
+                                <div data-scroll-x className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
                                     {STATUS_TABS.map((tab) => {
                                         const active = activeStatus === tab.key;
                                         return (
@@ -706,7 +728,7 @@ export default function BooksIndex({ items, counts, filters }: BooksIndexProps) 
                                                 type="button"
                                                 onClick={() => applyFilters({ status: tab.key === 'all' ? null : tab.key })}
                                                 className={cn(
-                                                    'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
+                                                    'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-xs md:py-1.5 font-medium whitespace-nowrap transition-colors',
                                                     active ? 'bg-cp-surface text-cp-brand-ink shadow-sm' : 'text-cp-muted hover:text-cp-ink',
                                                 )}
                                             >
@@ -756,7 +778,40 @@ export default function BooksIndex({ items, counts, filters }: BooksIndexProps) 
                                         </p>
                                     </div>
                                 </div>
-                                <div className="overflow-x-auto">
+                                {/* phone: table ki jagah cards (same data + same actions) */}
+                                {items.data.length === 0 ? (
+                                    <div className="p-4 md:hidden">{noResults}</div>
+                                ) : (
+                                    <MobileCardList>
+                                        {items.data.map((book) => {
+                                            return (
+                                                <MobileCard
+                                                    key={book.id}
+                                                    href={`${BASE}/${book.uuid}/edit`}
+                                                    leading={
+                                                        <span className={cn('flex size-10 items-center justify-center overflow-hidden rounded-xl', book.cover_image ? 'bg-cp-canvas' : tileTone(book.title || String(book.id)))}>
+                                                            {book.cover_image ? <img src={book.cover_image} alt="" className="h-full w-full object-cover" /> : <BookOpen className="size-5" />}
+                                                        </span>
+                                                    }
+                                                    title={book.title || 'Untitled book'}
+                                                    subtitle={book.book_detail?.author_name ? `by ${book.book_detail.author_name}` : undefined}
+                                                    trailing={<PriceCell book={book} />}
+                                                    meta={
+                                                        <>
+                                                            <StatusPill status={book.status} />
+                                                            <FormatChip book={book} />
+                                                            <span>
+                                                                {book.sales_count} {book.sales_count === 1 ? 'sale' : 'sales'}
+                                                            </span>
+                                                        </>
+                                                    }
+                                                    actions={<RowActions book={book} busy={busyId === book.id} onAction={(a) => runAction(book, a)} />}
+                                                />
+                                            );
+                                        })}
+                                    </MobileCardList>
+                                )}
+                                <div className="hidden overflow-x-auto md:block">
                                     <table className="w-full border-collapse text-left text-sm">
                                         <thead>
                                             <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
@@ -773,23 +828,7 @@ export default function BooksIndex({ items, counts, filters }: BooksIndexProps) 
                                             {items.data.length === 0 && (
                                                 <tr>
                                                     <td colSpan={7} className="px-6 py-8">
-                                                        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
-                                                            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
-                                                                <Inbox className="size-5" />
-                                                            </span>
-                                                            <p className="mt-1 text-sm font-semibold text-cp-ink">No books found</p>
-                                                            <p className="max-w-xs px-4 text-xs text-cp-muted">
-                                                                Try a different search or status filter.
-                                                            </p>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={clearFilters}
-                                                                className="mt-3 border-cp-line"
-                                                            >
-                                                                Clear filters
-                                                            </Button>
-                                                        </div>
+                                                        {noResults}
                                                     </td>
                                                 </tr>
                                             )}

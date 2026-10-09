@@ -104,7 +104,7 @@ function KpiCard({ label, value, sub, icon, tone }: { label: string; value: numb
                 <span className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">{label}</span>
                 <span className={cn('flex size-6 items-center justify-center rounded-md', tone)}>{icon}</span>
             </div>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-cp-ink">{value.toLocaleString('en-IN')}</span>
+            <span className="mt-3 text-xl font-semibold tracking-tight text-cp-ink sm:text-2xl">{value.toLocaleString('en-IN')}</span>
             <span className="mt-1 text-xs text-cp-muted">{sub}</span>
         </div>
     );
@@ -191,7 +191,7 @@ export default function BookingsIndex({ bookings, counts, stats, timezone, filte
                     </div>
 
                     {/* KPIs */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
                         <KpiCard label="Today" value={stats.today} sub="Calls scheduled today" icon={<CalendarClock className="size-3.5" />} tone="bg-cp-brand-soft text-cp-brand-ink" />
                         <KpiCard label="Next 7 days" value={stats.next_7_days} sub="Upcoming calls this week" icon={<CalendarDays className="size-3.5" />} tone="bg-cp-sky-soft text-cp-sky-ink" />
                         <KpiCard label="Completed" value={stats.completed_this_month} sub="This month" icon={<CalendarCheck className="size-3.5" />} tone="bg-cp-success-soft text-cp-success-ink" />
@@ -200,7 +200,7 @@ export default function BookingsIndex({ bookings, counts, stats, timezone, filte
 
                     {/* Filters */}
                     <div className="flex flex-col gap-3 rounded-xl bg-cp-surface p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-                        <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
+                        <div data-scroll-x className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
                             {STATUS_TABS.map((tab) => {
                                 const active = filters.status === tab.key;
                                 const count = tab.key === 'all' ? totalAll : Number(counts[tab.key] ?? 0);
@@ -210,7 +210,7 @@ export default function BookingsIndex({ bookings, counts, stats, timezone, filte
                                         type="button"
                                         onClick={() => visit({ status: tab.key })}
                                         className={cn(
-                                            'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
+                                            'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-xs md:py-1.5 font-medium whitespace-nowrap transition-colors',
                                             active ? 'bg-cp-surface text-cp-brand-ink shadow-sm' : 'text-cp-muted hover:text-cp-ink',
                                         )}
                                     >

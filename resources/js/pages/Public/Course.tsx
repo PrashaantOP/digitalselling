@@ -173,7 +173,7 @@ export default function Course({ product, creator, checkoutUrl }: Props) {
         <>
             <Head title={product.title} />
             {preview && <LessonPreview slug={product.slug} lesson={preview} accent={accent} cta={product.button_text || 'Enroll now'} onClose={() => setPreview(null)} />}
-            <main className="flex min-h-screen flex-col bg-[#FAF9F5] text-[#14141B]">
+            <main className="flex min-h-dvh flex-col bg-[#FAF9F5] text-[#14141B]">
                 <div className="h-1" style={{ backgroundColor: accent }} />
                 <header>
                     <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">

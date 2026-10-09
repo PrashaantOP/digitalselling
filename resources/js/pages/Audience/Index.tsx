@@ -1,3 +1,4 @@
+import { MetaDot, MobileCard, MobileCardList } from '@/components/mobile-card-list';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -210,7 +211,7 @@ function KpiCard({ label, value, sub, icon, tone }: { label: string; value: stri
                 <span className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">{label}</span>
                 <span className={cn('flex size-6 items-center justify-center rounded-md', tone)}>{icon}</span>
             </div>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-cp-ink">{value}</span>
+            <span className="mt-3 text-xl font-semibold tracking-tight text-cp-ink sm:text-2xl">{value}</span>
             <span className="mt-1 text-xs text-cp-muted">{sub}</span>
         </div>
     );
@@ -273,15 +274,35 @@ function EmptyRow({ colSpan, title, hint }: { colSpan: number; title: string; hi
     return (
         <tr>
             <td colSpan={colSpan} className="px-6 py-8">
-                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
-                    <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
-                        <Inbox className="size-5" />
-                    </span>
-                    <p className="mt-1 text-sm font-semibold text-cp-ink">{title}</p>
-                    <p className="max-w-xs px-4 text-xs text-cp-muted">{hint}</p>
-                </div>
+                <EmptyBox title={title} hint={hint} />
             </td>
         </tr>
+    );
+}
+
+/** table (desktop) aur cards (phone) dono ka "kuch nahi mila" */
+function EmptyBox({ title, hint }: { title: string; hint: string }) {
+    return (
+        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
+                <Inbox className="size-5" />
+            </span>
+            <p className="mt-1 text-sm font-semibold text-cp-ink">{title}</p>
+            <p className="max-w-xs px-4 text-xs text-cp-muted">{hint}</p>
+        </div>
+    );
+}
+
+/** customer / visitor ki pehchaan chip */
+function VisitorStatus({ isCustomer }: { isCustomer: boolean }) {
+    return isCustomer ? (
+        <span className="inline-flex items-center gap-1 rounded-full bg-cp-success-soft px-2.5 py-0.5 text-[11px] font-semibold text-cp-success-ink">
+            <span className="size-1.5 rounded-full bg-cp-success" /> Customer
+        </span>
+    ) : (
+        <span className="inline-flex items-center gap-1 rounded-full bg-cp-surface-3 px-2.5 py-0.5 text-[11px] font-semibold text-cp-subtle">
+            <span className="size-1.5 rounded-full bg-current" /> Visitor
+        </span>
     );
 }
 
@@ -348,7 +369,7 @@ export default function AudienceIndex({ tab, customers, visitors, summary, count
                     </div>
 
                     {/* KPI cards */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
                         {isCustomers ? (
                             <>
                                 <KpiCard label="Total Customers" value={Number(cs.total).toLocaleString('en-IN')} sub={`${cs.new_30d} joined in the last 30 days`} icon={<Users className="size-3.5" />} tone="bg-cp-brand-soft text-cp-brand-ink" />
@@ -405,7 +426,69 @@ export default function AudienceIndex({ tab, customers, visitors, summary, count
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto">
+                        {/* phone: table ki jagah cards — tap pe wahi side panel */}
+                        <div className="md:hidden">
+                            {isCustomers ? (
+                                customers?.data.length === 0 ? (
+                                    <div className="p-4">
+                                        <EmptyBox title="No customers found" hint={applied ? 'Try a different search.' : 'Customers appear here automatically after their first purchase.'} />
+                                    </div>
+                                ) : (
+                                    <MobileCardList>
+                                        {customers?.data.map((c) => (
+                                            <MobileCard
+                                                key={c.id}
+                                                onOpen={() => setSelectedCustomer(c)}
+                                                leading={<Avatar name={c.name} className="size-9 text-[11px]" />}
+                                                title={c.name ?? 'Unnamed'}
+                                                subtitle={c.email ?? c.phone}
+                                                trailing={<span className="text-[15px] font-bold whitespace-nowrap text-cp-ink">{formatCurrency(Number(c.total_spent))}</span>}
+                                                meta={
+                                                    <>
+                                                        <span>
+                                                            {c.total_orders} {c.total_orders === 1 ? 'order' : 'orders'}
+                                                        </span>
+                                                        <MetaDot />
+                                                        <span>First bought {formatDate(c.first_purchase_at)}</span>
+                                                    </>
+                                                }
+                                            />
+                                        ))}
+                                    </MobileCardList>
+                                )
+                            ) : visitors?.data.length === 0 ? (
+                                <div className="p-4">
+                                    <EmptyBox title="No visitors found" hint={applied ? 'Try a different search.' : 'Visitors appear here as people open your store.'} />
+                                </div>
+                            ) : (
+                                <MobileCardList>
+                                    {visitors?.data.map((v) => (
+                                        <MobileCard
+                                            key={v.id}
+                                            onOpen={() => setSelectedVisitor(v)}
+                                            leading={<Avatar name={v.name} className="size-9 text-[11px]" />}
+                                            title={v.name ?? 'Anonymous visitor'}
+                                            subtitle={[v.city, v.country].filter(Boolean).join(', ') || v.phone || 'Location unknown'}
+                                            trailing={<VisitorStatus isCustomer={v.is_customer} />}
+                                            meta={
+                                                <>
+                                                    <span className="inline-flex items-center gap-1">
+                                                        <DeviceIcon device={v.device} className="size-3.5" />
+                                                        {v.visits_count} {v.visits_count === 1 ? 'visit' : 'visits'}
+                                                    </span>
+                                                    <MetaDot />
+                                                    <span>{v.pages_count} pages</span>
+                                                    <MetaDot />
+                                                    <span>{timeAgo(v.last_seen_at)}</span>
+                                                </>
+                                            }
+                                        />
+                                    ))}
+                                </MobileCardList>
+                            )}
+                        </div>
+
+                        <div className="hidden overflow-x-auto md:block">
                             {isCustomers ? (
                                 <table className="w-full border-collapse text-left text-sm">
                                     <thead>
@@ -491,15 +574,7 @@ export default function AudienceIndex({ tab, customers, visitors, summary, count
                                                 <td className="px-4 py-3.5 text-center text-[13px] font-semibold text-cp-ink">{v.pages_count}</td>
                                                 <td className="px-4 py-3.5 text-[13px] whitespace-nowrap text-cp-body">{timeAgo(v.last_seen_at)}</td>
                                                 <td className="px-6 py-3.5 text-center whitespace-nowrap">
-                                                    {v.is_customer ? (
-                                                        <span className="inline-flex items-center gap-1 rounded-full bg-cp-success-soft px-2.5 py-0.5 text-[11px] font-semibold text-cp-success-ink">
-                                                            <span className="size-1.5 rounded-full bg-cp-success" /> Customer
-                                                        </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center gap-1 rounded-full bg-cp-surface-3 px-2.5 py-0.5 text-[11px] font-semibold text-cp-subtle">
-                                                            <span className="size-1.5 rounded-full bg-current" /> Visitor
-                                                        </span>
-                                                    )}
+                                                    <VisitorStatus isCustomer={v.is_customer} />
                                                 </td>
                                             </tr>
                                         ))}

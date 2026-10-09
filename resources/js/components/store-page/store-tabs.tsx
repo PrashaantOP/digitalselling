@@ -23,6 +23,7 @@ export function StoreTabs({ active }: { active: StoreTabKey }) {
     return (
         // 5 tabs phone pe nahi samaate — side me scroll (scrollbar chhupa)
         <nav
+            data-scroll-x
             className="no-scrollbar flex items-center gap-6 overflow-x-auto border-b border-cp-line"
             aria-label="Store sections"
         >

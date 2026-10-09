@@ -240,7 +240,7 @@ export default function DashboardIndex({
                                                 disabled={loading}
                                                 aria-pressed={p === days}
                                                 className={cn(
-                                                    'rounded-lg px-3 py-1 text-xs font-semibold transition',
+                                                    'rounded-lg px-3 py-2 text-xs font-semibold transition sm:py-1',
                                                     p === days ? 'bg-cp-brand text-white shadow-sm' : 'text-cp-subtle hover:text-cp-ink',
                                                 )}
                                             >

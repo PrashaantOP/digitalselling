@@ -223,7 +223,7 @@ export function RichText({ id, value, onChange, placeholder, error }: { id?: str
         <div className={cn('overflow-hidden rounded-lg border bg-cp-surface shadow-sm focus-within:border-cp-brand focus-within:ring-2 focus-within:ring-cp-brand/15', error ? 'border-cp-red' : 'border-cp-line')}>
             <div className="flex items-center gap-0.5 border-b border-cp-line bg-cp-canvas px-2 py-1.5">
                 {tools.map((t) => (
-                    <button key={t.cmd} type="button" aria-label={t.label} onMouseDown={(e) => e.preventDefault()} onClick={() => exec(t.cmd)} className="rounded p-1.5 text-cp-body hover:bg-cp-surface hover:text-cp-ink">
+                    <button key={t.cmd} type="button" aria-label={t.label} onMouseDown={(e) => e.preventDefault()} onClick={() => exec(t.cmd)} className="flex size-9 items-center justify-center rounded p-1.5 text-cp-body md:size-auto hover:bg-cp-surface hover:text-cp-ink">
                         <t.icon className="size-4" />
                     </button>
                 ))}

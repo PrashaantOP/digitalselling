@@ -25,6 +25,19 @@ interface Props {
 
 type Action = { kind: 'invite' } | { kind: 'role'; member: Member } | { kind: 'remove'; member: Member } | null;
 
+/** Active (2-step on) / Invited (kab tak) — table column aur phone dono me */
+function MemberStatus({ member }: { member: Member }) {
+    return member.status === 'active' ? (
+        <span className="inline-flex items-center gap-1 rounded-full bg-cp-success-soft px-2.5 py-0.5 text-[11px] font-semibold text-cp-success-ink">
+            <ShieldCheck className="size-3" /> Active · 2-step on
+        </span>
+    ) : (
+        <span className="rounded-full bg-cp-warning-soft px-2.5 py-0.5 text-[11px] font-semibold text-cp-warning-ink">
+            Invited · expires {expiresIn(member.invite_expires_at)}
+        </span>
+    );
+}
+
 export default function TeamMembers({ members, roles, seats }: Props) {
     const flash = usePage<{ flash?: { success?: string } }>().props.flash;
     const [action, setAction] = useState<Action>(null);
@@ -97,40 +110,37 @@ export default function TeamMembers({ members, roles, seats }: Props) {
                         <thead>
                             <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
                                 <th className="px-5 py-3">Member</th>
-                                <th className="px-4 py-3">Role</th>
-                                <th className="px-4 py-3">Status</th>
-                                <th className="px-4 py-3">Last active</th>
-                                <th className="px-5 py-3" />
+                                <th className="hidden px-4 py-3 md:table-cell">Role</th>
+                                <th className="hidden px-4 py-3 md:table-cell">Status</th>
+                                <th className="hidden px-4 py-3 md:table-cell">Last active</th>
+                                <th className="px-3 py-3 md:px-5" />
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-cp-line/60">
                             {members.map((m) => (
                                 <tr key={m.uuid}>
-                                    <td className="px-5 py-3.5">
+                                    <td className="px-4 py-3.5 md:px-5">
                                         <p className="font-semibold text-cp-ink">{m.name ?? 'Invited'}</p>
-                                        <p className="text-xs text-cp-muted">{m.email}</p>
+                                        <p className="break-all text-xs text-cp-muted">{m.email}</p>
+                                        {/* phone: role + status naam ke neeche (columns chhupe hain) */}
+                                        <div className="mt-2 flex flex-wrap items-center gap-1.5 md:hidden">
+                                            <span className="rounded-md bg-cp-brand-soft px-2 py-0.5 text-xs font-semibold text-cp-brand-ink">{m.role ?? 'No role'}</span>
+                                            <MemberStatus member={m} />
+                                        </div>
                                     </td>
-                                    <td className="px-4 py-3.5">
+                                    <td className="hidden px-4 py-3.5 md:table-cell">
                                         <span className="rounded-md bg-cp-brand-soft px-2 py-0.5 text-xs font-semibold text-cp-brand-ink">{m.role ?? 'No role'}</span>
                                     </td>
-                                    <td className="px-4 py-3.5">
-                                        {m.status === 'active' ? (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-cp-success-soft px-2.5 py-0.5 text-[11px] font-semibold text-cp-success-ink">
-                                                <ShieldCheck className="size-3" /> Active · 2-step on
-                                            </span>
-                                        ) : (
-                                            <span className="rounded-full bg-cp-warning-soft px-2.5 py-0.5 text-[11px] font-semibold text-cp-warning-ink">
-                                                Invited · expires {expiresIn(m.invite_expires_at)}
-                                            </span>
-                                        )}
+                                    <td className="hidden px-4 py-3.5 md:table-cell">
+                                        <MemberStatus member={m} />
                                     </td>
-                                    <td className="px-4 py-3.5 text-xs text-cp-subtle">{m.status === 'active' ? relativeTime(m.last_active_at) : '—'}</td>
-                                    <td className="relative px-5 py-3.5 text-right">
+                                    <td className="hidden px-4 py-3.5 text-xs text-cp-subtle md:table-cell">{m.status === 'active' ? relativeTime(m.last_active_at) : '—'}</td>
+                                    <td className="relative px-3 py-3.5 text-right align-top md:px-5 md:align-middle">
                                         <button
                                             type="button"
                                             aria-label={`Actions for ${m.email}`}
                                             onClick={() => setMenuFor(menuFor === m.uuid ? null : m.uuid)}
-                                            className="rounded-lg p-1.5 text-cp-muted hover:bg-cp-surface-3 hover:text-cp-ink"
+                                            className="inline-flex size-9 items-center justify-center rounded-lg p-1.5 text-cp-muted hover:bg-cp-surface-3 hover:text-cp-ink md:size-auto"
                                         >
                                             <MoreHorizontal className="size-4" />
                                         </button>

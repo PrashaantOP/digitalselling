@@ -44,7 +44,7 @@ export function RevenueChart({ data, days }: { data: ChartPoint[]; days: number 
                             onClick={() => setMetric(m.key)}
                             aria-pressed={metric === m.key}
                             className={cn(
-                                'rounded-lg px-3 py-1.5 text-xs font-semibold transition',
+                                'rounded-lg px-3 py-2 text-xs font-semibold transition sm:py-1.5',
                                 metric === m.key ? 'bg-cp-surface text-cp-ink shadow-sm' : 'text-cp-muted hover:text-cp-ink',
                             )}
                         >

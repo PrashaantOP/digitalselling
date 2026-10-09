@@ -1,4 +1,5 @@
 import { GradeForm, submissionFileUrl, SubmissionStatusPill } from '@/components/submission-grader';
+import { MobileCard, MobileCardList } from '@/components/mobile-card-list';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -240,6 +241,24 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
         setOpen(true);
     }
 
+    // filter se kuch na mile — table aur phone cards dono me yahi
+    const noResults = (
+        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
+                <Inbox className="size-5" />
+            </span>
+            <p className="mt-1 text-sm font-semibold text-cp-ink">{hasFilters ? 'No submissions match' : 'No submissions yet'}</p>
+            <p className="max-w-xs px-4 text-xs text-cp-muted">
+                {hasFilters ? 'Try a different status or remove the course filter.' : 'When students submit an assignment from a lesson, it will show up here for review.'}
+            </p>
+            {hasFilters && (
+                <Button variant="outline" size="sm" onClick={() => router.get(BASE, {}, { preserveState: true, replace: true })} className="mt-3 border-cp-line">
+                    Clear filters
+                </Button>
+            )}
+        </div>
+    );
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Assignments" />
@@ -256,7 +275,7 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
 
                     {/* Filters */}
                     <div className="flex flex-col gap-3 rounded-xl bg-cp-surface p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
+                        <div data-scroll-x className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
                             {STATUS_TABS.map((tab) => {
                                 const active = activeStatus === tab.key;
                                 return (
@@ -265,7 +284,7 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
                                         type="button"
                                         onClick={() => applyFilters({ status: tab.key === 'all' ? null : tab.key })}
                                         className={cn(
-                                            'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
+                                            'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-xs md:py-1.5 font-medium whitespace-nowrap transition-colors',
                                             active ? 'bg-cp-surface text-cp-brand-ink shadow-sm' : 'text-cp-muted hover:text-cp-ink',
                                         )}
                                     >
@@ -296,7 +315,37 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
                                 </p>
                             </div>
                         </div>
-                        <div className="overflow-x-auto">
+                        {/* phone: table ki jagah cards (same data + same actions) */}
+                        {submissions.data.length === 0 ? (
+                            <div className="p-4 md:hidden">{noResults}</div>
+                        ) : (
+                            <MobileCardList>
+                                {submissions.data.map((row) => {
+                                    const name = studentName(row);
+                                    return (
+                                        <MobileCard
+                                            key={row.id}
+                                            onOpen={() => openReview(row)}
+                                            leading={<div className={cn('flex size-9 items-center justify-center rounded-full text-[11px] font-bold', avatarTone(name))}>{initials(name)}</div>}
+                                            title={lessonTitle(row)}
+                                            subtitle={`${name ?? 'Anonymous'} · ${courseTitle(row)}`}
+                                            trailing={<SubmissionStatusPill status={row.status} />}
+                                            meta={
+                                                <>
+                                                    <span>{formatDateTime(row.submitted_at)}</span>
+                                                    {row.submission_file_path && (
+                                                        <span className="inline-flex items-center gap-1 text-cp-brand-ink">
+                                                            <Paperclip className="size-3" /> File
+                                                        </span>
+                                                    )}
+                                                </>
+                                            }
+                                        />
+                                    );
+                                })}
+                            </MobileCardList>
+                        )}
+                        <div className="hidden overflow-x-auto md:block">
                             <table className="w-full border-collapse text-left text-sm">
                                 <thead>
                                     <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
@@ -311,20 +360,7 @@ export default function CourseSubmissions({ submissions, filters }: SubmissionsP
                                     {submissions.data.length === 0 && (
                                         <tr>
                                             <td colSpan={5} className="px-6 py-8">
-                                                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
-                                                    <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
-                                                        <Inbox className="size-5" />
-                                                    </span>
-                                                    <p className="mt-1 text-sm font-semibold text-cp-ink">{hasFilters ? 'No submissions match' : 'No submissions yet'}</p>
-                                                    <p className="max-w-xs px-4 text-xs text-cp-muted">
-                                                        {hasFilters ? 'Try a different status or remove the course filter.' : 'When students submit an assignment from a lesson, it will show up here for review.'}
-                                                    </p>
-                                                    {hasFilters && (
-                                                        <Button variant="outline" size="sm" onClick={() => router.get(BASE, {}, { preserveState: true, replace: true })} className="mt-3 border-cp-line">
-                                                            Clear filters
-                                                        </Button>
-                                                    )}
-                                                </div>
+                                                {noResults}
                                             </td>
                                         </tr>
                                     )}

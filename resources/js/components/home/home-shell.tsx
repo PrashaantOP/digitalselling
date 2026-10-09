@@ -27,7 +27,7 @@ export function HomeShell({ title, description, children }: { title: string; des
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
             </Head>
 
-            <div className="home-page home-light relative min-h-screen overflow-x-clip bg-white font-sans text-slate-900 antialiased selection:bg-blue-600 selection:text-white">
+            <div className="home-page home-light relative min-h-dvh overflow-x-clip bg-white font-sans text-slate-900 antialiased selection:bg-blue-600 selection:text-white">
                 {/* top blue wash — absolute layer taaki sticky navbar root ka direct child rahe */}
                 <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-225 bg-linear-to-b from-blue-50/80 via-white to-white" />
                 <HomeNavbar />

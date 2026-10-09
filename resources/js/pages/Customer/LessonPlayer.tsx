@@ -152,7 +152,7 @@ export default function LessonPlayer({ enrollment, modules, completedLessonIds, 
             </div>
 
             <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[300px_minmax(0,1fr)]">
-                <aside className="hidden rounded-xl bg-white p-3 shadow-sm lg:sticky lg:top-20 lg:block lg:max-h-[calc(100vh-6.5rem)] lg:overflow-y-auto">{outline}</aside>
+                <aside className="hidden rounded-xl bg-white p-3 shadow-sm lg:sticky lg:top-20 lg:block lg:max-h-[calc(100dvh-6.5rem)] lg:overflow-y-auto">{outline}</aside>
 
                 <article className="min-w-0 rounded-xl bg-white p-5 shadow-sm sm:p-7">
                     {!lesson ? (

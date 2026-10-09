@@ -1,8 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Head, router } from '@inertiajs/react';
-import { ArrowRight, ExternalLink, Info, Loader2, Rocket, Save, Sparkles, X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { ArrowLeft, ArrowRight, ExternalLink, Eye, Info, Loader2, Rocket, Save, Sparkles, X } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import { DeviceToggle, SaveStatusPill, type Device } from './ui';
 import type { SaveStatus } from './use-auto-save';
 
@@ -57,15 +57,21 @@ export function EditorShell({
     tip: string;
 }) {
     const statusMeta = STATUS_BADGE[status] ?? STATUS_BADGE.draft;
+    // phone / tablet (lg se neeche): ek waqt me ek pane — form ya preview (Course editor jaisa)
+    const [pane, setPane] = useState<'edit' | 'preview'>('edit');
+    const showPreview = () => {
+        setPane('preview');
+        if (window.innerWidth < 1024 && device !== 'mobile') onDeviceChange('mobile');
+    };
 
     return (
-        <div className="h-screen overflow-hidden bg-cp-surface">
+        <div className="h-dvh overflow-hidden bg-cp-surface">
             <Head title={headTitle} />
 
             {/* full-bleed split — left is the form, right is the dark preview */}
             <div className="flex h-full min-h-0 flex-col overflow-hidden lg:flex-row">
                 {/* LEFT — editor */}
-                <section className="flex min-h-0 w-full flex-col overflow-hidden border-r border-cp-line bg-cp-surface lg:w-[520px] lg:shrink-0">
+                <section className={cn('flex min-h-0 w-full flex-1 flex-col overflow-hidden border-r border-cp-line bg-cp-surface lg:w-[520px] lg:flex-none lg:shrink-0', pane === 'preview' && 'hidden lg:flex')}>
                     {/* top bar */}
                     <div className="flex items-center justify-between border-b border-cp-line px-4 py-3 md:px-6">
                         <div className="flex min-w-0 items-center gap-3">
@@ -73,15 +79,24 @@ export function EditorShell({
                                 type="button"
                                 onClick={onBack}
                                 aria-label={backLabel}
-                                className="rounded-lg p-1 text-cp-muted transition hover:bg-cp-canvas hover:text-cp-ink"
+                                className="flex size-9 items-center justify-center rounded-lg text-cp-muted transition hover:bg-cp-canvas hover:text-cp-ink lg:size-auto lg:p-1"
                             >
                                 <X className="size-5" />
                             </button>
                             <h2 className="truncate text-[13px] font-semibold tracking-wider text-cp-ink uppercase">{title}</h2>
                         </div>
-                        <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase', statusMeta.cls)}>
-                            {statusMeta.label}
-                        </span>
+                        <div className="flex shrink-0 items-center gap-2">
+                            <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase', statusMeta.cls)}>
+                                {statusMeta.label}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={showPreview}
+                                className="flex h-9 items-center gap-1 rounded-lg border border-cp-line px-2.5 text-xs font-semibold text-cp-ink lg:hidden"
+                            >
+                                <Eye className="size-3.5" /> Preview
+                            </button>
+                        </div>
                     </div>
 
                     {/* scrollable form body */}
@@ -125,7 +140,7 @@ export function EditorShell({
 
                 {/* RIGHT — preview */}
                 <section
-                    className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#0A0A12]"
+                    className={cn('relative flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#0A0A12]', pane === 'edit' && 'hidden lg:flex')}
                     style={{
                         backgroundImage:
                             'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
@@ -134,9 +149,18 @@ export function EditorShell({
                 >
                     {/* preview header */}
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 px-4 py-3 md:px-6">
-                        <div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setPane('edit')}
+                                className="flex h-9 items-center gap-1 rounded-lg border border-white/20 bg-white/10 px-2.5 text-xs font-semibold text-white lg:hidden"
+                            >
+                                <ArrowLeft className="size-3.5" /> Edit
+                            </button>
+                            <div>
                             <p className="text-[13px] font-semibold text-white">Preview</p>
                             <p className="text-[11px] text-white/50">This is exactly what your visitors see.</p>
+                            </div>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <DeviceToggle device={device} onChange={onDeviceChange} />

@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { MobileCard, MobileCardList } from '@/components/mobile-card-list';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -140,6 +141,24 @@ export default function CourseStudents({ course, enrollments, filters }: Student
 
     const searching = Boolean(filters.search);
 
+    // filter se kuch na mile — table aur phone cards dono me yahi
+    const noResults = (
+        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
+                <Inbox className="size-5" />
+            </span>
+            <p className="mt-1 text-sm font-semibold text-cp-ink">{searching ? 'No students found' : 'No students yet'}</p>
+            <p className="max-w-xs px-4 text-xs text-cp-muted">
+                {searching ? 'Try a different name, email or phone number.' : 'Students appear here automatically as soon as they buy this course.'}
+            </p>
+            {searching && (
+                <Button variant="outline" size="sm" onClick={clearSearch} className="mt-3 border-cp-line">
+                    Clear search
+                </Button>
+            )}
+        </div>
+    );
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Students · ${course.title || 'Course'}`} />
@@ -207,7 +226,43 @@ export default function CourseStudents({ course, enrollments, filters }: Student
                                 </p>
                             </div>
                         </div>
-                        <div className="overflow-x-auto">
+                        {/* phone: table ki jagah cards (same data + same actions) */}
+                        {enrollments.data.length === 0 ? (
+                            <div className="p-4 md:hidden">{noResults}</div>
+                        ) : (
+                            <MobileCardList>
+                                {enrollments.data.map((row) => {
+                                    const percent = percentOf(row);
+                                    const meta = STATUS_META[statusOf(row)];
+                                    const access = accessLabel(row);
+                                    const name = row.customer?.name ?? null;
+                                    return (
+                                        <MobileCard
+                                            key={row.id}
+                                            href={`/dashboard/enrollments/${row.uuid}`}
+                                            leading={<div className={cn('flex size-9 items-center justify-center rounded-full text-[11px] font-bold', avatarTone(name))}>{initials(name)}</div>}
+                                            title={name ?? 'Anonymous'}
+                                            subtitle={row.customer?.email ?? row.customer?.phone ?? '—'}
+                                            trailing={<span className="text-sm font-bold text-cp-ink">{percent}%</span>}
+                                            meta={
+                                                <>
+                                                    <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold', meta.chip)}>
+                                                        <span className={cn('size-1.5 rounded-full', meta.dot)} /> {meta.label}
+                                                    </span>
+                                                    <span className={access.tone}>{access.text}</span>
+                                                    {row.certificate_issued_at && (
+                                                        <span className="inline-flex items-center gap-1 text-cp-warning-ink">
+                                                            <Award className="size-3" /> Certificate
+                                                        </span>
+                                                    )}
+                                                </>
+                                            }
+                                        />
+                                    );
+                                })}
+                            </MobileCardList>
+                        )}
+                        <div className="hidden overflow-x-auto md:block">
                             <table className="w-full border-collapse text-left text-sm">
                                 <thead>
                                     <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
@@ -224,20 +279,7 @@ export default function CourseStudents({ course, enrollments, filters }: Student
                                     {enrollments.data.length === 0 && (
                                         <tr>
                                             <td colSpan={7} className="px-6 py-8">
-                                                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
-                                                    <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
-                                                        <Inbox className="size-5" />
-                                                    </span>
-                                                    <p className="mt-1 text-sm font-semibold text-cp-ink">{searching ? 'No students found' : 'No students yet'}</p>
-                                                    <p className="max-w-xs px-4 text-xs text-cp-muted">
-                                                        {searching ? 'Try a different name, email or phone number.' : 'Students appear here automatically as soon as they buy this course.'}
-                                                    </p>
-                                                    {searching && (
-                                                        <Button variant="outline" size="sm" onClick={clearSearch} className="mt-3 border-cp-line">
-                                                            Clear search
-                                                        </Button>
-                                                    )}
-                                                </div>
+                                                {noResults}
                                             </td>
                                         </tr>
                                     )}

@@ -7,7 +7,7 @@ export function AdminAuthShell({ title, subtitle, children }: { title: string; s
     return (
         <>
             <Head title={`${title} · Admin`} />
-            <main className="flex min-h-screen items-center justify-center bg-slate-900 px-4 py-10">
+            <main className="flex min-h-dvh items-center justify-center bg-slate-900 px-4 py-10">
                 <div className="w-full max-w-sm rounded-2xl bg-white p-7 shadow-2xl">
                     <BrandIcon className="size-11" label="CreatorPro" />
                     <h1 className="mt-4 text-xl font-bold text-slate-900">{title}</h1>

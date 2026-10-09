@@ -51,7 +51,7 @@ export default function AdminLayout({ title, children }: { title: string; childr
     return (
         <>
             <Head title={`${title} · Admin`} />
-            <div className="flex min-h-screen bg-slate-50 text-slate-900">
+            <div className="flex min-h-dvh bg-slate-50 text-slate-900">
                 {/* sidebar */}
                 <aside
                     className={cn(

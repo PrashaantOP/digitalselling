@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { MOBILE_ICON_ACTION, MobileCard, MobileCardList } from '@/components/mobile-card-list';
 import AppLayout from '@/layouts/app-layout';
 import { cn, formatCurrency } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -174,7 +175,7 @@ function KpiCard({ label, value, sub, icon, tone }: { label: string; value: stri
                 <span className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">{label}</span>
                 <span className={cn('flex size-6 items-center justify-center rounded-md', tone)}>{icon}</span>
             </div>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-cp-ink">{value}</span>
+            <span className="mt-3 text-xl font-semibold tracking-tight text-cp-ink sm:text-2xl">{value}</span>
             <span className="mt-1 text-xs text-cp-muted">{sub}</span>
         </div>
     );
@@ -349,7 +350,7 @@ export default function PaymentsIndex({ transactions, summary, filters }: Paymen
                     </div>
 
                     {/* KPI cards — same as Store KpiCard */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 [&>*:first-child]:col-span-2 sm:[&>*:first-child]:col-span-1">
                         <KpiCard
                             label="Total Earned"
                             value={formatCurrency(gross)}
@@ -375,7 +376,7 @@ export default function PaymentsIndex({ transactions, summary, filters }: Paymen
 
                     {/* Filters — card style like Store Section content */}
                     <div className="flex flex-col gap-4 rounded-xl bg-cp-surface p-4 shadow-sm">
-                        <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
+                        <div data-scroll-x className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
                             {TYPE_TABS.map((tab) => {
                                 const active = (filters.type ?? 'all') === tab.type;
                                 return (
@@ -384,7 +385,7 @@ export default function PaymentsIndex({ transactions, summary, filters }: Paymen
                                         type="button"
                                         onClick={() => updateFilters({ type: tab.type === 'all' ? undefined : tab.type })}
                                         className={cn(
-                                            'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
+                                            'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-xs md:py-1.5 font-medium whitespace-nowrap transition-colors',
                                             active ? 'bg-cp-surface text-cp-brand-ink shadow-sm' : 'text-cp-muted hover:text-cp-ink',
                                         )}
                                     >
@@ -484,7 +485,42 @@ export default function PaymentsIndex({ transactions, summary, filters }: Paymen
                                 <CheckCircle2 className="size-3.5" /> {summary.orders} successful
                             </span>
                         </div>
-                        <div className="overflow-x-auto">
+                        {/* phone: table ki jagah cards (same data + same actions) */}
+                        {transactions.data.length === 0 && (
+                            <div className="p-4 md:hidden">
+                                <EmptyBox />
+                            </div>
+                        )}
+                        {transactions.data.length > 0 && (
+                            <MobileCardList>
+                                {transactions.data.map((tx) => {
+                                    return (
+                                        <MobileCard
+                                            key={tx.id}
+                                            onOpen={() => setSelected(tx)}
+                                            leading={<div className={cn('flex size-9 items-center justify-center rounded-full text-[11px] font-bold', avatarTone(tx.buyer_name))}>{initials(tx.buyer_name)}</div>}
+                                            title={tx.buyer_name ?? 'Anonymous'}
+                                            subtitle={tx.product?.title ?? 'Deleted product'}
+                                            trailing={<span className="text-[15px] font-bold whitespace-nowrap text-cp-ink">{formatCurrency(Number(tx.total_amount))}</span>}
+                                            meta={
+                                                <>
+                                                    <StatusPill status={tx.status} />
+                                                    <span>{formatDateTime(tx.created_at)}</span>
+                                                </>
+                                            }
+                                            actions={
+                                                hasInvoice(tx) ? (
+                                                    <a href={invoiceUrl(tx)} target="_blank" rel="noopener" aria-label="Download invoice" className={MOBILE_ICON_ACTION}>
+                                                        <Download className="size-4.5" />
+                                                    </a>
+                                                ) : undefined
+                                            }
+                                        />
+                                    );
+                                })}
+                            </MobileCardList>
+                        )}
+                        <div className="hidden overflow-x-auto md:block">
                             <table className="w-full border-collapse text-left text-sm">
                                 <thead>
                                     <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
@@ -715,14 +751,21 @@ function TableEmptyState() {
     return (
         <tr>
             <td colSpan={6} className="px-6 py-8">
-                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
-                    <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
-                        <Inbox className="size-5" />
-                    </span>
-                    <p className="mt-1 text-sm font-semibold text-cp-ink">No payments found</p>
-                    <p className="max-w-xs px-4 text-xs text-cp-muted">Try a different search or filter. New sales will appear here automatically.</p>
-                </div>
+                <EmptyBox />
             </td>
         </tr>
+    );
+}
+
+/** table (desktop) aur cards (phone) dono ka "kuch nahi mila" */
+function EmptyBox() {
+    return (
+        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
+                <Inbox className="size-5" />
+            </span>
+            <p className="mt-1 text-sm font-semibold text-cp-ink">No payments found</p>
+            <p className="max-w-xs px-4 text-xs text-cp-muted">Try a different search or filter. New sales will appear here automatically.</p>
+        </div>
     );
 }

@@ -62,7 +62,7 @@ function initials(name: string) {
 /** Desktop (lg+): hamesha dikhne wala sidebar. Mobile / tablet pe MobileNav (mobile-nav.tsx: top bar + bottom bar). */
 export function AppSidebar() {
     return (
-        <aside className="sticky top-0 hidden h-screen w-[288px] shrink-0 flex-col border-r border-cp-line bg-cp-surface lg:flex">
+        <aside className="sticky top-0 hidden h-dvh w-[288px] shrink-0 flex-col border-r border-cp-line bg-cp-surface lg:flex">
             <SidebarBody />
         </aside>
     );

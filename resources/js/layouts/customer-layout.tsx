@@ -23,7 +23,7 @@ export default function CustomerLayout({ title, children, wide = false }: { titl
     const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 
     return (
-        <div className="flex min-h-screen flex-col bg-[#F6F5F2] text-[#14141B]">
+        <div className="flex min-h-dvh flex-col bg-[#F6F5F2] text-[#14141B]">
             <Head title={title} />
 
             <header className="sticky top-0 z-30 border-b border-[#E4E2DA] bg-white/90 backdrop-blur">
@@ -89,7 +89,7 @@ export default function CustomerLayout({ title, children, wide = false }: { titl
 /** Login / verify / done page ka chhota centered card (bina nav ke). */
 export function CustomerCard({ title, children }: { title: string; children: ReactNode }) {
     return (
-        <div className="flex min-h-screen flex-col items-center bg-[#F6F5F2] px-4 py-10 text-[#14141B]">
+        <div className="flex min-h-dvh flex-col items-center bg-[#F6F5F2] px-4 py-10 text-[#14141B]">
             <Head title={title} />
             <div className="mb-6 flex items-center">
                 <BrandLogo className="h-9" />

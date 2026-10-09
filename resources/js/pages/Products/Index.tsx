@@ -321,7 +321,7 @@ export default function ProductsIndex({ products, counts, statusCounts, totals, 
                             {/* ---- filters ---- */}
                             <div className="flex flex-col gap-3 rounded-2xl bg-cp-surface p-3 shadow-sm ring-1 ring-cp-surface-3 md:p-4">
                                 {/* phone pe side scroll, badi screen pe wrap */}
-                                <div className="no-scrollbar -mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-0.5 md:flex-wrap md:overflow-visible">
+                                <div data-scroll-x className="no-scrollbar -mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-0.5 md:flex-wrap md:overflow-visible">
                                     <button
                                         type="button"
                                         onClick={() => visit({ type: null, page: 1 })}
@@ -382,7 +382,7 @@ export default function ProductsIndex({ products, counts, statusCounts, totals, 
                                         )}
                                     </form>
 
-                                    <div className="no-scrollbar flex items-center gap-1 overflow-x-auto rounded-xl bg-cp-canvas p-1">
+                                    <div data-scroll-x className="no-scrollbar flex items-center gap-1 overflow-x-auto rounded-xl bg-cp-canvas p-1">
                                         {STATUS_TABS.map((tab) => {
                                             const active = activeStatus === tab.key;
                                             const count = tab.key === 'all' ? counts.all : statusCounts[tab.key];

@@ -90,7 +90,7 @@ export function PublicProductLayout({
     return (
         <>
             <Head title={title} />
-            <main className="flex min-h-screen flex-col bg-[#FAF9F5] text-[#14141B]">
+            <main className="flex min-h-dvh flex-col bg-[#FAF9F5] text-[#14141B]">
                 <div className="h-1" style={{ backgroundColor: accent }} />
                 <header>
                     <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">

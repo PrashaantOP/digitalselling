@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { MetaDot, MobileCard, MobileCardList } from '@/components/mobile-card-list';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -170,7 +171,7 @@ function KpiCard({ label, value, sub, icon, tone }: { label: string; value: stri
                 <span className="text-[11px] font-semibold tracking-wider text-cp-muted uppercase">{label}</span>
                 <span className={cn('flex size-6 items-center justify-center rounded-md', tone)}>{icon}</span>
             </div>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-cp-ink">{value}</span>
+            <span className="mt-3 text-xl font-semibold tracking-tight text-cp-ink sm:text-2xl">{value}</span>
             <span className="mt-1 text-xs text-cp-muted">{sub}</span>
         </div>
     );
@@ -310,7 +311,7 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                     )}
 
                     {/* KPI cards */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
                         <KpiCard
                             label="Clearing"
                             value={money(balance.clearing + (balance.blocked_reason ? balance.ready : 0))}
@@ -336,7 +337,49 @@ export default function SettlementsIndex({ balance, settlements, methods, kycSta
                                     </p>
                                 </div>
                             </div>
-                            <div className="overflow-x-auto">
+                            {/* phone: table ki jagah cards (same data + same actions) */}
+                            {settlements.data.length === 0 && (
+                                <div className="p-4 md:hidden">
+                                    <EmptyBox />
+                                </div>
+                            )}
+                            {settlements.data.length > 0 && (
+                                <MobileCardList>
+                                    {settlements.data.map((row) => {
+                                        return (
+                                            <MobileCard
+                                                key={row.id}
+                                                href={`/dashboard/settlements/${row.uuid}`}
+                                                title={formatDate(row.created_at)}
+                                                subtitle={
+                                                    <>
+                                                        {row.orders_count} {row.orders_count === 1 ? 'booking' : 'bookings'} · {formatDate(row.period_start)} – {formatDate(row.period_end)}
+                                                    </>
+                                                }
+                                                trailing={
+                                                    <>
+                                                        <span className="block text-[15px] font-bold whitespace-nowrap text-cp-ink">{money(row.net_amount)}</span>
+                                                        <span className="block text-[11px] whitespace-nowrap text-cp-coral-dark-ink">− {money(row.commission_amount)} fee</span>
+                                                    </>
+                                                }
+                                                meta={
+                                                    <>
+                                                        <StatusPill status={row.status} />
+                                                        <span className="font-mono">{row.number}</span>
+                                                        {row.reference_number && (
+                                                            <>
+                                                                <MetaDot />
+                                                                <span className="max-w-32 truncate font-mono">UTR {row.reference_number}</span>
+                                                            </>
+                                                        )}
+                                                    </>
+                                                }
+                                            />
+                                        );
+                                    })}
+                                </MobileCardList>
+                            )}
+                            <div className="hidden overflow-x-auto md:block">
                                 <table className="w-full border-collapse text-left text-sm">
                                     <thead>
                                         <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
@@ -471,16 +514,23 @@ function TableEmptyState() {
     return (
         <tr>
             <td colSpan={8} className="px-6 py-8">
-                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
-                    <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
-                        <Inbox className="size-5" />
-                    </span>
-                    <p className="mt-1 text-sm font-semibold text-cp-ink">No settlements yet</p>
-                    <p className="max-w-sm px-4 text-xs text-cp-muted">
-                        Your first settlement will be created automatically.
-                    </p>
-                </div>
+                <EmptyBox />
             </td>
         </tr>
+    );
+}
+
+/** table (desktop) aur cards (phone) dono ka "abhi kuch nahi" */
+function EmptyBox() {
+    return (
+        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
+                <Inbox className="size-5" />
+            </span>
+            <p className="mt-1 text-sm font-semibold text-cp-ink">No settlements yet</p>
+            <p className="max-w-sm px-4 text-xs text-cp-muted">
+                Your first settlement will be created automatically.
+            </p>
+        </div>
     );
 }

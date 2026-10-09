@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { MetaDot, MobileCard, MobileCardList } from '@/components/mobile-card-list';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -389,7 +390,35 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                                 </div>
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
+                            <>
+                            {/* phone: table ki jagah cards (same data + same actions) */}
+                            {registrations.data.length > 0 && (
+                                <MobileCardList>
+                                    {registrations.data.map((reg) => {
+                                        return (
+                                            <MobileCard
+                                                key={reg.id}
+                                                leading={<span className="flex size-9 items-center justify-center rounded-full bg-cp-brand-soft text-xs font-bold text-cp-brand-ink">{initials(reg.customer?.name ?? null)}</span>}
+                                                title={reg.customer?.name ?? 'Unknown attendee'}
+                                                subtitle={reg.customer?.email ?? reg.customer?.phone ?? '—'}
+                                                meta={
+                                                    <>
+                                                        {reg.customer?.email && reg.customer?.phone && (
+                                                            <>
+                                                                <span>{reg.customer.phone}</span>
+                                                                <MetaDot />
+                                                            </>
+                                                        )}
+                                                        <span>{formatDateTime(reg.registered_at)}</span>
+                                                    </>
+                                                }
+                                                actions={<AttendanceButton attended={reg.attended} busy={busyId === reg.id} onClick={() => toggleAttended(reg)} />}
+                                            />
+                                        );
+                                    })}
+                                </MobileCardList>
+                            )}
+                            <div className="hidden overflow-x-auto md:block">
                                 <table className="w-full border-collapse text-left text-sm">
                                     <thead>
                                         <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
@@ -452,6 +481,7 @@ export default function Attendees({ event, registrations, totals, filters }: Att
                                     </tbody>
                                 </table>
                             </div>
+                            </>
                         )}
 
                         {registrations.total > 0 && (

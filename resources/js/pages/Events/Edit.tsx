@@ -6,6 +6,7 @@ import { Head, router } from '@inertiajs/react';
 import { assetUrl, firstError } from '@/components/course-editor/api';
 import { VideoEmbed } from '@/components/public/video-embed';
 import {
+    ArrowLeft,
     ArrowRight,
     Check,
     ExternalLink,
@@ -212,7 +213,7 @@ function PreviewPane({ item, publicUrl, device }: { item: EventItem; publicUrl: 
     return (
         <div
             className={cn(
-                'relative mx-auto flex h-[min(720px,calc(100vh-150px))] w-full items-start justify-center transition-all duration-300',
+                'relative mx-auto flex h-[min(720px,calc(100dvh-150px))] w-full items-start justify-center transition-all duration-300',
                 isMobile ? 'max-w-[380px]' : 'max-w-[860px]',
             )}
         >
@@ -329,6 +330,12 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
 
     const [form, setForm] = useState(initial);
     const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
+    // phone / tablet (lg se neeche): ek waqt me ek pane — form ya preview (Course editor jaisa)
+    const [pane, setPane] = useState<'edit' | 'preview'>('edit');
+    const showPreview = () => {
+        setPane('preview');
+        if (window.innerWidth < 1024) setDevice('mobile');
+    };
     const [publishing, setPublishing] = useState(false);
     const [publishError, setPublishError] = useState<string | null>(null);
     const [coupons, setCoupons] = useState<Coupon[]>(item.coupons ?? []);
@@ -502,13 +509,13 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
     const statusMeta = STATUS_BADGE[item.status] ?? STATUS_BADGE.draft;
 
     return (
-        <div className="h-screen overflow-hidden bg-cp-surface">
+        <div className="h-dvh overflow-hidden bg-cp-surface">
             <Head title={`${item.title || 'Untitled event'} · Edit event`} />
 
             {/* full-bleed split — left is the form, right is the dark preview */}
             <div className="flex h-full min-h-0 flex-col overflow-hidden lg:flex-row">
                 {/* LEFT — editor */}
-                <section className="flex min-h-0 w-full flex-col overflow-hidden border-r border-cp-line bg-cp-surface lg:w-[520px] lg:shrink-0">
+                <section className={cn('flex min-h-0 w-full flex-1 flex-col overflow-hidden border-r border-cp-line bg-cp-surface lg:w-[520px] lg:flex-none lg:shrink-0', pane === 'preview' && 'hidden lg:flex')}>
                     {/* top bar */}
                     <div className="flex items-center justify-between border-b border-cp-line px-4 py-3 md:px-6">
                         <div className="flex min-w-0 items-center gap-3">
@@ -516,7 +523,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                 type="button"
                                 onClick={() => leave('/dashboard/events')}
                                 aria-label="Back to events"
-                                className="rounded-lg p-1 text-cp-muted transition hover:bg-cp-canvas hover:text-cp-ink"
+                                className="flex size-9 items-center justify-center rounded-lg text-cp-muted transition hover:bg-cp-canvas hover:text-cp-ink lg:size-auto lg:p-1"
                             >
                                 <X className="size-5" />
                             </button>
@@ -524,14 +531,23 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                                 {item.title || 'Your event title here'}
                             </h2>
                         </div>
-                        <span
-                            className={cn(
-                                'shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase',
-                                statusMeta.cls,
-                            )}
-                        >
-                            {statusMeta.label}
-                        </span>
+                        <div className="flex shrink-0 items-center gap-2">
+                            <span
+                                className={cn(
+                                    'shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase',
+                                    statusMeta.cls,
+                                )}
+                            >
+                                {statusMeta.label}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={showPreview}
+                                className="flex h-9 items-center gap-1 rounded-lg border border-cp-line px-2.5 text-xs font-semibold text-cp-ink lg:hidden"
+                            >
+                                <Eye className="size-3.5" /> Preview
+                            </button>
+                        </div>
                     </div>
 
                     {/* scrollable form body */}
@@ -895,7 +911,7 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
 
                 {/* RIGHT — preview */}
                 <section
-                    className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#0A0A12]"
+                    className={cn('relative flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#0A0A12]', pane === 'edit' && 'hidden lg:flex')}
                     style={{
                         backgroundImage:
                             'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
@@ -904,9 +920,18 @@ export default function EventsEdit({ item, publicUrl }: EventsEditProps) {
                 >
                     {/* preview header */}
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 px-4 py-3 md:px-6">
-                        <div>
-                            <p className="text-[13px] font-semibold text-white">Preview</p>
-                            <p className="text-[11px] text-white/50">This is exactly what your visitors see.</p>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setPane('edit')}
+                                className="flex h-9 items-center gap-1 rounded-lg border border-white/20 bg-white/10 px-2.5 text-xs font-semibold text-white lg:hidden"
+                            >
+                                <ArrowLeft className="size-3.5" /> Edit
+                            </button>
+                            <div>
+                                <p className="text-[13px] font-semibold text-white">Preview</p>
+                                <p className="text-[11px] text-white/50">This is exactly what your visitors see.</p>
+                            </div>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <DeviceToggle device={device} onChange={setDevice} />

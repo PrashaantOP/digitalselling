@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { MobileCard, MobileCardList } from '@/components/mobile-card-list';
 import { useRefreshOnBack } from '@/hooks/use-refresh-on-back';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -208,7 +209,7 @@ function RowActions({
                     type="button"
                     aria-label={`More actions for ${page.title}`}
                     disabled={busy}
-                    className="rounded-lg p-1.5 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink disabled:opacity-50"
+                    className="flex size-9 items-center justify-center rounded-lg p-1.5 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink disabled:opacity-50 md:size-auto"
                 >
                     {busy ? <Loader2 className="size-4.5 animate-spin" /> : <MoreHorizontal className="size-4.5" />}
                 </button>
@@ -362,6 +363,27 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
         });
     }
 
+    // filter se kuch na mile — table aur phone cards dono me yahi
+    const noResults = (
+        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
+            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
+                <Inbox className="size-5" />
+            </span>
+            <p className="mt-1 text-sm font-semibold text-cp-ink">No payment pages found</p>
+            <p className="max-w-xs px-4 text-xs text-cp-muted">
+                Try a different search or status filter.
+            </p>
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="mt-3 border-cp-line"
+            >
+                Clear filters
+            </Button>
+        </div>
+    );
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Payment Pages" />
@@ -436,7 +458,7 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                         <>
                             {/* Filters */}
                             <div className="flex flex-col gap-4 rounded-xl bg-cp-surface p-4 shadow-sm">
-                                <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
+                                <div data-scroll-x className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
                                     {STATUS_TABS.map((tab) => {
                                         const active = activeStatus === tab.key;
                                         return (
@@ -445,7 +467,7 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                                 type="button"
                                                 onClick={() => applyFilters({ status: tab.key === 'all' ? null : tab.key })}
                                                 className={cn(
-                                                    'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
+                                                    'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-xs md:py-1.5 font-medium whitespace-nowrap transition-colors',
                                                     active ? 'bg-cp-surface text-cp-brand-ink shadow-sm' : 'text-cp-muted hover:text-cp-ink',
                                                 )}
                                             >
@@ -495,7 +517,39 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                         </p>
                                     </div>
                                 </div>
-                                <div className="overflow-x-auto">
+                                {/* phone: table ki jagah cards (same data + same actions) */}
+                                {items.data.length === 0 ? (
+                                    <div className="p-4 md:hidden">{noResults}</div>
+                                ) : (
+                                    <MobileCardList>
+                                        {items.data.map((page) => {
+                                            return (
+                                                <MobileCard
+                                                    key={page.id}
+                                                    href={`${BASE}/${page.uuid}/edit`}
+                                                    leading={
+                                                        <span className={cn('flex size-10 items-center justify-center rounded-xl', tileTone(page.title || String(page.id)))}>
+                                                            <CreditCard className="size-5" />
+                                                        </span>
+                                                    }
+                                                    title={page.title || 'Untitled payment page'}
+                                                    subtitle={`/p/${page.slug}`}
+                                                    trailing={<PriceCell page={page} />}
+                                                    meta={
+                                                        <>
+                                                            <StatusPill status={page.status} />
+                                                            <span>
+                                                                {page.sales_count} {page.sales_count === 1 ? 'sale' : 'sales'}
+                                                            </span>
+                                                        </>
+                                                    }
+                                                    actions={<RowActions page={page} busy={busyId === page.id} onAction={(a) => runAction(page, a)} />}
+                                                />
+                                            );
+                                        })}
+                                    </MobileCardList>
+                                )}
+                                <div className="hidden overflow-x-auto md:block">
                                     <table className="w-full border-collapse text-left text-sm">
                                         <thead>
                                             <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">
@@ -510,23 +564,7 @@ export default function PaymentPagesIndex({ items, counts, filters }: PaymentPag
                                             {items.data.length === 0 && (
                                                 <tr>
                                                     <td colSpan={5} className="px-6 py-8">
-                                                        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-cp-line bg-cp-surface-2 py-8 text-center">
-                                                            <span className="flex size-10 items-center justify-center rounded-full bg-cp-surface-3 text-cp-muted">
-                                                                <Inbox className="size-5" />
-                                                            </span>
-                                                            <p className="mt-1 text-sm font-semibold text-cp-ink">No payment pages found</p>
-                                                            <p className="max-w-xs px-4 text-xs text-cp-muted">
-                                                                Try a different search or status filter.
-                                                            </p>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={clearFilters}
-                                                                className="mt-3 border-cp-line"
-                                                            >
-                                                                Clear filters
-                                                            </Button>
-                                                        </div>
+                                                        {noResults}
                                                     </td>
                                                 </tr>
                                             )}

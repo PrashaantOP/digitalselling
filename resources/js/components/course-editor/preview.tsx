@@ -292,7 +292,7 @@ export function CoursePreview({ form, detail, coverImages, checkoutQuestions, dr
     );
 
     return (
-        <div className={cn('mx-auto flex h-[min(720px,calc(100vh-150px))] w-full transition-all', mobile ? 'max-w-[390px]' : 'max-w-[1040px]')}>
+        <div className={cn('mx-auto flex h-[min(720px,calc(100dvh-150px))] w-full transition-all', mobile ? 'max-w-[390px]' : 'max-w-[1040px]')}>
             <div className={cn('flex h-full w-full flex-col overflow-hidden shadow-xl', mobile ? 'rounded-[2.5rem] border-[10px] border-[#14141B]' : 'rounded-xl border border-[#DAD8D0]')} style={{ background: t.page }}>
                 {mobile ? (
                     <div className="mx-auto my-1 h-1.5 w-20 rounded-full bg-[#14141B]/80" />

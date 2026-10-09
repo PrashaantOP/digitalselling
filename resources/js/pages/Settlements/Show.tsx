@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { MetaDot, MobileCard, MobileCardList } from '@/components/mobile-card-list';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -177,7 +178,54 @@ export default function SettlementShow({ settlement, orders, adjustments }: Prop
                                 <h2 className="text-base font-semibold text-cp-ink">Bookings in this settlement</h2>
                                 <p className="mt-0.5 text-xs text-cp-muted">Each row shows its own commission deduction.</p>
                             </div>
-                            <div className="overflow-x-auto">
+                            {/* phone: table ki jagah cards (same data + same actions) */}
+                            {orders.length > 0 && (
+                                <MobileCardList>
+                                    {orders.map((order) => {
+                                        return (
+                                            <MobileCard
+                                                key={order.id}
+                                                title={order.product?.title ?? 'Deleted product'}
+                                                subtitle={
+                                                    <>
+                                                        {order.buyer_name ?? '—'} · {formatDate(order.paid_at)}
+                                                    </>
+                                                }
+                                                trailing={
+                                                    <>
+                                                        <span className="block text-sm font-bold whitespace-nowrap text-cp-ink">{money(order.net_payout_amount)}</span>
+                                                        <span className="block text-[11px] whitespace-nowrap text-cp-muted">of {money(order.total_amount)}</span>
+                                                    </>
+                                                }
+                                                meta={
+                                                    <>
+                                                        <span className="font-mono">{order.order_number}</span>
+                                                        <MetaDot />
+                                                        <span className="text-cp-coral-dark-ink">
+                                                            − {money(order.platform_fee)} ({Number(order.commission_rate)}%)
+                                                        </span>
+                                                    </>
+                                                }
+                                            />
+                                        );
+                                    })}
+                                </MobileCardList>
+                            )}
+                            {/* phone: table ke tfoot jaisa total */}
+                            {orders.length > 0 ? (
+                                <div className="flex items-center justify-between gap-3 border-t border-cp-line bg-cp-canvas/60 px-4 py-3 text-[13px] font-bold text-cp-ink md:hidden">
+                                    <span>
+                                        Total · {settlement.orders_count} {settlement.orders_count === 1 ? 'booking' : 'bookings'}
+                                    </span>
+                                    <span className="text-right">
+                                        {money(settlement.net_amount)}
+                                        <span className="block text-[11px] font-medium text-cp-coral-dark-ink">− {money(settlement.commission_amount)} fee</span>
+                                    </span>
+                                </div>
+                            ) : (
+                                <p className="px-4 py-8 text-center text-sm text-cp-muted md:hidden">The bookings from this settlement have been released (failed settlement).</p>
+                            )}
+                            <div className="hidden overflow-x-auto md:block">
                                 <table className="w-full border-collapse text-left text-sm">
                                     <thead>
                                         <tr className="bg-cp-canvas/60 text-[11px] font-semibold tracking-wider text-cp-muted uppercase">

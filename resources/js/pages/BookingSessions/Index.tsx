@@ -108,7 +108,7 @@ export default function BookingSessionsIndex({ items, counts, filters }: Session
                     </div>
 
                     <div className="flex flex-col gap-3 rounded-xl bg-cp-surface p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-                        <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
+                        <div data-scroll-x className="flex items-center gap-1 overflow-x-auto rounded-lg bg-cp-canvas p-1">
                             {tabs.map((t) => {
                                 const active = (filters.status ?? '') === t.key;
                                 return (
@@ -117,7 +117,7 @@ export default function BookingSessionsIndex({ items, counts, filters }: Session
                                         type="button"
                                         onClick={() => visit({ status: t.key })}
                                         className={cn(
-                                            'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
+                                            'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-xs md:py-1.5 font-medium whitespace-nowrap transition-colors',
                                             active ? 'bg-cp-surface text-cp-brand-ink shadow-sm' : 'text-cp-muted hover:text-cp-ink',
                                         )}
                                     >
@@ -259,7 +259,7 @@ function SessionCard({
 }) {
     const detail = s.booking_service_detail;
     const meta = STATUS_META[s.status];
-    const iconBtn = 'rounded-lg p-1.5 text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink disabled:opacity-50';
+    const iconBtn = 'flex size-9 items-center justify-center rounded-lg p-1.5 md:size-auto text-cp-muted transition hover:bg-cp-surface-3 hover:text-cp-ink disabled:opacity-50';
 
     return (
         <article className="flex flex-col rounded-xl bg-cp-surface p-5 shadow-sm transition-shadow hover:shadow-md">

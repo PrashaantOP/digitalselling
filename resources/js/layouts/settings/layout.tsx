@@ -37,7 +37,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                 </div>
 
                 {/* phone: tabs */}
-                <nav aria-label="Settings" className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 lg:hidden">
+                <nav data-scroll-x aria-label="Settings" className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 lg:hidden">
                     {NAV.map((item) => {
                         const active = isActive(currentPath, item.href);
 
